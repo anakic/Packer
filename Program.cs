@@ -32,12 +32,12 @@ namespace Packer
             AddStep(new ToUnicodeStep());
             AddStep(new ReformatJsonFilesStep());
             AddStep(new StripSecurityStep());
-            //AddStep(new ExtractTablesStep());
             AddStep(new StripTimestapsStep());
+            AddStep(new ExtractTablesStep());
             //AddStep(new SetSchemasStep());
 
-            firstStep?.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales.pbit");
-            // firstStep?.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
+            // firstStep?.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales.pbit");
+            firstStep?.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
             return;
 
             var operation = args[0];
