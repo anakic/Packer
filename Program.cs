@@ -32,8 +32,8 @@ namespace Packer
             AddStep(new ToUnicodeStep());
             AddStep(new ReformatJsonFilesStep());
             AddStep(new StripSecurityStep());
-            //AddStep(new StripTimestapsStep());
             //AddStep(new ExtractTablesStep());
+            AddStep(new StripTimestapsStep());
             //AddStep(new SetSchemasStep());
 
             firstStep?.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales.pbit");
