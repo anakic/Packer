@@ -24,34 +24,17 @@ namespace Packer
 
     internal static class Program
     {
-        private static readonly Encoding Encoding = Encoding.Unicode;
-
-        private static StepBase? firstStep;
-        private static StepBase? lastStep;
-
-        private static void AddStep(StepBase step)
-        {
-            if (firstStep == null)
-                firstStep = step;
-
-            if (lastStep != null)
-                lastStep.Next = step;
-
-            lastStep = step;
-        }
-
         public static void Main(string[] args)
         {
-            AddStep(new ZipStep());
-            AddStep(new ToUnicodeStep());
-            AddStep(new ReformatJsonFilesStep());
-            AddStep(new ResolveVariablesStep());
-            AddStep(new StripSecurityStep());
-            AddStep(new StripTimestapsStep());
-            AddStep(new ExtractTablesStep());
+            Engine engine = new Engine();
+            engine.AddStep(new ReformatJsonFilesStep());
+            engine.AddStep(new StripSecurityStep());
+            engine.AddStep(new StripTimestapsStep());
+            engine.AddStep(new ExtractTablesStep());
+            engine.AddStep(new ResolveVariablesStep());
             //AddStep(new SetSchemasStep());
 
-            firstStep?.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales.pbit");
+            engine.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales.pbit");
             // firstStep?.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
             return;
 
@@ -59,10 +42,10 @@ namespace Packer
             switch (operation)
             {
                 case "pack":
-                    firstStep?.Pack(args[1], args[2]);
+                    engine.Pack(args[1], args[2]);
                     break;
                 case "unpack":
-                    firstStep?.Extract(args[1], args[2]);
+                    engine.Extract(args[1], args[2]);
                     break;
             }
         }

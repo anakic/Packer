@@ -1,22 +1,21 @@
-﻿using System.Xml.Linq;
+﻿using Packer.Model;
+using System.Xml.Linq;
 
 namespace Packer.Steps
 {
     internal class StripSecurityStep : StepBase
     {
-        public override void Extract(string pbitFilePath, string folderPath)
+        public override void ToHumanReadable(RepositoryModel model)
         {
             // remove security bindings
-            File.Delete(Path.Combine(folderPath, "SecurityBindings"));
-            var contentTypesXmlPath = Path.Combine(folderPath, "[Content_Types].xml");
-            var doc = XDocument.Load(contentTypesXmlPath);
-            doc
+            model.SecurityBindings = null;
+            // update xml file (remove sec binding entry)
+            model.ContentTypesFile!.XDocument
                 .Descendants(XName.Get("Override", @"http://schemas.openxmlformats.org/package/2006/content-types"))
                 .SingleOrDefault(xe => xe.Attribute("PartName")?.Value == "/SecurityBindings")
                 ?.Remove();
-            doc.Save(contentTypesXmlPath);
 
-            base.Extract(pbitFilePath, folderPath);
+            base.ToHumanReadable(model);
         }
     }
 }

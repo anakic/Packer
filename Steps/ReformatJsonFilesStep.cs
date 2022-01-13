@@ -1,42 +1,28 @@
-﻿using Newtonsoft.Json.Linq;
-using Packer.Tools;
-using System.Text;
+﻿using Newtonsoft.Json;
+using Packer.Model;
 
 namespace Packer.Steps
 {
     internal class ReformatJsonFilesStep : StepBase
     {
-        public override void Extract(string pbitFilePath, string folderPath)
+        public override void ToHumanReadable(RepositoryModel model)
         {
-            Directory.GetFiles(folderPath, "*")
-                .Where(f => string.IsNullOrEmpty(Path.GetExtension(f)) && !string.Equals(Path.GetFileName(f), "Version", StringComparison.OrdinalIgnoreCase))
-                .Union(Directory.GetFiles(Path.Combine(folderPath, "Report"), "*", SearchOption.AllDirectories))
-                .ToList()
-                .ForEach(f =>
-                {
-                    var obj = JObject.Parse(File.ReadAllText(f));
-                    var formatted = obj.ToString(Newtonsoft.Json.Formatting.Indented);
-                    File.WriteAllText(f, formatted);
-                });
+            SetFormat(model, Formatting.Indented);
 
-            base.Extract(pbitFilePath, folderPath);
+            base.ToHumanReadable(model);
         }
 
-        public override void Pack(string folderPath, string pbitFilePath)
+        public override void Pack(RepositoryModel model)
         {
-            base.Pack(folderPath, pbitFilePath);
+            base.Pack(model);
 
-            Directory.GetFiles(folderPath, "*")
-                .Where(f => string.IsNullOrEmpty(Path.GetExtension(f)) && !string.Equals(Path.GetFileName(f), "Version", StringComparison.OrdinalIgnoreCase))
-                .Union(Directory.GetFiles(Path.Combine(folderPath, "Report"), "*", SearchOption.AllDirectories))
-                .ToList()
-                .ForEach(f =>
-                {
-                    var str = File.ReadAllText(f);
-                    var obj = JObject.Parse(str);
-                    var formatted = obj.ToString(Newtonsoft.Json.Formatting.None);
-                    File.WriteAllText(f, formatted);
-                });
+            SetFormat(model, Formatting.None);
+        }
+
+        private static void SetFormat(RepositoryModel model, Formatting formatting)
+        {
+            model.GetAllJsonFiles()
+                .ToList().ForEach(f => f.Formatting = formatting);
         }
     }
 }

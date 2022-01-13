@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Packer.Model;
 using System.Text;
 
 namespace Packer.Steps
@@ -7,19 +8,15 @@ namespace Packer.Steps
     {
         HashSet<string> propertiesToStrip = new HashSet<string>() { "createdTimestamp", "modifiedTime", "structureModifiedTime", "refreshedTime", "lastUpdate", "lastSchemaUpdate", "lastProcessed" };
 
-        public override void Extract(string pbitFilePath, string folderPath)
+        public override void ToHumanReadable(RepositoryModel model)
         {
             // strip timestamps
-            var dataModelSchemaFile = Path.Combine(folderPath, "DataModelSchema");
-            var jObj = JObject.Parse(File.ReadAllText(dataModelSchemaFile));
-            jObj.Descendants()
+            model.DataModelSchemaFile!.JObj.Descendants()
                 .OfType<JProperty>()
                 .Where(jp => propertiesToStrip.Contains(jp.Name))
                 .ToList().ForEach(jp => jp.Remove());
-            var bytes = Encoding.Unicode.GetBytes(jObj.ToString());
-            File.WriteAllBytes(dataModelSchemaFile, bytes);
 
-            base.Extract(pbitFilePath, folderPath);
+            base.ToHumanReadable(model);
         }
     }
 }

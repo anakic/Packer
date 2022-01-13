@@ -6,9 +6,9 @@ namespace Packer.Steps
     {
         public StepBase? Next { get; set; }
 
-        public virtual void Extract(RepositoryModel model)
+        public virtual void ToHumanReadable(RepositoryModel model)
         {
-            Next?.Extract(model);
+            Next?.ToHumanReadable(model);
         }
 
         public virtual void Pack(RepositoryModel model)

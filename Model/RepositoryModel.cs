@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Packer.Storage;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Packer.Model
@@ -40,6 +41,11 @@ namespace Packer.Model
             // todo: read images (embedded pngs);
         }
 
+        internal JsonFileItem GetExtractedJsonFile(string v)
+        {
+            return extractedPageFiles.Union(extractedTableFiles).First(f => string.Equals(f.Path, v));
+        }
+
         public void WriteTo(IFilesStore fileSystem)
         {
             IEnumerable<FileSystemItem> filesToSave = themeFiles
@@ -75,7 +81,7 @@ namespace Packer.Model
         private TextFileItem? ReadText(IFilesStore source, string path)
         {
             if (source.FileExists(path))
-                return new TextFileItem(path, source.ReadAsText(path));
+                return new TextFileItem(path, source.ReadAsText(path, Encoding.Unicode));
             return null;
         }
 
@@ -114,11 +120,31 @@ namespace Packer.Model
             return file;
         }
 
+        public void ClearExtractedTables()
+            => extractedTableFiles.Clear();
+
+        public void ClearExtractedPages()
+            => extractedPageFiles.Clear();
+
         public JsonFileItem AddExtractedPageFile(string pageName, JObject jObject)
         {
             var file = new JsonFileItem(Path.Combine(pagesFolder, pageName), jObject);
             extractedTableFiles.Add(file);
             return file;
+        }
+
+        // Gets all json files that are part of the model (does not include extracted files)
+        public IEnumerable<JsonFileItem> GetAllJsonFiles()
+        {
+            return ThemeFiles
+                .Union(new[]
+                {
+                    SettingsFile!,
+                    LayoutFile!,
+                    DataModelSchemaFile!,
+                    DiagramLayoutFile!,
+                    MetadataFile!
+                });
         }
     }
 }
