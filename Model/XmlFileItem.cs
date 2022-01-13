@@ -1,20 +1,21 @@
-﻿using System.Xml.Linq;
+﻿using System.Text;
+using System.Xml.Linq;
 
 namespace Packer.Model
 {
-    class XmlFileItem : FileItem
+    class XmlFileItem : FileSystemItem
     {
-        Lazy<XDocument> lazyDocument;
-
-        public XmlFileItem(string basePath, string relativePath) : base(basePath, relativePath)
+        public XmlFileItem(string path, XDocument xDocument) 
+            : base(path)
         {
-            lazyDocument = new Lazy<XDocument>(() => XDocument.Parse(ReadAsString()));
+            XDocument = xDocument;
         }
 
-        public void Modify(Action<XDocument> documentAction)
+        public XDocument XDocument { get; }
+
+        internal override byte[] GetBytesToSave()
         {
-            documentAction(lazyDocument.Value);
-            lazyDocument.Value.Save(AbsolutePath);
+            return Encoding.Unicode.GetBytes(XDocument.ToString());
         }
     }
 }

@@ -1,17 +1,19 @@
-﻿namespace Packer.Steps
+﻿using Packer.Model;
+
+namespace Packer.Steps
 {
     class StepBase
     {
         public StepBase? Next { get; set; }
 
-        public virtual void Extract(string pbitFilePath, string folderPath)
+        public virtual void Extract(RepositoryModel model)
         {
-            Next?.Extract(pbitFilePath, folderPath);
+            Next?.Extract(model);
         }
 
-        public virtual void Pack(string folderPath, string pbitFilePath)
+        public virtual void Pack(RepositoryModel model)
         {
-            Next?.Pack(folderPath, pbitFilePath);
+            Next?.Pack(model);
         }
     }
 }

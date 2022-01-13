@@ -8,6 +8,20 @@ using System.Xml.Linq;
 
 namespace Packer
 {
+    /*
+     * 
+     * The model exposes objects for files and folders. Steps modify these objects.
+     * These objects are loaded from disk on load and saved to disk explicitly by calling Save() on the model.
+     * No other interaction with the files on disk is allowed.
+     
+    1. json files should have a Formatting property
+    2. all files should have a save changes method
+    3. steps should only deal with json/xml/text, not with bytes so fileitems should not expose raw data (these methods should be protected instead of public)
+     
+     */
+
+
+
     internal static class Program
     {
         private static readonly Encoding Encoding = Encoding.Unicode;

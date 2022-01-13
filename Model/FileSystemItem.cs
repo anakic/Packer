@@ -9,6 +9,6 @@
             Path = path;
         }
 
-        //public abstract void Delete();
+        internal abstract byte [] GetBytesToSave();
     }
 }

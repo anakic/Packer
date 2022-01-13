@@ -1,45 +1,44 @@
 ﻿using Newtonsoft.Json.Linq;
+using Packer.Model;
 using System.Text;
 
 namespace Packer.Steps
 {
     internal class ExtractTablesStep : StepBase
     {
-        public override void Extract(string pbitFilePath, string folderPath)
+        public override void Extract(RepositoryModel model)
         {
-            // strip timestamps
-            var dataModelSchemaFile = Path.Combine(folderPath, "DataModelSchema");
-            var jObj = JObject.Parse(File.ReadAllText(dataModelSchemaFile, Encoding.Unicode));
-            var tableJObjects = jObj.Descendants()
-                .OfType<JProperty>()
-                .Single(jp => jp.Name == "tables")
-                .Children().Cast<JArray>().Single()
-                .Children<JObject>()
-                .ToArray();
-
-            if (tableJObjects.Any())
+            model.DataModelSchemaFile.Modify(jObj => 
             {
-                string tablesDir = Path.Combine(folderPath, "Tables");
-                if (!Directory.Exists(tablesDir))
-                    Directory.CreateDirectory(tablesDir);
+                var tableJObjects = jObj
+                    .Descendants()
+                    .OfType<JProperty>()
+                    .Single(jp => jp.Name == "tables")
+                    .Children().Cast<JArray>().Single()
+                    .Children<JObject>()
+                    .ToArray();
 
-                foreach (var tableJObject in tableJObjects)
+                if (tableJObjects.Any())
                 {
-                    var tableName = tableJObject["name"]!.Value<string>()!;
-                    string tableSchemaFilePath = Path.Combine(tablesDir, tableName);
-                    File.WriteAllText(tableSchemaFilePath, tableJObject.ToString(Newtonsoft.Json.Formatting.Indented));
-                    tableJObject.Replace(new JObject(){ new JProperty("$fileRef", Path.Combine("Tables", tableName)) });
+                    foreach (var tableJObject in tableJObjects)
+                    {
+                        var tableName = tableJObject["name"]!.Value<string>()!;
+                        var tableFileItem = model.AddExtractedTableFile(tableName, tableJObject);
+                        tableJObject.Replace(new JObject() { new JProperty("$fileRef", tableFileItem.Path) });
+                    }
                 }
+            });
 
-                File.WriteAllText(dataModelSchemaFile, jObj.ToString(Newtonsoft.Json.Formatting.Indented));
-            }
-
-            base.Extract(pbitFilePath, folderPath);
+            base.Extract(model);
         }
 
-        public override void Pack(string folderPath, string pbitFilePath)
+        public override void Pack(RepositoryModel model)
         {
-            base.Pack(folderPath, pbitFilePath);
+            // [1. resolve packed variables (we don't need to do that, we can just add the resolve variables step to the beginning and make sure it runs first)]
+            // delete "tables" folder
+
+            base.Pack(model);
         }
+
     }
 }

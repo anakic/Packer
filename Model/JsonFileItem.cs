@@ -1,29 +1,36 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Packer.Storage;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Packer.Model
 {
-    class JsonFileItem : FileItem
+    class JsonFileItem : FileSystemItem
     {
-        Lazy<JObject> lazyObj;
-        public JsonFileItem(string basePath, string relativePath) : base(basePath, relativePath)
+        public JObject JObj { get; set; }
+
+        public Newtonsoft.Json.Formatting Formatting { get; set; }
+
+        public JsonFileItem(string path, JObject jObj) 
+            : base(path)
         {
-            lazyObj = new Lazy<JObject>(() => ParseJsonStr(ReadBytes()));
+            JObj = jObj;
         }
 
-        public void Modify(Action<JObject> action, Newtonsoft.Json.Formatting formatting)
+        internal override byte[] GetBytesToSave()
         {
-            action(lazyObj.Value);
-            var str = lazyObj.Value.ToString(formatting);
-            var bytes = Encoding.Unicode.GetBytes(str);
-            Save(bytes);
+            var str = JObj.ToString(Formatting);
+            return Encoding.Unicode.GetBytes(str);
         }
 
-        static JObject ParseJsonStr(byte[] bytes)
+
+        public static JsonFileItem Read(string path, IFilesStore store)
+        {
+            var bytes = store.ReadAsBytes(path);
+            var jObj = ParseJsonBytes(bytes);
+            return new JsonFileItem(path, jObj);
+        }
+
+        static JObject ParseJsonBytes(byte[] bytes)
         {
             var encodingsToTry = new[] { Encoding.Unicode, Encoding.UTF8 };
             foreach (var enc in encodingsToTry)

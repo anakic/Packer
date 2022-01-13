@@ -1,136 +1,124 @@
-﻿using Packer.Steps;
-using System.IO.Compression;
+﻿using Newtonsoft.Json.Linq;
+using Packer.Storage;
+using System.Xml.Linq;
 
 namespace Packer.Model
 {
     internal class RepositoryModel
     {
-        private readonly string baseFolder;
+        string tablesFolder = @"Tables";
+        string pagesFolder = @"Report\Pages";
+        string themesFolder = @"Report\StaticResources\SharedResources\BaseThemes";
 
         List<JsonFileItem> themeFiles;
         List<JsonFileItem> extractedTableFiles;
         List<JsonFileItem> extractedPageFiles;
 
-        private static StepBase? firstStep;
-        private static StepBase? lastStep;
-
-        private static void AddStep(StepBase step)
+        public RepositoryModel(IFilesStore source)
         {
-            if (firstStep == null)
-                firstStep = step;
+            DataModelSchemaFile = ReadJson(source, "DataModelSchema");
+            DiagramLayoutFile = ReadJson(source, "DiagramLayout");
+            SettingsFile = ReadJson(source, "Settings");
+            MetadataFile = ReadJson(source, "Metadata");
+            SecurityBindings = ReadBinary(source, "SecurityBindings");
+            VersionFile = ReadText(source, "Version");
+            ContentTypesFile = ReadXml(source, "[Content_Types].xml");
+            LayoutFile = ReadJson(source, @"Report\Layout");
 
-            if (lastStep != null)
-                lastStep.Next = step;
-
-            lastStep = step;
-        }
-
-        public void Load(string pbitFilePath)
-        {
-            // clear everything except the .git folder
-            if (Directory.Exists(baseFolder))
-            {
-                foreach (var d in Directory.GetDirectories(baseFolder))
-                {
-                    if (Path.GetFileName(d) == ".git")
-                        continue;
-                    Directory.Delete(d, true);
-                }
-                foreach (var f in Directory.GetFiles(baseFolder))
-                {
-                    File.Delete(f);
-                }
-            }
-            else
-                Directory.CreateDirectory(baseFolder);
-
-            ZipFile.ExtractToDirectory(pbitFilePath, baseFolder);
-
-            Initialize();
-
-            firstStep?.Extract(this);
-        }
-
-        public void Pack(string pbitFilePath)
-        {
-            var tempFolderPath = Path.Combine(Path.GetTempPath(), "Packer_temp");
-
-            if (Directory.Exists(tempFolderPath))
-                Directory.Delete(tempFolderPath, true);
-
-            IEnumerable<FileItem> itemsToCopy =
-                ThemeFiles.Cast<FileItem>()
-                .Union(
-                    new FileItem[]
-                    {
-                        DataModelSchemaFile,
-                        DiagramLayoutFile,
-                        SettingsFile,
-                        MetadataFile,
-                        VersionFile,
-                        LayoutFile,
-                        ContentTypesFile
-                    });
-
-            itemsToCopy.ToList().ForEach(i => i.CopyRelativeTo(tempFolderPath));
-            var model = new RepositoryModel(tempFolderPath);
-            firstStep?.Pack(model);
-
-            if (File.Exists(pbitFilePath))
-                File.Delete(pbitFilePath);
-            ZipFile.CreateFromDirectory(tempFolderPath, pbitFilePath);
-
-            Directory.Delete(tempFolderPath, true);
-        }
-
-        public RepositoryModel(string baseFolder)
-        {
-            this.baseFolder = baseFolder;
-
-            Initialize();
-        }
-
-        private void Initialize()
-        {
-            DataModelSchemaFile = new JsonFileItem(baseFolder, "DataModelSchema");
-            DiagramLayoutFile = new JsonFileItem(baseFolder, "DiagramLayout");
-            SettingsFile = new JsonFileItem(baseFolder, "Settings");
-            MetadataFile = new JsonFileItem(baseFolder, "Metadata");
-            VersionFile = new JsonFileItem(baseFolder, "Version");
-            LayoutFile = new JsonFileItem(baseFolder, "Layout");
-            ContentTypesFile = new XmlFileItem(baseFolder, "[Content_Types].xml");
-
-            string themesFolder = @"Report\StaticResources\SharedResources\BaseThemes";
-            themeFiles = Directory
-                .GetFiles(Path.Combine(baseFolder, themesFolder))
-                .Select(f => new JsonFileItem(baseFolder, GetRelativePath(baseFolder, f)))
-                .ToList();
+            themeFiles = new List<JsonFileItem>();
+            foreach (var themeFile in source.GetFiles(themesFolder))
+                themeFiles.Add(ReadJson(source, themeFile)!);
 
             extractedTableFiles = new List<JsonFileItem>();
+            foreach (var tableFile in source.GetFiles(tablesFolder))
+                extractedTableFiles.Add(ReadJson(source, tableFile)!);
+
             extractedPageFiles = new List<JsonFileItem>();
+            foreach (var pageFile in source.GetFiles(pagesFolder))
+                extractedPageFiles.Add(ReadJson(source, pageFile)!);
+
+            // todo: read images (embedded pngs);
         }
 
-        private string GetRelativePath(string baseFolder, string f)
+        public void WriteTo(IFilesStore fileSystem)
         {
-            return f.Substring(baseFolder.TrimEnd('\\').Length + 1);
+            IEnumerable<FileSystemItem> filesToSave = themeFiles
+                .Union(new FileSystemItem?[]
+                {
+                    DataModelSchemaFile,
+                    DiagramLayoutFile,
+                    SettingsFile,
+                    ContentTypesFile,
+                    SecurityBindings,
+                    MetadataFile,
+                    LayoutFile
+                })
+                // todo: add images (embedded pngs);
+                .Where(jf => jf != null)
+                .Select(jf => jf!)
+                .ToList();
+
+            foreach (var file in filesToSave)
+            {
+                var bytes = file.GetBytesToSave();
+                fileSystem.Write(file!.Path, bytes);
+            }
         }
 
-        public JsonFileItem DataModelSchemaFile { get; private set; }
-        public JsonFileItem DiagramLayoutFile { get; private set; }
-        public JsonFileItem SettingsFile { get; private set; }
-        public JsonFileItem MetadataFile { get; private set; }
-        public FileItem VersionFile { get; private set; }
-        public JsonFileItem LayoutFile { get; private set; }
+        private BinaryFileItem? ReadBinary(IFilesStore source, string path)
+        {
+            if (source.FileExists(path))
+                return new BinaryFileItem(path, source.ReadAsBytes(path));
+            return null;
+        }
+
+        private TextFileItem? ReadText(IFilesStore source, string path)
+        {
+            if (source.FileExists(path))
+                return new TextFileItem(path, source.ReadAsText(path));
+            return null;
+        }
+
+        private JsonFileItem? ReadJson(IFilesStore fileSystem, string path)
+        {
+            if (fileSystem.FileExists(path))
+                return JsonFileItem.Read(path, fileSystem);
+            return null;
+        }
+
+        private XmlFileItem? ReadXml(IFilesStore fileSystem, string path)
+        {
+            if (fileSystem.FileExists(path))
+                return new XmlFileItem(path, XDocument.Parse(fileSystem.ReadAsText(path)));
+            return null;
+        }
+
+        public JsonFileItem? DataModelSchemaFile { get; set; }
+        public JsonFileItem? DiagramLayoutFile { get; set; }
+        public XmlFileItem? ContentTypesFile { get; set; }
+        public JsonFileItem? SettingsFile { get; set; }
+        public JsonFileItem? MetadataFile { get; set; }
+        public BinaryFileItem? SecurityBindings { get; set; }
+        public TextFileItem? VersionFile { get; set; }
+        public JsonFileItem? LayoutFile { get; set; }
+        
         public IEnumerable<JsonFileItem> ThemeFiles => themeFiles;
 
-        public List<JsonFileItem> ExtractedTableFiles => extractedTableFiles;
-        public List<JsonFileItem> ExtractedPageFiles => extractedPageFiles;
+        public IEnumerable<JsonFileItem> ExtractedTableFiles => extractedTableFiles;
+        public IEnumerable<JsonFileItem> ExtractedPageFiles => extractedPageFiles;
 
-        public XmlFileItem ContentTypesFile { get; private set; }
-
-        public void DeleteSecurityBindingsFile()
+        public JsonFileItem AddExtractedTableFile(string tableName, JObject jObject)
         {
-            File.Delete(Path.Combine(baseFolder, "SecurityBindings"));
+            var file = new JsonFileItem(Path.Combine(tablesFolder, tableName), jObject);
+            extractedTableFiles.Add(file);
+            return file;
+        }
+
+        public JsonFileItem AddExtractedPageFile(string pageName, JObject jObject)
+        {
+            var file = new JsonFileItem(Path.Combine(pagesFolder, pageName), jObject);
+            extractedTableFiles.Add(file);
+            return file;
         }
     }
 }
