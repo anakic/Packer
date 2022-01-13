@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Packer.Storage;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Packer.Model
@@ -13,9 +14,16 @@ namespace Packer.Model
 
         public XDocument XDocument { get; }
 
-        internal override byte[] GetBytesToSave()
+        internal override void SaveForMachine(IFilesStore store)
+            => SaveForHuman(store);
+
+        internal override void SaveForHuman(IFilesStore store)
         {
-            return Encoding.Unicode.GetBytes(XDocument.ToString());
+            StringBuilder builder = new StringBuilder();
+            using (TextWriter writer = new StringWriter(builder))
+                XDocument.Save(writer);
+
+            store.Write(Path, builder.ToString());
         }
     }
 }

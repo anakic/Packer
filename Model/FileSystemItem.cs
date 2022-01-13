@@ -1,4 +1,6 @@
-﻿namespace Packer.Model
+﻿using Packer.Storage;
+
+namespace Packer.Model
 {
     abstract class FileSystemItem
     {
@@ -9,6 +11,7 @@
             Path = path;
         }
 
-        internal abstract byte [] GetBytesToSave();
+        internal abstract void SaveForMachine(IFilesStore store);
+        internal abstract void SaveForHuman(IFilesStore store);
     }
 }

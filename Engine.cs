@@ -30,7 +30,7 @@ namespace Packer
             firstStep?.ToHumanReadable(repoModel);
 
             folderStore.ClearContents();
-            repoModel.WriteTo(folderStore);
+            repoModel.WriteTo(folderStore, true);
         }
 
         public void Pack(string repositoryFolder, string pbitFile)
@@ -44,7 +44,7 @@ namespace Packer
             var store = new FolderFilesStore(repositoryFolder);
             RepositoryModel model = new RepositoryModel(store);
             firstStep?.Pack(model);
-            model.WriteTo(new FolderFilesStore(tempFolderPath));
+            model.WriteTo(new FolderFilesStore(tempFolderPath), false);
 
             // create zip from output folder
             if (File.Exists(pbitFile))

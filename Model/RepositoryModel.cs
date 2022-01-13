@@ -46,7 +46,7 @@ namespace Packer.Model
             return extractedPageFiles.Union(extractedTableFiles).First(f => string.Equals(f.Path, v));
         }
 
-        public void WriteTo(IFilesStore fileSystem)
+        public void WriteTo(IFilesStore fileSystem, bool forHuman)
         {
             IEnumerable<FileSystemItem> filesToSave = themeFiles
                 .Union(new FileSystemItem?[]
@@ -65,10 +65,15 @@ namespace Packer.Model
                 .Select(jf => jf!)
                 .ToList();
 
+            if (forHuman)
+                filesToSave = filesToSave.Union(extractedTableFiles).Union(extractedPageFiles);
+
             foreach (var file in filesToSave)
             {
-                var bytes = file.GetBytesToSave();
-                fileSystem.Write(file!.Path, bytes);
+                if(forHuman)
+                    file.SaveForHuman(fileSystem);
+                else
+                    file.SaveForHuman(fileSystem);
             }
         }
 

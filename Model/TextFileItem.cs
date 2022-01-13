@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Packer.Storage;
+using System.Text;
 
 namespace Packer.Model
 {
@@ -12,9 +13,12 @@ namespace Packer.Model
 
         public string Text { get; set; }
 
-        internal override byte[] GetBytesToSave()
+        internal override void SaveForMachine(IFilesStore store)
+            => SaveForHuman(store);
+
+        internal override void SaveForHuman(IFilesStore store)
         {
-            return Encoding.Unicode.GetBytes(Text);
+            store.Write(Path, Text, Encoding.Unicode);
         }
     }
 }

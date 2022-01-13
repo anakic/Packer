@@ -27,15 +27,14 @@ namespace Packer
         public static void Main(string[] args)
         {
             Engine engine = new Engine();
-            engine.AddStep(new ReformatJsonFilesStep());
             engine.AddStep(new StripSecurityStep());
             engine.AddStep(new StripTimestapsStep());
             engine.AddStep(new ExtractTablesStep());
             engine.AddStep(new ResolveVariablesStep());
             //AddStep(new SetSchemasStep());
 
-            engine.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales.pbit");
-            // firstStep?.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
+            engine.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
+            // engine.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales_2.pbit");
             return;
 
             var operation = args[0];

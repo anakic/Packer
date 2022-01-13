@@ -21,7 +21,6 @@ namespace Packer.Steps
                 {
                     var tableName = tableJObject["name"]!.Value<string>()!;
                     var tableFileItem = model.AddExtractedTableFile(tableName, tableJObject);
-                    tableFileItem.Formatting = Newtonsoft.Json.Formatting.Indented;
                     tableJObject.Replace(new JObject() { new JProperty("$fileRef", tableFileItem.Path) });
                 }
             }

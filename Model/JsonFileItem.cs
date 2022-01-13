@@ -16,12 +16,18 @@ namespace Packer.Model
             JObj = jObj;
         }
 
-        internal override byte[] GetBytesToSave()
+        internal override void SaveForMachine(IFilesStore store)
         {
-            var str = JObj.ToString(Formatting);
-            return Encoding.Unicode.GetBytes(str);
+            var str = JObj.ToString(Newtonsoft.Json.Formatting.None);
+            var bytes = Encoding.Unicode.GetBytes(str);
+            store.Write(Path, bytes);
         }
 
+        internal override void SaveForHuman(IFilesStore store)
+        {
+            var str = JObj.ToString(Newtonsoft.Json.Formatting.Indented);
+            store.Write(Path, str);
+        }
 
         public static JsonFileItem Read(string path, IFilesStore store)
         {

@@ -44,7 +44,7 @@ namespace Packer.Storage
         public IEnumerable<string> GetFiles(string path)
         {
             string absPath = ToAbsolute(path);
-            if(Directory.Exists(absPath))
+            if (Directory.Exists(absPath))
                 return Directory.GetFiles(absPath).Select(ToRelative);
             else
                 return Enumerable.Empty<string>();
@@ -64,24 +64,34 @@ namespace Packer.Storage
 
         public string ReadAsText(string path, Encoding? encoding = null)
         {
-            if(encoding == null)
+            if (encoding == null)
                 return File.ReadAllText(ToAbsolute(path));
             else
                 return File.ReadAllText(ToAbsolute(path), encoding);
         }
 
-        public void Write(string path, string text)
+        public void Write(string path, string text, Encoding? encoding = null)
         {
-            File.WriteAllText(ToAbsolute(path), text);
+            var absPath = ToAbsolute(path);
+            EnsureParentFolderExists(absPath);
+            if (encoding == null)
+                File.WriteAllText(absPath, text);
+            else
+                File.WriteAllText(absPath, text, encoding);
         }
 
         public void Write(string path, byte[] bytes)
         {
             var absPath = ToAbsolute(path);
-            var dirName = Path.GetDirectoryName(absPath)!;
-            if(!Directory.Exists(dirName))
-                Directory.CreateDirectory(dirName);
+            EnsureParentFolderExists(absPath);
             File.WriteAllBytes(absPath, bytes);
+        }
+
+        private static void EnsureParentFolderExists(string absPath)
+        {
+            var dirName = Path.GetDirectoryName(absPath)!;
+            if (!Directory.Exists(dirName))
+                Directory.CreateDirectory(dirName);
         }
 
         private string ToRelative(string path)
