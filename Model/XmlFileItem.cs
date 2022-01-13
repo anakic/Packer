@@ -19,11 +19,7 @@ namespace Packer.Model
 
         internal override void SaveForHuman(IFilesStore store)
         {
-            StringBuilder builder = new StringBuilder();
-            using (TextWriter writer = new StringWriter(builder))
-                XDocument.Save(writer);
-
-            store.Write(Path, builder.ToString(), Encoding.UTF8);
+            store.Write(Path, XDocument.ToString(), Encoding.UTF8);
         }
     }
 }
