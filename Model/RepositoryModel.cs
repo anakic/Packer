@@ -10,8 +10,10 @@ namespace Packer.Model
         string tablesFolder = @"Tables";
         string pagesFolder = @"Report\Pages";
         string themesFolder = @"Report\StaticResources\SharedResources\BaseThemes";
+        string resourcesFolder = @"Report\StaticResources\RegisteredResources";
 
         List<JsonFileItem> themeFiles;
+        List<BinaryFileItem> resourceFiles;
         List<JsonFileItem> extractedTableFiles;
         List<JsonFileItem> extractedPageFiles;
 
@@ -38,7 +40,9 @@ namespace Packer.Model
             foreach (var pageFile in source.GetFiles(pagesFolder))
                 extractedPageFiles.Add(ReadJson(source, pageFile)!);
 
-            // todo: read images (embedded pngs);
+            resourceFiles = new List<BinaryFileItem>();
+            foreach (var resFile in source.GetFiles(resourcesFolder))
+                resourceFiles.Add(ReadBinary(source, resFile)!);
         }
 
         internal JsonFileItem GetExtractedJsonFile(string v)
@@ -48,7 +52,8 @@ namespace Packer.Model
 
         public void WriteTo(IFilesStore fileSystem, bool forHuman)
         {
-            IEnumerable<FileSystemItem> filesToSave = themeFiles
+            IEnumerable<FileSystemItem> filesToSave = themeFiles.Cast<FileSystemItem>()
+                .Union(resourceFiles)
                 .Union(new FileSystemItem?[]
                 {
                     DataModelSchemaFile,
@@ -60,7 +65,6 @@ namespace Packer.Model
                     LayoutFile,
                     VersionFile
                 })
-                // todo: add images (embedded pngs);
                 .Where(jf => jf != null)
                 .Select(jf => jf!)
                 .ToList();
