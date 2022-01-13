@@ -27,8 +27,10 @@ namespace Packer
             folderStore.UpdateContentsFromZip(pbitFile);
 
             var repoModel = new RepositoryModel(folderStore);
-
             firstStep?.ToHumanReadable(repoModel);
+
+            folderStore.ClearContents();
+            repoModel.WriteTo(folderStore);
         }
 
         public void Pack(string repositoryFolder, string pbitFile)

@@ -57,7 +57,8 @@ namespace Packer.Model
                     ContentTypesFile,
                     SecurityBindings,
                     MetadataFile,
-                    LayoutFile
+                    LayoutFile,
+                    VersionFile
                 })
                 // todo: add images (embedded pngs);
                 .Where(jf => jf != null)

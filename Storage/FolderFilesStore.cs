@@ -17,6 +17,12 @@ namespace Packer.Storage
         // clears all files except the .git folder
         public void UpdateContentsFromZip(string zipFile)
         {
+            ClearContents();
+            ZipFile.ExtractToDirectory(zipFile, folderPath);
+        }
+
+        public void ClearContents()
+        {
             // clear everything except the .git folder
             foreach (var d in Directory.GetDirectories(folderPath))
             {
@@ -28,8 +34,6 @@ namespace Packer.Storage
             {
                 File.Delete(f);
             }
-
-            ZipFile.ExtractToDirectory(zipFile, folderPath);
         }
 
         public bool FileExists(string path)
