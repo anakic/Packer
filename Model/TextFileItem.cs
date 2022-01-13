@@ -18,7 +18,7 @@ namespace Packer.Model
 
         internal override void SaveForHuman(IFilesStore store)
         {
-            store.Write(Path, Text, Encoding.Unicode);
+            store.Write(Path, Encoding.Unicode.GetBytes(Text));
         }
     }
 }

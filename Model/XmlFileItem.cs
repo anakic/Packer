@@ -23,7 +23,7 @@ namespace Packer.Model
             using (TextWriter writer = new StringWriter(builder))
                 XDocument.Save(writer);
 
-            store.Write(Path, builder.ToString());
+            store.Write(Path, builder.ToString(), Encoding.UTF8);
         }
     }
 }

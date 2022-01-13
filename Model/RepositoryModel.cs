@@ -73,7 +73,7 @@ namespace Packer.Model
                 if(forHuman)
                     file.SaveForHuman(fileSystem);
                 else
-                    file.SaveForHuman(fileSystem);
+                    file.SaveForMachine(fileSystem);
             }
         }
 
