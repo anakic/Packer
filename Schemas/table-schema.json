@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "Table schema",
+  "description": "The schema for extracted table files.",
+  "required": [
+    "name",
+    "lineageTag",
+    "columns",
+    "partitions"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "isHidden": {
+      "type": "boolean"
+    },
+    "showAsVariationsOnly": {
+      "type": "boolean"
+    },
+    "lineageTag": {
+      "type": "string"
+    },
+    "columns": {
+      "type": "array",
+      "additionalItems": false,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "dataType"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "sortByColumn": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "dataType": {
+            "type": "string"
+          },
+          "formatString": {
+            "type": "string"
+          },
+          "isHidden": {
+            "type": "boolean"
+          },
+          "isUnique": {
+            "type": "boolean"
+          },
+          "isKey": {
+            "type": "boolean"
+          },
+          "isNameInferred": {
+            "type": "boolean"
+          },
+          "sourceColumn": {
+            "type": "string"
+          },
+          "expression": {
+            "type": "string"
+          },
+          "lineageTag": {
+            "type": "string"
+          },
+          "dataCategory": {
+            "type": "string"
+          },
+          "summarizeBy": {
+            "type": "string"
+          },
+          "isDataTypeInferred": {
+            "type": "boolean"
+          },
+          "isNullable": {
+            "type": "boolean"
+          },
+          "annotations": {
+            "type": "array",
+            "required": [
+              "name",
+              "value"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "attributeHierarchy": {
+            "type": "object",
+            "title": "The attributeHierarchy schema",
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "required": [
+        "name",
+        "value"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "partitions": {
+      "type": "array",
+      "additionalItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "mode",
+          "state",
+          "source"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "type",
+              "expression"
+            ],
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "expression": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

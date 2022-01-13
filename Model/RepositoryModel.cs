@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Packer.Storage;
+using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 
@@ -28,12 +29,14 @@ namespace Packer.Model
             ContentTypesFile = ReadXml(source, "[Content_Types].xml");
             LayoutFile = ReadJson(source, @"Report\Layout");
 
+            TableSchemaFile = ReadJsonSchema(@"Tables\table-schema.json");
+
             themeFiles = new List<JsonFileItem>();
             foreach (var themeFile in source.GetFiles(themesFolder))
                 themeFiles.Add(ReadJson(source, themeFile)!);
 
             extractedTableFiles = new List<JsonFileItem>();
-            foreach (var tableFile in source.GetFiles(tablesFolder))
+            foreach (var tableFile in source.GetFiles(tablesFolder).Where(f => !f.ToLower().EndsWith("-schema.json")))
                 extractedTableFiles.Add(ReadJson(source, tableFile)!);
 
             extractedPageFiles = new List<JsonFileItem>();
@@ -43,6 +46,16 @@ namespace Packer.Model
             resourceFiles = new List<BinaryFileItem>();
             foreach (var resFile in source.GetFiles(resourcesFolder))
                 resourceFiles.Add(ReadBinary(source, resFile)!);
+        }
+
+        // todo: return JsonSchemaFile (exposes JSchema instead of JObject)
+        private JsonFileItem ReadJsonSchema(string schemaFileDestinationPath)
+        {
+            var schemaFileName = Path.GetFileName(schemaFileDestinationPath);
+            var schemasSourceFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "Schemas");
+            var absPath = Path.Combine(schemasSourceFolder, schemaFileName);
+            var jObj = JObject.Parse(File.ReadAllText(absPath));
+            return new JsonFileItem(schemaFileDestinationPath, jObj);
         }
 
         internal JsonFileItem GetExtractedJsonFile(string v)
@@ -70,11 +83,19 @@ namespace Packer.Model
                 .ToList();
 
             if (forHuman)
-                filesToSave = filesToSave.Union(extractedTableFiles).Union(extractedPageFiles);
+            {
+                filesToSave = filesToSave
+                    .Union(extractedTableFiles)
+                    .Union(extractedPageFiles)
+                    .Union(new[]
+                    {
+                        TableSchemaFile
+                    });
+            }
 
             foreach (var file in filesToSave)
             {
-                if(forHuman)
+                if (forHuman)
                     file.SaveForHuman(fileSystem);
                 else
                     file.SaveForMachine(fileSystem);
@@ -117,7 +138,10 @@ namespace Packer.Model
         public BinaryFileItem? SecurityBindings { get; set; }
         public TextFileItem? VersionFile { get; set; }
         public JsonFileItem? LayoutFile { get; set; }
-        
+
+        public JsonFileItem TableSchemaFile { get; set; }
+
+
         public IEnumerable<JsonFileItem> ThemeFiles => themeFiles;
 
         public IEnumerable<JsonFileItem> ExtractedTableFiles => extractedTableFiles;
@@ -143,10 +167,12 @@ namespace Packer.Model
             return file;
         }
 
-        // Gets all json files that are part of the model (does not include extracted files)
+        // Gets all json files that are part of the model (includes extracted files)
         public IEnumerable<JsonFileItem> GetAllJsonFiles()
         {
             return ThemeFiles
+                .Union(extractedTableFiles)
+                .Union(extractedPageFiles)
                 .Union(new[]
                 {
                     SettingsFile!,

@@ -32,10 +32,10 @@ namespace Packer
             engine.AddStep(new ExtractTablesStep());
             engine.AddStep(new ExtractPagesStep());
             engine.AddStep(new ResolveVariablesStep());
-            //AddStep(new SetSchemasStep());
+            engine.AddStep(new SetSchemasStep());
 
-            // engine.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
-            engine.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales_2.pbit");
+            engine.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
+            engine.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales_new.pbit");
             return;
 
             var operation = args[0];
