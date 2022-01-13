@@ -30,6 +30,7 @@ namespace Packer
             engine.AddStep(new StripSecurityStep());
             engine.AddStep(new StripTimestapsStep());
             engine.AddStep(new ExtractTablesStep());
+            engine.AddStep(new ExtractPagesStep());
             engine.AddStep(new ResolveVariablesStep());
             //AddStep(new SetSchemasStep());
 
