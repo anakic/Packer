@@ -2,6 +2,9 @@
 
 namespace Packer.Storage
 {
+    /// <summary>
+    /// Represents the file system that contains the repository files.
+    /// </summary>
     interface IFilesStore
     {
         public IEnumerable<string> GetFiles(string path);

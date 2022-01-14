@@ -4,11 +4,13 @@ using System.Text;
 
 namespace Packer.Model
 {
+    /// <summary>
+    /// Represents a json file in the repo. Exposes a JObject property 
+    /// that can be get/set as wellas modified. 
+    /// </summary>
     class JsonFileItem : FileSystemItem
     {
         public JObject JObj { get; set; }
-
-        public Newtonsoft.Json.Formatting Formatting { get; set; }
 
         public JsonFileItem(string path, JObject jObj) 
             : base(path)

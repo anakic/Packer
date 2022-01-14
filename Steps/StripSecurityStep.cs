@@ -3,6 +3,10 @@ using System.Xml.Linq;
 
 namespace Packer.Steps
 {
+    /// <summary>
+    /// Strips the security bindings from the repo allowing us to edit the code and repackage the pbit file.
+    /// If this is not done, PowerBI will complain about the file being corrupt when openning the pbit file.
+    /// </summary>
     internal class StripSecurityStep : StepBase
     {
         public override void ToHumanReadable(RepositoryModel model)

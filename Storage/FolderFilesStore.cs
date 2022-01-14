@@ -3,6 +3,11 @@ using System.Text;
 
 namespace Packer.Storage
 {
+    /// <summary>
+    /// Represents the file system that contains the repository files. This will be a folder on
+    /// the local file system. This class must not expose the .git subdirectory and must also
+    /// ensure that all paths are relative to the base folder.
+    /// </summary>
     internal class FolderFilesStore : IFilesStore
     {
         private readonly string folderPath;

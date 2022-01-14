@@ -1,11 +1,14 @@
 ﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Packer.Model;
-using System.Reflection;
-using System.Text;
 
 namespace Packer.Steps
 {
+    /// <summary>
+    /// Schema files are used for two thigs:
+    /// 1. they are copied into the repo and a $schema property is set on the targetted json files so that json editors(e.g.VSCode) will offer error checking when editing the json manually.
+    /// 2. targetted json files are validated against corresponding schemas when packing; any validation errors are displayed to the user as warnings in the console.
+    /// </summary>
     internal class SetSchemasStep : StepBase
     {
         public override void ToHumanReadable(RepositoryModel model)

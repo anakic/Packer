@@ -5,6 +5,11 @@ using System.IO.Compression;
 
 namespace Packer
 {
+    /// <summary>
+    /// Class that allows running a series of transformation steps on the repository.
+    /// It defines all the steps needed to convert files from machine to human readable
+    /// form and back again.
+    /// </summary>
     internal class Engine
     {
         List<StepBase> steps = new List<StepBase>();

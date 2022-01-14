@@ -3,6 +3,13 @@ using System.Text;
 
 namespace Packer.Model
 {
+    /// <summary>
+    /// Represents a text file in the repository. Allows getting/setting
+    /// the text of the file.
+    /// </summary>
+    /// <remarks>
+    /// Currently, used only for the Version file
+    /// </remarks>
     class TextFileItem : FileSystemItem
     {
         public TextFileItem(string path, string text) 

@@ -6,6 +6,10 @@ using System.Xml.Linq;
 
 namespace Packer.Model
 {
+    /// <summary>
+    /// Represents the repository folder. Exposes the files contained in the repository via strongly typed properties.
+    /// Knows about the structure of the folder but know nothing of the contents and meanings of those files.
+    /// </summary>
     internal class RepositoryModel
     {
         string tablesFolder = @"Tables";

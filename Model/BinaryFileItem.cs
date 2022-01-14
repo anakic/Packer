@@ -2,6 +2,9 @@
 
 namespace Packer.Model
 {
+    /// <summary>
+    /// Represents a binary file in the repository.
+    /// </summary>
     class BinaryFileItem : FileSystemItem
     {
         public BinaryFileItem(string path, byte[] bytes) 

@@ -3,6 +3,9 @@ using Packer.Model;
 
 namespace Packer.Steps
 {
+    /// <summary>
+    /// Extracts the pages from the Layout json file into a Pages subfolder. This makes it easier to edit and version individual pages.
+    /// </summary>
     internal class ExtractPagesStep : StepBase
     {
         public override void ToHumanReadable(RepositoryModel model)

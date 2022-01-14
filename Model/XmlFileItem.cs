@@ -4,6 +4,12 @@ using System.Xml.Linq;
 
 namespace Packer.Model
 {
+    /// <summary>
+    /// Represents an XML file the repository. Exposes an XDocument
+    /// property that can be get/set and modified. 
+    /// </summary>
+    /// <remarks>
+    /// Currently only used for the [Content_Types].xml file</remarks>
     class XmlFileItem : FileSystemItem
     {
         public XmlFileItem(string path, XDocument xDocument) 

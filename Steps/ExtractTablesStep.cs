@@ -3,6 +3,9 @@ using Packer.Model;
 
 namespace Packer.Steps
 {
+    /// <summary>
+    /// Extracts the tables from the DataModelSchema json file into a Pages subfolder. This makes it easier to edit and version individual tables of the model.
+    /// </summary>
     internal class ExtractTablesStep : StepBase
     {
         public override void ToHumanReadable(RepositoryModel model)
