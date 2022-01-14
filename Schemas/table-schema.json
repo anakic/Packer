@@ -112,9 +112,7 @@
           "attributeHierarchy": {
             "type": "object",
             "title": "The attributeHierarchy schema",
-            "required": [
-              "state"
-            ],
+            "required": [],
             "properties": {
               "state": {
                 "type": "string"
@@ -135,7 +133,6 @@
         "required": [
           "name",
           "mode",
-          "state",
           "source"
         ],
         "properties": {
@@ -192,6 +189,18 @@
         "annotations": {
           "$ref": "#/defs/annotations"
         }
+      }
+    },
+    "measures": {
+      "type": "array",
+      "items": {
+        "name": { "type": "string" },
+        "expression": { "type": "string" },
+        "lineageTag": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "annotations": {"$ref": "#/defs/annotations" }
       }
     }
   },
