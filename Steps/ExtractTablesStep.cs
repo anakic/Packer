@@ -28,9 +28,9 @@ namespace Packer.Steps
             base.ToHumanReadable(model);
         }
 
-        public override void Pack(RepositoryModel model)
+        public override void ToMachineReadable(RepositoryModel model)
         {
-            base.Pack(model);
+            base.ToMachineReadable(model);
 
             model.ClearExtractedTables();
         }

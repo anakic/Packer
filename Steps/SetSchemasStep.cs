@@ -24,7 +24,7 @@ namespace Packer.Steps
             base.ToHumanReadable(model);
         }
 
-        public override void Pack(RepositoryModel model)
+        public override void ToMachineReadable(RepositoryModel model)
         {
             foreach (var kvp in GetFileSchemas(model))
             {
@@ -39,13 +39,12 @@ namespace Packer.Steps
                 if (!isValid)
                 {
                     Console.WriteLine($"Warning - file '{file.Path}' failed json validation with the following messages: ");
-                    int i = 1;
                     foreach (var m in messages)
                         Console.Write($"({m.LineNumber}, {m.LinePosition}) {m.Message}");
                 }
             }
 
-            base.Pack(model);
+            base.ToMachineReadable(model);
         }
 
         private static Dictionary<JsonFileItem, JsonFileItem> GetFileSchemas(RepositoryModel model)

@@ -7,18 +7,16 @@ namespace Packer
 {
     internal class Engine
     {
-        private StepBase? firstStep;
-        private StepBase? lastStep;
+        List<StepBase> steps = new List<StepBase>();
 
-        public void AddStep(StepBase step)
+        public Engine()
         {
-            if (firstStep == null)
-                firstStep = step;
-
-            if (lastStep != null)
-                lastStep.Next = step;
-
-            lastStep = step;
+            steps.Add(new StripSecurityStep());
+            steps.Add(new StripTimestapsStep());
+            steps.Add(new ExtractTablesStep());
+            steps.Add(new ExtractPagesStep());
+            steps.Add(new SetSchemasStep());
+            steps.Add(new ResolveVariablesStep());
         }
 
         public void Extract(string pbitFile, string repositoryFolder)
@@ -27,7 +25,8 @@ namespace Packer
             folderStore.UpdateContentsFromZip(pbitFile);
 
             var repoModel = new RepositoryModel(folderStore);
-            firstStep?.ToHumanReadable(repoModel);
+            foreach(var step in steps)
+                step.ToHumanReadable(repoModel);
 
             folderStore.ClearContents();
             repoModel.WriteTo(folderStore, true);
@@ -43,7 +42,10 @@ namespace Packer
             // read and modify model, then save to output folder
             var store = new FolderFilesStore(repositoryFolder);
             RepositoryModel model = new RepositoryModel(store);
-            firstStep?.Pack(model);
+            
+            // traverse steps in reverse order
+            for(int i = steps.Count-1; i >=0; i--)
+                steps[i].ToMachineReadable(model);
             model.WriteTo(new FolderFilesStore(tempFolderPath), false);
 
             // create zip from output folder

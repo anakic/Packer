@@ -27,13 +27,7 @@ namespace Packer
         public static void Main(string[] args)
         {
             Engine engine = new Engine();
-            engine.AddStep(new StripSecurityStep());
-            engine.AddStep(new StripTimestapsStep());
-            engine.AddStep(new ExtractTablesStep());
-            engine.AddStep(new ExtractPagesStep());
-            engine.AddStep(new ResolveVariablesStep());
-            engine.AddStep(new SetSchemasStep());
-
+            
             engine.Extract(@"C:\TEST_PBI_VC\aw_sales.pbit", @"C:\TEST_PBI_VC\unpacked");
             engine.Pack(@"C:\TEST_PBI_VC\unpacked", @"C:\TEST_PBI_VC\aw_sales_new.pbit");
             return;

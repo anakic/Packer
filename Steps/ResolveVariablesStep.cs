@@ -5,9 +5,9 @@ namespace Packer.Steps
 {
     internal class ResolveVariablesStep : StepBase
     {
-        public override void Pack(RepositoryModel model)
+        public override void ToMachineReadable(RepositoryModel model)
         {
-            base.Pack(model);
+            base.ToMachineReadable(model);
 
             model.GetAllJsonFiles()
                 .ToList()
