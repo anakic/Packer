@@ -17,6 +17,9 @@
     "name": {
       "type": "string"
     },
+    "isPrivate": {
+      "type": "boolean"
+    },
     "isHidden": {
       "type": "boolean"
     },
@@ -84,20 +87,24 @@
           "isNullable": {
             "type": "boolean"
           },
-          "annotations": {
+          "annotations": { "$ref": "#/defs/annotations" },
+          "variations": {
             "type": "array",
-            "required": [
-              "name",
-              "value"
-            ],
             "items": {
               "type": "object",
               "properties": {
-                "name": {
-                  "type": "string"
+                "name": { "type": "string" },
+                "isDefault": { "type": "boolean" },
+                "defaultHierarchy": {
+                  "type": "object",
+                  "properties": {
+                    "table": { "type": "string" },
+                    "hierarcchy": { "type": "string" }
+                  }
                 },
-                "value": {
-                  "type": "string"
+                "relationship": {
+                  "type": "string",
+                  "format": "uuid"
                 }
               }
             }
@@ -119,24 +126,7 @@
         "additionalProperties": false
       }
     },
-    "annotations": {
-      "type": "array",
-      "required": [
-        "name",
-        "value"
-      ],
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        }
-      }
-    },
+    "annotations": { "$ref": "#/defs/annotations" },
     "partitions": {
       "type": "array",
       "additionalItems": true,
@@ -177,7 +167,46 @@
         },
         "additionalProperties": false
       }
+    },
+    "hierarchies": {
+      "type": "array",
+      "items": {
+        "name": { "type": "string" },
+        "lineageTag": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": { "type": "string" },
+        "levels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "ordinal": { "type": "integer" },
+              "column": { "type": "string" },
+              "lineageTag": { "type": "string" }
+            }
+          }
+        },
+        "annotations": {
+          "$ref": "#/defs/annotations"
+        }
+      }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "defs": {
+    "annotations": {
+      "$id": "/annotations",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    }
+  }
 }
