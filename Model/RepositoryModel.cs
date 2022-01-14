@@ -167,7 +167,7 @@ namespace Packer.Model
         public JsonFileItem AddExtractedPageFile(string pageName, JObject jObject)
         {
             var file = new JsonFileItem(Path.Combine(pagesFolder, pageName), jObject);
-            extractedTableFiles.Add(file);
+            extractedPageFiles.Add(file);
             return file;
         }
 
