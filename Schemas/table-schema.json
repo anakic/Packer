@@ -14,6 +14,7 @@
     "$schema": {
       "type": "string"
     },
+    "excludeFromModelRefresh": {"type": "boolean"},
     "name": {
       "type": "string"
     },
@@ -200,7 +201,7 @@
           "type": "string",
           "format": "uuid"
         },
-        "annotations": {"$ref": "#/defs/annotations" }
+        "annotations": { "$ref": "#/defs/annotations" }
       }
     }
   },
