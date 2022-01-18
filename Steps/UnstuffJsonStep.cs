@@ -16,6 +16,8 @@ namespace Packer.Steps
             {
                 Unstuff(pageFile.JObj, "config");
                 Unstuff(pageFile.JObj, "filters");
+                Unstuff(pageFile.JObj, "query");
+                Unstuff(pageFile.JObj, "dataTransforms");
             }
 
             Unstuff(model.LayoutFile!.JObj, "config");
