@@ -20,6 +20,7 @@ namespace Packer
             steps.Add(new StripTimestapsStep());
             steps.Add(new ExtractTablesStep());
             steps.Add(new ExtractPagesStep());
+            steps.Add(new UnstuffJsonStep());
             steps.Add(new SetSchemasStep());
             steps.Add(new ResolveVariablesStep());
         }
