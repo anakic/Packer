@@ -22,6 +22,7 @@ namespace Packer
             steps.Add(new ExtractPagesStep());
             steps.Add(new OrderArraysStep());
             steps.Add(new UnstuffJsonStep());
+            steps.Add(new ConsolidateVisualsOrderingStep());
             steps.Add(new SetSchemasStep());
             steps.Add(new ResolveVariablesStep());
         }
