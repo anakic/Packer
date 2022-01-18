@@ -10,22 +10,22 @@ namespace Packer.Steps
     {
         public override void ToHumanReadable(RepositoryModel model)
         {
-            var tableJObjects = model.DataModelSchemaFile!.JObj
-                .Descendants()
-                .OfType<JProperty>()
-                .Single(jp => jp.Name == "tables")
-                .Children().Cast<JArray>().Single()
+            var arr = model.DataModelSchemaFile!.JObj.SelectToken("model.tables")!;
+
+            var tableJObjects = arr
                 .Children<JObject>()
                 .ToArray();
 
             if (tableJObjects.Any())
             {
+                Dictionary<string, string> tablePaths = new Dictionary<string, string>();
                 foreach (var tableJObject in tableJObjects)
                 {
                     var tableName = tableJObject["name"]!.Value<string>()!;
                     var tableFileItem = model.AddExtractedTableFile(tableName, tableJObject);
-                    tableJObject.Replace(new JObject() { new JProperty("$fileRef", tableFileItem.Path) });
+                    tablePaths.Add(tableName, tableFileItem.Path);
                 }
+                arr.Replace(new JArray(tablePaths.OrderBy(kvp => kvp.Key).Select(kvp => new JObject(new JProperty("$fileRef", kvp.Value)))));
             }
 
             base.ToHumanReadable(model);
