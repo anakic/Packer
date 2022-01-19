@@ -5,6 +5,11 @@
         public static void Main(string[] args)
         {
             Engine engine = new Engine();
+
+            engine.Extract(@"C:\TEST_PBI_VC\CNWL Flow Model v3.7.2 - JP Optimisation.pbit", @"C:\TEST_PBI_VC\repo");
+            engine.Pack(@"C:\TEST_PBI_VC\repo", @"C:\TEST_PBI_VC\test.pbit");
+            return;
+
             var operation = args[0];
             switch (operation)
             {
