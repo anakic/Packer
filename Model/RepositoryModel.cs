@@ -45,7 +45,6 @@ namespace Packer.Model
 
             extractedTableFiles = new List<JsonFileItem>();
             var tableFiles = source.GetFiles(tablesFolder)
-                .Where(f => string.Equals(Path.GetExtension(f), ".json", StringComparison.OrdinalIgnoreCase))
                 .Where(f => !f.ToLower().EndsWith("-schema.json"));
             foreach (var tableFile in tableFiles)
                 extractedTableFiles.Add(ReadJson(source, tableFile)!);
