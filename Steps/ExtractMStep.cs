@@ -33,7 +33,7 @@ namespace Packer.Steps
 
         public override void ToMachineReadable(RepositoryModel model)
         {
-            throw new NotImplementedException();
+            model.ClearExtractedMFiles();
         }
     }
 }

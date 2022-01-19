@@ -31,6 +31,18 @@ namespace Packer.Steps
                         var resolved = model.GetExtractedJsonFile(fileRefObj.fileRef!);
                         fileRefObj.obj.Replace(resolved.JObj);
                     }
+
+
+                    var fileStringRefObjects = jf.JObj.Descendants().OfType<JObject>()
+                        .Select(obj => new { obj, fileRef = obj.Property("$fileStringRef")?.Value.ToString() })
+                        .Where(x => x.fileRef != null)
+                        .ToList();
+
+                    foreach (var fileRefObj in fileStringRefObjects)
+                    {
+                        var resolved = model.GetExtractedTextFile(fileRefObj.fileRef!);
+                        fileRefObj.obj.Replace(new JValue(resolved.Text));
+                    }
                 });
         }
     }

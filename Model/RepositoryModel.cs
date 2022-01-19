@@ -80,9 +80,14 @@ namespace Packer.Model
             return new JsonFileItem(schemaFileDestinationPath, jObj);
         }
 
-        internal JsonFileItem GetExtractedJsonFile(string v)
+        internal TextFileItem GetExtractedTextFile(string path)
         {
-            return extractedPageFiles.Union(extractedTableFiles).First(f => string.Equals(f.Path, v));
+            return extractedDaxFiles.Union(extractedMFiles).First(f => string.Equals(f.Path, path));
+        }
+
+        internal JsonFileItem GetExtractedJsonFile(string path)
+        {
+            return extractedPageFiles.Union(extractedTableFiles).First(f => string.Equals(f.Path, path));
         }
 
         public void WriteTo(IFilesStore fileSystem, bool forHuman)
@@ -136,7 +141,7 @@ namespace Packer.Model
         private TextFileItem? ReadText(IFilesStore source, string path)
         {
             if (source.FileExists(path))
-                return new TextFileItem(path, source.ReadAsText(path, Encoding.Unicode));
+                return new TextFileItem(path, source.ReadAsText(path));
             return null;
         }
 
