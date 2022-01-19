@@ -43,6 +43,7 @@ namespace Packer.Steps
             foreach (var pageFile in model.ExtractedPageFiles)
             {
                 Restore(pageFile, "tabOrder");
+                Restore(pageFile, "z");
             }
         }
 

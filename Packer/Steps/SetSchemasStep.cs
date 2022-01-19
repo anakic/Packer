@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Packer.Model;
+using System.Text;
 
 namespace Packer.Steps
 {
@@ -11,6 +13,13 @@ namespace Packer.Steps
     /// </summary>
     internal class SetSchemasStep : StepBase
     {
+        private ILogger<SetSchemasStep> logger;
+
+        public SetSchemasStep(ILogger<SetSchemasStep> logger)
+        {
+            this.logger = logger;
+        }
+
         public override void ToHumanReadable(RepositoryModel model)
         {
             var fileSchemas = GetFileSchemas(model);
@@ -41,9 +50,11 @@ namespace Packer.Steps
 
                 if (!isValid)
                 {
-                    Console.WriteLine($"Warning - file '{file.Path}' failed json validation with the following messages: ");
+                    var text = new StringBuilder();
+                    text.AppendLine($"File '{file.Path}' failed json validation with the following messages: ");
                     foreach (var m in messages)
-                        Console.Write($"({m.LineNumber}, {m.LinePosition}) {m.Message}");
+                        text.AppendLine($"({m.LineNumber}, {m.LinePosition}) {m.Message}");
+                    logger.LogWarning(text.ToString());
                 }
             }
 
