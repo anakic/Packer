@@ -21,11 +21,13 @@ namespace Packer.Model
         public string Text { get; set; }
 
         internal override void SaveForMachine(IFilesStore store)
-            => SaveForHuman(store);
+        {
+            store.Write(Path, Encoding.Unicode.GetBytes(Text));
+        }
 
         internal override void SaveForHuman(IFilesStore store)
         {
-            store.Write(Path, Encoding.Unicode.GetBytes(Text));
+            store.Write(Path, Text);
         }
     }
 }
