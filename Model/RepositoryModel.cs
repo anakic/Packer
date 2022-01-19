@@ -25,6 +25,7 @@ namespace Packer.Model
         List<JsonFileItem> extractedPageFiles; 
         List<TextFileItem> extractedDaxFiles;
         List<TextFileItem> extractedMFiles;
+        private readonly IFilesStore source;
 
         public RepositoryModel(IFilesStore source)
         {
@@ -68,6 +69,7 @@ namespace Packer.Model
             resourceFiles = new List<BinaryFileItem>();
             foreach (var resFile in source.GetFiles(resourcesFolder))
                 resourceFiles.Add(ReadBinary(source, resFile)!);
+            this.source = source;
         }
 
         // todo: return JsonSchemaFile (exposes JSchema instead of JObject)
@@ -82,7 +84,9 @@ namespace Packer.Model
 
         internal TextFileItem GetExtractedTextFile(string path)
         {
-            return extractedDaxFiles.Union(extractedMFiles).First(f => string.Equals(f.Path, path));
+            // todo: instead of using EscapeName here, we should expose search methods in the IFilesStore type (and hide
+            // escaping path in the implementation of this interface rather than make it part of the interface).
+            return extractedDaxFiles.Union(extractedMFiles).First(f => string.Equals(f.Path, source.EscapeName(path)));
         }
 
         internal JsonFileItem GetExtractedJsonFile(string path)
