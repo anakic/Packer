@@ -5,7 +5,13 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Packer", "Packer\Packer.csproj", "{8E0E586F-E80E-4F1E-B6C7-AF27AC14B8AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packer.UI", "Packer.UI\Packer.UI.csproj", "{78FFDB2D-C745-48EE-94DF-535BACC7CCE4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Packer.UI", "Packer.UI\Packer.UI.csproj", "{78FFDB2D-C745-48EE-94DF-535BACC7CCE4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{CD5DC172-CAF8-49B0-9DE2-3530BED734C8}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
