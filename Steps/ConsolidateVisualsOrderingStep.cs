@@ -40,12 +40,30 @@ namespace Packer.Steps
 
         public override void ToMachineReadable(RepositoryModel model)
         {
-            throw new NotImplementedException();
-            // procitati order listu i za svaki item:
-            // - uzeti da mu je tab order = index_u_listi * 100
-            // - naci #config item kojem pripada
-            // - upisati tabOrder u #config/layout[0] jobj
-            // - upisati tabOrder u parent #config jobjecta
+            foreach (var pageFile in model.ExtractedPageFiles)
+            {
+                Restore(pageFile, "tabOrder");
+            }
+        }
+
+        private static void Restore(JsonFileItem pageFile, string property)
+        {
+            var arrToken = (pageFile.JObj.SelectToken($"#{property}") as JArray)!;
+            var tabOrderArr = arrToken.Values<string>()!.ToArray();
+
+            var dict = pageFile.JObj
+                .SelectTokens("visualContainers[*]")!
+                .ToDictionary(tok => tok.SelectToken("#config.name")!.Value<string>()!, tok => (JObject)tok);
+
+            int order = 1;
+            foreach (var visualName in tabOrderArr)
+            {
+                var value = 100 * order++;
+                var visualToken = dict[visualName!];
+                visualToken.Add(new JProperty(property, value));
+                (visualToken.SelectToken($"#config.layouts[0].position") as JObject)!.Add(new JProperty(property, value));
+            }
+            ((JProperty)arrToken.Parent!).Remove();
         }
     }
 }
