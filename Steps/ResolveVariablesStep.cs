@@ -21,23 +21,22 @@ namespace Packer.Steps
                 .ToList()
                 .ForEach(jf =>
                 {
+                    // handle $fileRef (replace a child object with a reference to a json file, used for extracting tables/pages into own files)
                     var fileRefObjects = jf.JObj.Descendants().OfType<JObject>()
                         .Select(obj => new { obj, fileRef = obj.Property("$fileRef")?.Value.ToString() })
                         .Where(x => x.fileRef != null)
                         .ToList();
-
                     foreach (var fileRefObj in fileRefObjects)
                     {
                         var resolved = model.GetExtractedJsonFile(fileRefObj.fileRef!);
                         fileRefObj.obj.Replace(resolved.JObj);
                     }
 
-
+                    // handle $fileStringRef (replace a string with a ref to a text file with the contents of the string, used to extract m/dax code)
                     var fileStringRefObjects = jf.JObj.Descendants().OfType<JObject>()
                         .Select(obj => new { obj, fileRef = obj.Property("$fileStringRef")?.Value.ToString() })
                         .Where(x => x.fileRef != null)
                         .ToList();
-
                     foreach (var fileRefObj in fileStringRefObjects)
                     {
                         var resolved = model.GetExtractedTextFile(fileRefObj.fileRef!);
