@@ -201,9 +201,9 @@ namespace Packer.Model
             return file;
         }
 
-        public TextFileItem AddExtractedMFile(string tableName, int partitionIndex, string text)
+        public TextFileItem AddExtractedMFile(string tableName, string partitionName, string text)
         {
-            var file = new TextFileItem(Path.Combine(queriesFolder, $"{tableName}.partition{partitionIndex}.m"), text);
+            var file = new TextFileItem(Path.Combine(queriesFolder, $"{tableName}.{partitionName}.m"), text);
             extractedMFiles.Add(file);
             return file;
         }
