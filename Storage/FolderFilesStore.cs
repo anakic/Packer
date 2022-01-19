@@ -1,5 +1,6 @@
 ﻿using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Packer.Storage
 {
@@ -11,6 +12,15 @@ namespace Packer.Storage
     internal class FolderFilesStore : IFilesStore
     {
         private readonly string folderPath;
+
+        public string EscapeName(string name)
+        {
+            // todo: this could cause problems if we have two names with different special 
+            // characters in the same location since they would result in the same escaped name.
+            // we might want to use a different mapping (1:1) instead of (N:1), for exmaple
+            // using rare unicode chars or some encoding scheme. 
+            return Regex.Replace(name, @"[<>/\:""\|?*]", "_");
+        }
 
         public FolderFilesStore(string folderPath)
         {
@@ -104,7 +114,7 @@ namespace Packer.Storage
 
         private string ToAbsolute(string path)
         {
-            return Path.Combine(folderPath, path);
+            return Path.Combine(folderPath, EscapeName(path));
         }
     }
 }

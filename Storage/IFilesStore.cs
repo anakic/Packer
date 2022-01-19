@@ -7,6 +7,8 @@ namespace Packer.Storage
     /// </summary>
     interface IFilesStore
     {
+        public string EscapeName(string name);
+
         public IEnumerable<string> GetFiles(string path);
         public IEnumerable<string> GetFolders(string path);
         public string ReadAsText(string path, Encoding? encoding = null);
