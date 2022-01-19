@@ -40,6 +40,7 @@ namespace Packer.Steps
 
         public override void ToMachineReadable(RepositoryModel model)
         {
+            throw new NotImplementedException();
             // procitati order listu i za svaki item:
             // - uzeti da mu je tab order = index_u_listi * 100
             // - naci #config item kojem pripada
