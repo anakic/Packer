@@ -23,6 +23,28 @@ namespace Packer.Steps
             Unstuff(model.LayoutFile!.JObj, "config");
         }
 
+        public override void ToMachineReadable(RepositoryModel model)
+        {
+            foreach (var pageFile in model.ExtractedPageFiles)
+            {
+                Stuff(pageFile.JObj, "config");
+                Stuff(pageFile.JObj, "filters");
+                Stuff(pageFile.JObj, "query");
+                Stuff(pageFile.JObj, "dataTransforms");
+            }
+
+            Stuff(model.LayoutFile!.JObj, "config");
+        }
+
+        private void Stuff(JObject root, string propName)
+        {
+            var props = root.Descendants().OfType<JProperty>().Where(jp => jp.Name == $"#{propName}").ToArray();
+            foreach (var jp in props)
+            {
+                jp.Replace(new JProperty(propName, jp.Value.ToString()));
+            }
+        }
+
         private static void Unstuff(JObject root, string propName)
         {
             var props = root.Descendants().OfType<JProperty>().Where(jp => jp.Name == propName).ToArray();
