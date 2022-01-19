@@ -33,7 +33,7 @@ namespace Packer.Model
             SettingsFile = ReadJson(source, "Settings");
             MetadataFile = ReadJson(source, "Metadata");
             SecurityBindings = ReadBinary(source, "SecurityBindings");
-            VersionFile = ReadText(source, "Version");
+            VersionFile = ReadBinary(source, "Version");
             ContentTypesFile = ReadXml(source, "[Content_Types].xml");
             LayoutFile = ReadJson(source, @"Report\Layout");
 
@@ -160,7 +160,7 @@ namespace Packer.Model
         public JsonFileItem? SettingsFile { get; set; }
         public JsonFileItem? MetadataFile { get; set; }
         public BinaryFileItem? SecurityBindings { get; set; }
-        public TextFileItem? VersionFile { get; set; }
+        public BinaryFileItem? VersionFile { get; set; }
         public JsonFileItem? LayoutFile { get; set; }
 
         public JsonFileItem TableSchemaFile { get; set; }
