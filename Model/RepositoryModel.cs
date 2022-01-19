@@ -13,6 +13,8 @@ namespace Packer.Model
     internal class RepositoryModel
     {
         string tablesFolder = @"Tables";
+        string measuresFolder = @"Measures";
+        string queriesFolder = @"Queries";
         string pagesFolder = @"Report\Pages";
         string themesFolder = @"Report\StaticResources\SharedResources\BaseThemes";
         string resourcesFolder = @"Report\StaticResources\RegisteredResources";
@@ -20,7 +22,9 @@ namespace Packer.Model
         List<JsonFileItem> themeFiles;
         List<BinaryFileItem> resourceFiles;
         List<JsonFileItem> extractedTableFiles;
-        List<JsonFileItem> extractedPageFiles;
+        List<JsonFileItem> extractedPageFiles; 
+        List<TextFileItem> extractedDaxFiles;
+        List<TextFileItem> extractedMFiles;
 
         public RepositoryModel(IFilesStore source)
         {
@@ -40,8 +44,23 @@ namespace Packer.Model
                 themeFiles.Add(ReadJson(source, themeFile)!);
 
             extractedTableFiles = new List<JsonFileItem>();
-            foreach (var tableFile in source.GetFiles(tablesFolder).Where(f => !f.ToLower().EndsWith("-schema.json")))
+            var tableFiles = source.GetFiles(tablesFolder)
+                .Where(f => string.Equals(Path.GetExtension(f), ".json", StringComparison.OrdinalIgnoreCase))
+                .Where(f => !f.ToLower().EndsWith("-schema.json"));
+            foreach (var tableFile in tableFiles)
                 extractedTableFiles.Add(ReadJson(source, tableFile)!);
+
+            extractedDaxFiles = new List<TextFileItem>();
+            var daxFiles = source.GetFiles(measuresFolder)
+                .Where(f => string.Equals(Path.GetExtension(f), ".dax", StringComparison.OrdinalIgnoreCase));
+            foreach (var daxFile in daxFiles)
+                extractedDaxFiles.Add(ReadText(source, daxFile)!);
+
+            extractedMFiles = new List<TextFileItem>();
+            var mFiles = source.GetFiles(queriesFolder)
+                .Where(f => string.Equals(Path.GetExtension(f), ".m", StringComparison.OrdinalIgnoreCase));
+            foreach (var mFile in mFiles)
+                extractedMFiles.Add(ReadText(source, mFile)!);
 
             extractedPageFiles = new List<JsonFileItem>();
             foreach (var pageFile in source.GetFiles(pagesFolder))
@@ -91,6 +110,8 @@ namespace Packer.Model
                 filesToSave = filesToSave
                     .Union(extractedTableFiles)
                     .Union(extractedPageFiles)
+                    .Union(extractedDaxFiles)
+                    .Union(extractedMFiles)
                     .Union(new[]
                     {
                         TableSchemaFile
@@ -150,6 +171,8 @@ namespace Packer.Model
 
         public IEnumerable<JsonFileItem> ExtractedTableFiles => extractedTableFiles;
         public IEnumerable<JsonFileItem> ExtractedPageFiles => extractedPageFiles;
+        public IEnumerable<TextFileItem> ExtractedDaxFiles => extractedDaxFiles;
+        public IEnumerable<TextFileItem> ExtractedMFiles => extractedMFiles;
 
         public JsonFileItem AddExtractedTableFile(string tableName, JObject jObject)
         {
@@ -170,6 +193,24 @@ namespace Packer.Model
             extractedPageFiles.Add(file);
             return file;
         }
+
+        public TextFileItem AddExtractedDaxFile(string tableName, string measureName, string text)
+        {
+            var file = new TextFileItem(Path.Combine(measuresFolder, $"{tableName}.{measureName}.dax"), text);
+            extractedDaxFiles.Add(file);
+            return file;
+        }
+
+        public TextFileItem AddExtractedMFile(string tableName, int partitionIndex, string text)
+        {
+            var file = new TextFileItem(Path.Combine(queriesFolder, $"{tableName}.partition{partitionIndex}.m"), text);
+            extractedMFiles.Add(file);
+            return file;
+        }
+        public void ClearExtractedMFiles()
+            => extractedMFiles.Clear();
+        public void ClearExtractedDaxFiles()
+            => extractedDaxFiles.Clear();
 
         // Gets all json files that are part of the model (includes extracted files)
         public IEnumerable<JsonFileItem> GetAllJsonFiles()

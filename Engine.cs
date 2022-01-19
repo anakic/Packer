@@ -19,6 +19,7 @@ namespace Packer
             steps.Add(new StripSecurityStep());
             steps.Add(new StripTimestapsStep());
             steps.Add(new ExtractTablesStep());
+            steps.Add(new ExtractDaxStep());
             steps.Add(new ExtractPagesStep());
             steps.Add(new OrderArraysStep());
             steps.Add(new UnstuffJsonStep());
