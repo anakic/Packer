@@ -22,7 +22,7 @@ namespace Packer.Model
 
         internal override void SaveForMachine(IFilesStore store)
         {
-            store.Write(Path, Encoding.Unicode.GetBytes(Text));
+            SaveForHuman(store);
         }
 
         internal override void SaveForHuman(IFilesStore store)
