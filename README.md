@@ -29,6 +29,8 @@ Packer works with pbit files (not pbix files). In order to be able to version co
 
 The command line interface for the tool is very simple. It has only two commands: `unpack` and `pack`.
 
+![Packer CLI](https://user-images.githubusercontent.com/9460757/150337177-b8f22c65-0843-4985-906e-e33435d83157.png)
+
 ### The unpack command
 
 The `unpack` command unpacks the specified pbit file into the specified folder. The syntax is as follows:
