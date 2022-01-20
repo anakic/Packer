@@ -119,7 +119,7 @@ When unpacking a pbit file into a folder, the first step Packer does is clearing
 
 ## Editing the source code of a model
 
-VSCode seems to a very good choice for this. It's free, it's fast, it's feature rich, it has GIT integration and it has extensions for editing `M` and `DAX` code.
+VSCode seems to be a very good choice for this. It's free, it's fast, it's feature rich, it has GIT integration and it has extensions for editing `M` and `DAX` code.
 
 ![VSCode](https://user-images.githubusercontent.com/9460757/150334827-dcf6bc6e-be99-41ee-b78d-775e4a8eeed1.png)
 
