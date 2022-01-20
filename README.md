@@ -1,23 +1,25 @@
 # Packer
 
-Packer is a tool for extracting and packing PowerBI template files (PBIT). It is intended for version/source controlling of power bi models. It allows extracting *source code* (data model, measures, M queries, page layouts, themes) from a pbit file into text files which can be version controlled and/or edited by hand. These files can then be edited and assembled into a new pbit file at a later point.
+Packer is a tool for extracting and packing PowerBI template files (PBIT). It is intended for version/source controlling of power bi models. It allows extracting *source code* (data model, measures, M queries, page layouts, themes) from a pbit file and saving them as text files which can be version controlled and/or edited by hand. These files can be assembled back into a new pbit file at any point.
+
+[image ]
 
 ## Background
 
-Out of the box, PowerBI does not offer a good mechanism for versioning and merging of models so users typically turn to versioning models by saving them as numbered files. This approach has several drawbacks:
+Out of the box, PowerBI does not offer a good mechanism for versioning and merging of models so users typically resort to versioning models by making separate copies of models for each version. This approach has several drawbacks:
 
-- given two version of a model (two different files) there's no easy way to tell what changed between the two versions.
+- given two version of a model (two different files) there's no easy way to tell what changed between them.
 - there's no easy way to merge changes between multiple people working on the same project (manual process is error prone, time intensive and cpu/memory intensive since both models must be loaded into memory and changes must be copied manually).
 - there's no easy way to cherry-pick features from different branches of the same project (e.g. a common project structure with customizations for different clients in separate branches)  
 - disk space (each file contains the entire model and, potentially, all of the data)
 
-The main obstacle to version controlling power bi models is lack of ability to extract the "source code" of the model as text. If the source code (page layouts, table definitions and relationships, measures etc...) could be extracted as text files, they could easily be version controlled, diff-ed and merged using standard tools for version controlling source code such as Git.
+The main difficulty with version controlling power bi models is the lack of ability to extract the "source code" of the model as text. If the source code (page layouts, table definitions and relationships, measures etc...) could be extracted as text files, they could easily be version controlled, diff-ed and merged using standard tools for version controlling source code such as Git.
 
 That's basically what Packer does. Packer provides a mechanism for extracting the source code of a power bi model, as well as a mechanism for assembling a PowerBI model from its source code.
 
 ## PBIT vs PBIX files
 
-Packer works with pbit files (not pbix files). In order to be able to version control a PowerBI model, it must be saved as pbit via the "Save As" command in PowerBI. The reason for using pbit files is that include a file called `DataModelSchema` which describes the schema of the data model as a json string which can be easily interpreted. In pbix files, on the other hand, the structure of the data model is mixed together with the data inside a `DataModel` file. Aside from the fact that this file includes data (which does not belong in version control) it is a binary file which makes it unsuitable for version control. For this reason, **Packer works with pbit files only**.
+Packer works with pbit files (not pbix files). In order to be able to version control a PowerBI model, it must be saved as pbit via the "Save As" command in PowerBI. The reason for using pbit files is that they include a file called `DataModelSchema` which describes the schema of the data model as a json string which can be easily interpreted. In pbix files, on the other hand, the structure of the data model is mixed in with the data inside a `DataModel` file. Aside from the fact that this file includes data (which does not belong in version control) it is a binary file which makes it unsuitable for version control. For this reason, **Packer works with pbit files only**.
 
 ## Command line interface
 
@@ -25,7 +27,7 @@ The command line interface for the tool is very simple. It has only two commands
 
 ### The unpack command
 
-The unpack command unpacks the specified pbit file into the specified folder. The syntax is as follows:
+The `unpack` command unpacks the specified pbit file into the specified folder. The syntax is as follows:
 
 ```bash
 packer unpack "path\to\pbitfile.pbit" "path\to\repository"
@@ -35,7 +37,7 @@ The folder parameter is optional. If unspecified, the pbit file will be unpacked
 
 ### The pack command
 
-The pack command packs a repository folder into a new pbit file. The syntax is as follows:
+The `pack` command packs a repository folder into a new pbit file. The syntax is as follows:
 
 ```bash
 packer pack "path\to\repository" "path\to\pbitfile.pbit"
