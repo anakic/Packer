@@ -64,7 +64,6 @@ namespace Packer
             if (Directory.Exists(tempFolderPath))
                 Directory.Delete(tempFolderPath, true);
 
-            logger.LogDebug($"Converting from repository files human readable to machine readable...");
             var store = new FolderFilesStore(repositoryFolder);
             RepositoryModel model = new RepositoryModel(store);
             // traverse steps in reverse order
