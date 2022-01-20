@@ -6,10 +6,10 @@ Packer is a tool for extracting and packing PowerBI template files (PBIT). It is
 
 ## Background
 
-Out of the box, PowerBI does not offer a good mechanism for versioning and merging of models so users typically resort to versioning models by making separate copies of models for each version. This approach has several drawbacks:
+Out of the box, PowerBI does not offer a good mechanism for versioning and merging of models so users typically resort to versioning models by making separate copies for each version. This approach has several drawbacks:
 
-- given two version of a model (two different files) there's no easy way to tell what changed between them.
-- there's no easy way to merge changes between multiple people working on the same project (manual process is error prone, time intensive and cpu/memory intensive since both models must be loaded into memory and changes must be copied manually).
+- given two version of a model (two different files) there's no easy way to tell what changed between them
+- there's no easy way to merge changes between multiple people working on the same project (manual process is error prone, time intensive and cpu/memory intensive since both models must be loaded into memory and changes must be copied manually)
 - there's no easy way to cherry-pick features from different branches of the same project (e.g. a common project structure with customizations for different clients in separate branches)  
 - wasteful of disk space (each file contains the entire model and, potentially, all of the data)
 
@@ -23,13 +23,13 @@ When a model is unpacked it can be stored in a git repository and edited in VSCo
 
 ## PBIT vs PBIX files
 
-Packer works with pbit files (not pbix files). In order to be able to version control a PowerBI model, it must be saved as pbit via the "Save As" command in PowerBI. The reason for using pbit files is that they include a file called `DataModelSchema` which describes the schema of the data model as a json string which can be easily interpreted. In pbix files, on the other hand, the structure of the data model is mixed in with the data inside a `DataModel` file. Aside from the fact that this file includes data (which does not belong in version control) it is a binary file which makes it unsuitable for version control. For this reason, **Packer works with pbit files only**.
+Packer works with pbit files (not pbix files). In order to be able to version control a PowerBI model, it must be saved as pbit via the "Save As" command in PowerBI. The reason for using pbit files is that they include a file called `DataModelSchema` which describes the schema of the data model as a json string which can be easily interpreted. In pbix files, on the other hand, the structure of the data model is mixed in with the data inside of the `DataModel` file. Aside from the fact that this file includes data (which does not belong in version control) it is a binary file which makes it unsuitable for version control. For this reason, **Packer works with pbit files only** (at least for the now).
 
 ## Command line interface
 
 The command line interface for the tool is very simple. It has only two commands: `unpack` and `pack`.
 
-![Packer CLI](https://user-images.githubusercontent.com/9460757/150337177-b8f22c65-0843-4985-906e-e33435d83157.png)
+![Packer CLI](https://user-images.githubusercontent.com/9460757/150347751-bff9e6fe-ceea-43f6-8d8f-483c95a09ef0.png)
 
 ### The unpack command
 
@@ -53,7 +53,7 @@ The folder parameter is optional. If unspecified, the current folder will be pac
 
 ## The GUI
 
-Packer includes a simple GUI tools as well that allows specifying the path to the pbit file and the path to the repository folder and allows packing and unpacking.
+Aside from the command line interface, Packer includes a simple GUI as well.
 
 ![Packer GUI](https://user-images.githubusercontent.com/9460757/150333538-3b387245-0bf3-4462-bcf5-5d71bb023376.png)
 
@@ -61,7 +61,7 @@ Log messages are displayed inside a textbox. Folder and file paths are remembere
 
 ## Steps when extracting a pbit file
 
-Pbit files are basically zip archives consisting of several files and folders. When unpacking a pbit file into a folder, Packer unzips its contents and performs a series of steps on the extracted files to ensure maximum readability/editability of the *source code*. The steps that the unpacker perform are described below. I describe them for completeness, though it's not strictly necessary to know or understand these steps in order to use Packer.
+Pbit files are basically zip archives consisting of several files and folders. When unpacking a pbit file into a folder, Packer unzips its contents and performs a series of steps on the extracted files to ensure maximum readability/editability of the *source code*. The steps that the unpacker perform are described below. I describe them here for completeness, though it's not strictly necessary to know or understand these steps in order to use Packer.
 
 ### 1. Strip security bindings
 
@@ -73,11 +73,11 @@ This step strips out `createdTimestamp`, `modifiedTime`, `structureModifiedTime`
 
 ### 3. Extract tables
 
-All tables are extracted from the `DataModelSchema` file into their own json files in the `Tables` subfolder. This makes it easier to figure out which table a change is affecting as well as makes the files smaller and easier to manage.
+All tables are extracted from the `DataModelSchema` file as separate json files and stored in the `Tables` subfolder. This makes it easier to figure out which table a change is affecting as well as makes the files smaller and easier to manage.
 
 ### 4. Extract measures
 
-DAX queries (measures) are extracted into their own files. These files are saved into the `Measures` subfolder. Once there, they can be edited e.g. in VisualStudio code. This makes editing them much easier because they can be formatted with newlines (json escapes newlines) and with good editor support (VSCode has extensions for editing DAX).
+DAX queries (measures) are extracted into their own files and saved into the `Measures` subfolder. Once there, they can be edited e.g. in Visual Studio Code. This makes editing them much easier because they can be formatted with newlines (json does not support newlines) and with good editor support (VSCode has extensions for editing DAX).
 
 ### 5. Extract M queries
 
@@ -89,7 +89,7 @@ Pages are extracted from the `Report\Layout` file and placed into their own file
 
 ### 7. Order arrays
 
-This step orders the arrays to reduce noise in diffs (we won't see a diff if only the order has changed). This is applied only to arrays where the order does not matter. Currently this is only done to the relationships array in the `DataModelSchema` file.
+This step orders certain JSON arrays to reduce noise in diffs (we won't see a diff if only the order of items has changed). This is applied only to those arrays where the order does not matter. Currently this is only done to the `relationships` array in the `DataModelSchema` file.
 
 ### 8. Unstuff JSON strings
 
@@ -101,7 +101,7 @@ Some report properties change automatically (and often) as the user interacts wi
 
 ### 10. Set JSON schema
 
-When extracting files, the tool ads a $schema element to JSON files. This allows editors that have JSON support (e.g. VSCode) to ensure that the json adheres to the rules for each particular file (mandatory properties, allowed properties, validating property values).
+When extracting files, Packer ads a `$schema` element to JSON files. This allows editors that have JSON support (e.g. VSCode) to ensure that the json adheres to the rules for each particular file (mandatory properties, allowed properties, validating property values). This makes editing the JSON by hand somewhat safer.
 
 In addition to validating the json in the IDE during editing, the files are also validated when packing and any errors are displayed to the user as warnings (the warnings do not prevent packing).
 
@@ -113,19 +113,19 @@ The pack operation does the opposite of the extract operation. It starts with th
 
 ## Interacting with Git
 
-When unpacking a pbit file into a folder, the first step is clearing the folder. All of the contents of the folder are deleted **except** the `.git` folder. Not deleting the `.git` folder allows versioning the files in the repo.
+When unpacking a pbit file into a folder, the first step Packer does is clearing the folder. All of the contents of the folder are deleted **except** the `.git` folder. Not deleting the `.git` folder allows versioning the files in the repo.
 
 **Important**: all uncomitted changes from a previous unpack operation will be lost when a pbit is unpacked into the folder. The packer tools does not check for uncomitted changes (though it could ask git about this, so this is a possible todo for a future version).
 
 ## Editing the source code of a model
 
-VSCode seems to a good choice. It's free, it's fast, it's feature rich, it has GIT integration and it has extensions for editing `M` and `DAX` code.
+VSCode seems to a very good choice for this. It's free, it's fast, it's feature rich, it has GIT integration and it has extensions for editing `M` and `DAX` code.
 
 ![VSCode](https://user-images.githubusercontent.com/9460757/150334827-dcf6bc6e-be99-41ee-b78d-775e4a8eeed1.png)
 
 ## Workflows
 
-The following describes a typical version-control workflow:
+The following are typical workflows for version controlling PowerBI models:
 
 ### Initial creation of the repository
 
@@ -144,26 +144,25 @@ The following describes a typical version-control workflow:
 
 ### Going back to a previous version of the model
 
-1. Check out the desired version from source
+1. Check out the desired version (commit) from git
 2. Use packer to assemble a pbit file from it
 3. Load the pbit file in PowerBI
 
 ### Managing multiple versions of the model (multiple-clients)
 
 1. define a master brach and use it to store all of the functionality that is in common
-2. define separate branches for each client (sub-version of the model)
+2. define separate branches for each client (i.e. each separate *flavor* of the model)
 3. when making a change that could be useful across all clients, commit it to the branch for the current client first
 4. then switch to the master branch and cherry-pick the change
 5. switch to each client branch and merge (or rebase) with the master branch to get the new change
 
 ## Good practices
 
-- keep commits small and commit regularly (treat it almost like save game)
+- keep commits small and commit regularly (treat it almost like *save game*)
 - keep commits limited to one topic (one topic can span many commits, but each commit should only be about one topic)
 - commits should not break the model (someone in the future should ideally be able to take any commit from the past and assemble a valid pbit file from it)
 - learn git so you can sort out the mess whenever you skip the best practices:)
 
-
 ## Requirements
 
-For Packer to work, .NET 6 must be installed on the target machine. If it is not installed, a message will appear in the console with a download link for the .NET 6 runtime (desktop).
+For Packer to work, .NET 6 must be installed on the target machine. If it is not installed, a message will appear in the console with a download link. Open the link and download the .NET 6 runtime (desktop version).
