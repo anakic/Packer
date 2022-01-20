@@ -23,7 +23,7 @@ When a model is unpacked it can be stored in a git repository and edited in VSCo
 
 ## PBIT vs PBIX files
 
-Packer works with pbit files (not pbix files). In order to be able to version control a PowerBI model, it must be saved as pbit via the "Save As" command in PowerBI. The reason for using pbit files is that they include a file called `DataModelSchema` which describes the schema of the data model as a json string which can be easily interpreted. In pbix files, on the other hand, the structure of the data model is mixed in with the data inside of the `DataModel` file. Aside from the fact that this file includes data (which does not belong in version control) it is a binary file which makes it unsuitable for version control. For this reason, **Packer works with pbit files only** (at least for the now).
+Packer works with pbit files (not pbix files). In order to be able to version control a PowerBI model, it must be saved as pbit via the "Save As" command in PowerBI. The reason for using pbit files is that they include a file called `DataModelSchema` which describes the schema of the data model as a json string which can be easily interpreted. In pbix files, on the other hand, the structure of the data model is mixed in with the data inside of the `DataModel` file. Aside from the fact that this file includes data (which does not belong in version control) it is a binary file which makes it unsuitable for version control. For this reason, **Packer works with pbit files only** (at least for now).
 
 ## Command line interface
 
