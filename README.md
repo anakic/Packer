@@ -138,7 +138,7 @@ The following are typical workflows for version controlling PowerBI models:
 
 0. Continue working (making changes) on the pbix model
 1. Once a task on the pbix file has been completed, save it as a pbit file
-2. Extract the pbit file into the same repository folder
+2. Extract the pbit file into the same repository folder (using Packer)
 3. Inspect the changes in VSCode and make manual adjustments if needed
 4. Commit the changes and supply a descriptive message for the commit
 
