@@ -26,6 +26,7 @@ namespace Packer
             steps.Add(new ExtractMStep());
             steps.Add(new ExtractPagesStep());
             steps.Add(new OrderArraysStep());
+            steps.Add(new StripPageGenPropsSteps());
             steps.Add(new UnstuffJsonStep());
             steps.Add(new ConsolidateVisualsOrderingStep());
             steps.Add(new SetSchemasStep(loggerFactory.CreateLogger<SetSchemasStep>()));

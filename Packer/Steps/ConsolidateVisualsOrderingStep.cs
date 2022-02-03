@@ -14,15 +14,17 @@ namespace Packer.Steps
         {
             foreach (var pageFile in model.ExtractedPageFiles)
             {
-                Consolidate(pageFile, "tabOrder");
-                Consolidate(pageFile, "z");
+                UnstuffJsonStep.Unstuff(pageFile.JObj, "visualContainers[*].config");
+                Consolidate(pageFile.JObj, "tabOrder");
+                Consolidate(pageFile.JObj, "z");
+                UnstuffJsonStep.Stuff(pageFile.JObj, "visualContainers[*].#config");
             }
         }
 
-        private static void Consolidate(JsonFileItem pageFile, string property)
+        private static void Consolidate(JObject pageFileJObj, string property)
         {
             Dictionary<string, int> visualsOrder = new Dictionary<string, int>();
-            foreach (var container in pageFile.JObj.SelectTokens("visualContainers[*]"))
+            foreach (var container in pageFileJObj.SelectTokens("visualContainers[*]"))
             {
                 var toToken = container[property];
                 if (toToken == null)
@@ -35,24 +37,26 @@ namespace Packer.Steps
                 visualsOrder[visualName] = value;
             }
             var visualsOrderArr = visualsOrder.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key).ToArray();
-            pageFile.JObj.Add(new JProperty($"#{property}", visualsOrderArr));
+            pageFileJObj.Add(new JProperty($"#{property}", visualsOrderArr));
         }
 
         public override void ToMachineReadable(RepositoryModel model)
         {
             foreach (var pageFile in model.ExtractedPageFiles)
             {
-                Restore(pageFile, "tabOrder");
-                Restore(pageFile, "z");
+                UnstuffJsonStep.Unstuff(pageFile.JObj, "visualContainers[*].config");
+                Restore(pageFile.JObj, "tabOrder");
+                Restore(pageFile.JObj, "z");
+                UnstuffJsonStep.Stuff(pageFile.JObj, "visualContainers[*].#config");
             }
         }
 
-        private static void Restore(JsonFileItem pageFile, string property)
+        private static void Restore(JObject pageFileJObj, string property)
         {
-            var arrToken = (pageFile.JObj.SelectToken($"#{property}") as JArray)!;
+            var arrToken = (pageFileJObj.SelectToken($"#{property}") as JArray)!;
             var tabOrderArr = arrToken.Values<string>()!.ToArray();
 
-            var dict = pageFile.JObj
+            var dict = pageFileJObj
                 .SelectTokens("visualContainers[*]")!
                 .ToDictionary(tok => tok.SelectToken("#config.name")!.Value<string>()!, tok => (JObject)tok);
 

@@ -13,45 +13,29 @@ namespace Packer.Steps
         public override void ToHumanReadable(RepositoryModel model)
         {
             foreach (var pageFile in model.ExtractedPageFiles)
-            {
                 Unstuff(pageFile.JObj, "config");
-                Unstuff(pageFile.JObj, "filters");
-                Unstuff(pageFile.JObj, "query");
-                Unstuff(pageFile.JObj, "dataTransforms");
-            }
-
             Unstuff(model.LayoutFile!.JObj, "config");
         }
 
         public override void ToMachineReadable(RepositoryModel model)
         {
             foreach (var pageFile in model.ExtractedPageFiles)
-            {
-                Stuff(pageFile.JObj, "config");
-                Stuff(pageFile.JObj, "filters");
-                Stuff(pageFile.JObj, "query");
-                Stuff(pageFile.JObj, "dataTransforms");
-            }
-
-            Stuff(model.LayoutFile!.JObj, "config");
+                Stuff(pageFile.JObj, "#config");
+            Stuff(model.LayoutFile!.JObj, "#config");
         }
 
-        private void Stuff(JObject root, string propName)
+        public static void Stuff(JObject root, string propName)
         {
-            var props = root.Descendants().OfType<JProperty>().Where(jp => jp.Name == $"#{propName}").ToArray();
+            var props = root.SelectTokens(propName).Select(t => t.Parent).Cast<JProperty>().ToArray();
             foreach (var jp in props)
-            {
-                jp.Replace(new JProperty(propName, jp.Value.ToString()));
-            }
+                jp.Replace(new JProperty(jp.Name.Substring(1), jp.Value.ToString(Newtonsoft.Json.Formatting.None)));
         }
 
-        private static void Unstuff(JObject root, string propName)
+        public static void Unstuff(JObject root, string propName)
         {
-            var props = root.Descendants().OfType<JProperty>().Where(jp => jp.Name == propName).ToArray();
+            var props = root.SelectTokens(propName).Select(t => t.Parent).Cast<JProperty>().ToArray();
             foreach (var jp in props)
-            {
                 jp.Replace(new JProperty("#" + jp.Name, JToken.Parse(jp.Value.ToString())));
-            }
         }
     }
 }
