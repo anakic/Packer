@@ -10,32 +10,47 @@ namespace Packer.Model
     /// </summary>
     class JsonFileItem : FileSystemItem
     {
+        private readonly bool noExtensionInPbit;
+
         public JObject JObj { get; set; }
 
-        public JsonFileItem(string path, JObject jObj) 
+        public JsonFileItem(string path, JObject jObj, bool noExtensionInPbit = true) 
             : base(path)
         {
             JObj = jObj;
+            this.noExtensionInPbit = noExtensionInPbit;
         }
 
         internal override void SaveForMachine(IFilesStore store)
         {
             var str = JObj.ToString(Newtonsoft.Json.Formatting.None);
             var bytes = Encoding.Unicode.GetBytes(str);
-            store.Write(Path, bytes);
+            var path = Path;
+            if (noExtensionInPbit)
+            {
+                if (System.IO.Path.GetExtension(Path).ToLower() != ".json")
+                    throw new FormatException("Was expecting a file with .json extension");
+                path = path.Substring(0, path.Length - ".json".Length);
+            }
+            store.Write(path, bytes);
         }
 
         internal override void SaveForHuman(IFilesStore store)
         {
             var str = JObj.ToString(Newtonsoft.Json.Formatting.Indented);
-            store.Write(Path, str);
+
+            var path = Path;
+            if (!System.IO.Path.HasExtension("json"))
+                path += ".json";
+
+            store.Write(path, str);
         }
 
         public static JsonFileItem Read(string path, IFilesStore store)
         {
             var bytes = store.ReadAsBytes(path);
             var jObj = ParseJsonBytes(bytes);
-            return new JsonFileItem(path, jObj);
+            return new JsonFileItem(path, jObj, !System.IO.Path.HasExtension("json"));
         }
 
         static JObject ParseJsonBytes(byte[] bytes)
