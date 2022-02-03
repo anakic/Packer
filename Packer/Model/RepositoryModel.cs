@@ -16,6 +16,7 @@ namespace Packer.Model
         string measuresFolder = @"Measures";
         string queriesFolder = @"Queries";
         string pagesFolder = @"Report\Pages";
+        string bookmarksFolder = @"Report\Bookmarks";
         string themesFolder = @"Report\StaticResources\SharedResources\BaseThemes";
         string resourcesFolder = @"Report\StaticResources\RegisteredResources";
 
@@ -23,6 +24,7 @@ namespace Packer.Model
         List<BinaryFileItem> resourceFiles;
         List<JsonFileItem> extractedTableFiles;
         List<JsonFileItem> extractedPageFiles;
+        List<JsonFileItem> extractedBookmarkFiles;
         List<TextFileItem> extractedDaxFiles;
         List<TextFileItem> extractedMFiles;
         private readonly IFilesStore source;
@@ -66,6 +68,10 @@ namespace Packer.Model
             foreach (var pageFile in source.GetFiles(pagesFolder))
                 extractedPageFiles.Add(ReadJson(source, pageFile)!);
 
+            extractedBookmarkFiles = new List<JsonFileItem>();
+            foreach (var bookmarkFile in source.GetFiles(bookmarksFolder))
+                extractedBookmarkFiles.Add(ReadJson(source, bookmarkFile)!);
+
             resourceFiles = new List<BinaryFileItem>();
             foreach (var resFile in source.GetFiles(resourcesFolder))
                 resourceFiles.Add(ReadBinary(source, resFile)!);
@@ -91,7 +97,7 @@ namespace Packer.Model
 
         internal JsonFileItem GetExtractedJsonFile(string path)
         {
-            return extractedPageFiles.Union(extractedTableFiles).First(f => string.Equals(f.Path, path + ".json"));
+            return extractedPageFiles.Union(extractedTableFiles).Union(extractedBookmarkFiles).First(f => string.Equals(f.Path, path + ".json"));
         }
 
         public void WriteTo(IFilesStore fileSystem, bool forHuman)
@@ -118,6 +124,7 @@ namespace Packer.Model
                 filesToSave = filesToSave
                     .Union(extractedTableFiles)
                     .Union(extractedPageFiles)
+                    .Union(extractedBookmarkFiles)
                     .Union(extractedDaxFiles)
                     .Union(extractedMFiles)
                     .Union(new[]
@@ -202,9 +209,19 @@ namespace Packer.Model
         public void ClearExtractedPages()
             => extractedPageFiles.Clear();
 
+        public void ClearExtractedBookmarks()
+            => extractedBookmarkFiles.Clear();
+
         public JsonFileItem AddExtractedPageFile(string pageName, JObject jObject)
         {
             var file = new JsonFileItem(Path.Combine(pagesFolder, pageName), jObject);
+            extractedPageFiles.Add(file);
+            return file;
+        }
+
+        public JsonFileItem AddExtractedBookmarkFile(string pageName, JObject jObject)
+        {
+            var file = new JsonFileItem(Path.Combine(bookmarksFolder, pageName), jObject);
             extractedPageFiles.Add(file);
             return file;
         }
