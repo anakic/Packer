@@ -40,7 +40,7 @@ namespace Packer.Model
             var str = JObj.ToString(Newtonsoft.Json.Formatting.Indented);
 
             var path = Path;
-            if (!System.IO.Path.HasExtension("json"))
+            if (!string.Equals(System.IO.Path.GetExtension(path), ".json", StringComparison.OrdinalIgnoreCase))
                 path += ".json";
 
             store.Write(path, str);
