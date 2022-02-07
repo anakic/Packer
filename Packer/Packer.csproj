@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <Content Include="Schemas\table-schema.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
