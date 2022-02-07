@@ -25,11 +25,11 @@ namespace Packer
             steps.Add(new ExtractDaxStep());
             steps.Add(new ExtractMStep());
             steps.Add(new ExtractPagesStep());
+            steps.Add(new ConsolidateVisualsOrderingStep());
             steps.Add(new OrderArraysStep());
             steps.Add(new StripPageGenPropsSteps());
             steps.Add(new UnstuffJsonStep());
             steps.Add(new ExtractBookmarksStep()); // must be after unstuff because bookmarks are stuffed inside layout/config property
-            steps.Add(new ConsolidateVisualsOrderingStep());
             steps.Add(new SetSchemasStep(loggerFactory.CreateLogger<SetSchemasStep>()));
             steps.Add(new ResolveVariablesStep());
             this.loggerFactory = loggerFactory;
