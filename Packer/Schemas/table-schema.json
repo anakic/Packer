@@ -14,8 +14,11 @@
     "$schema": {
       "type": "string"
     },
-    "excludeFromModelRefresh": {"type": "boolean"},
+    "excludeFromModelRefresh": { "type": "boolean" },
     "name": {
+      "type": "string"
+    },
+    "description": {
       "type": "string"
     },
     "isPrivate": {
@@ -76,6 +79,18 @@
           "lineageTag": {
             "type": "string"
           },
+          "columnOriginTable": {
+            "type": "string"
+          },
+          "columnOriginColumn": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          },
           "dataCategory": {
             "type": "string"
           },
@@ -113,13 +128,65 @@
           "attributeHierarchy": {
             "type": "object",
             "title": "The attributeHierarchy schema",
-            "required": [],
             "properties": {
               "state": {
                 "type": "string"
               }
             },
             "additionalProperties": false
+          },
+          "extendedProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "name": { "type": "string" },
+                "value": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": "number" },
+                    "groupedColumns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "Column": {
+                            "type": "object",
+                            "properties": {
+                              "Expression": {
+                                "type": "object",
+                                "properties": {
+                                  "SourceRef": {
+                                    "type": "object",
+                                    "properties": {
+                                      "Entity": { "type": "string" }
+                                    }
+                                  }
+                                }
+                              },
+                              "Property": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "binningMetadata": {
+                      "type": "object",
+                      "properties": {
+                        "binSize": {
+                          "type": "object",
+                          "properties": {
+                            "value": { "type": "number" },
+                            "uint": { "type": "number" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "additionalProperties": false
