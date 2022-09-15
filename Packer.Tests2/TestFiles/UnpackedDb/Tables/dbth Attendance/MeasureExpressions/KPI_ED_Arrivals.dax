@@ -1,0 +1,1 @@
+CALCULATE(COUNT('dbth Attendance'[Id]), USERELATIONSHIP('dbth Attendance'[Site],'dbth HospitalSite'[Code]) , USERELATIONSHIP('dbth Attendance'[ArrivedDate], Dates[Date]))

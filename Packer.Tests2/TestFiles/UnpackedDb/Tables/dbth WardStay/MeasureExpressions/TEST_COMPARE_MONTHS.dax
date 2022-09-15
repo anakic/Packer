@@ -1,0 +1,1 @@
+if( DISTINCTCOUNT(Dates[YearMonth]) = 2, "Analyze ALoS over time", BLANK())

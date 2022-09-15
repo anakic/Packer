@@ -1,0 +1,98 @@
+{
+  "name": "dbth SourceOfAdmission",
+  "lineageTag": "512d45b7-8c9d-41d2-b4eb-d5d722c1c953",
+  "columns": [
+    {
+      "name": "Code",
+      "dataType": "int64",
+      "sourceColumn": "Code",
+      "formatString": "0",
+      "lineageTag": "b1b2bc44-5850-4361-90f2-9f29daa2b523",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Code"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "dataType": "string",
+      "sourceColumn": "Description",
+      "lineageTag": "abcbf7a5-277c-4764-be7d-3e8329c1ad7c",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Description"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth SourceOfAdmission-62c0924b-e876-44f7-96b8-a37023ba8b6d",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth SourceOfAdmission-62c0924b-e876-44f7-96b8-a37023ba8b6d.m}"
+      }
+    }
+  ],
+  "measures": [
+    {
+      "name": "Measure",
+      "expression": "{ref: MeasureExpressions\\Measure.dax}",
+      "formatString": "0",
+      "lineageTag": "ff7df3a1-7fdd-44f2-be61-1ef013433358",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_DescriptionAtRefresh"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

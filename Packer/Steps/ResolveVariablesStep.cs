@@ -3,11 +3,14 @@ using Packer.Model;
 
 namespace Packer.Steps
 {
+    // todo: consider removing this step as well as $fileRef and $fileStringRef. We can use
+    // the folder structure and file names to construct a bim/datamodelschema file from a folder
+
     /// <summary>
     /// This step runs only when converting to machine readable format. It replaces all $fileRef 
     /// elements created by the Extract[Tables/Pages]Step with the contents of those files. This 
     /// makes it so that extract steps do not have to pack themselves. It is important that this
-    /// step is added AFTER the extract steps, meaning that it execute before (when packing) so
+    /// step is added AFTER the extract steps, meaning that it executes before (when packing) so
     /// that the extract steps can just clean up the extracted files (because this step would have
     /// already executed.
     /// </summary>

@@ -1,0 +1,1 @@
+CALCULATE([ALoS at discharge (with ward exclusions)], filter('dbth Spell', CALCULATE('dbth Spell'[Super stranded bed days])>0))

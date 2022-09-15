@@ -1,0 +1,3 @@
+
+    var lastNum = COUNTROWS(RELATEDTABLE('dbth WardStay'))
+    return CALCULATE(values('dbth Ward'[TypeKind]), filter(RELATEDTABLE('dbth WardStay'), 'dbth WardStay'[Number] = lastNum))

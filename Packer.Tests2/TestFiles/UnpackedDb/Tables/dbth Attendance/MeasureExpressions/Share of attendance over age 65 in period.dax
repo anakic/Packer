@@ -1,0 +1,1 @@
+calculate('dbth Attendance'[Attendance in period],'dbth Attendance'[Age] > 65) / 'dbth Attendance'[Attendance in period]

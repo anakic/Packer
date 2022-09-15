@@ -12,6 +12,9 @@ namespace Packer.Steps
     {
         public override void ToHumanReadable(RepositoryModel model)
         {
+            if (model.DataModelSchemaFile == null)
+                return;
+
             OrderArray(model.DataModelSchemaFile!.JObj.SelectToken("model.relationships")!, "fromTable", "fromColumn", "toTable", "toColumn");
         }
 

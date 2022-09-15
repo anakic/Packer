@@ -1,0 +1,1 @@
+year(dates[date]) = year(calculate(max(dates[Date]), REMOVEFILTERS()))

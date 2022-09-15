@@ -1,0 +1,6 @@
+
+    CALCULATE( 
+        distinctCOUNT('dbth WardStay'[SpellId]), 
+        Filter('dbth Attendance','dbth Attendance'[Age] >= 75),
+        USERELATIONSHIP('dbth Spell'[AdmittedDate], Dates[Date])
+)

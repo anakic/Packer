@@ -1,0 +1,9 @@
+IF(
+  ISBLANK('Dates'[Date]),
+  BLANK(),
+  DATE(
+    YEAR('Dates'[Date]),
+    1 + (MONTH('Dates'[Date]) - 1),
+    1
+  )
+)

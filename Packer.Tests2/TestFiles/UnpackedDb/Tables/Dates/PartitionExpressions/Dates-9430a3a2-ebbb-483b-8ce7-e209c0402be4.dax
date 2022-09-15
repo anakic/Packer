@@ -1,0 +1,7 @@
+ADDCOLUMNS (
+    CALENDAR(min('dbth Spell'[Discharged]), max('dbth Spell'[Discharged])),
+    "Year", YEAR ( [Date] ),
+    "MonthNumber", Month ( [Date]),
+    "Month", FORMAT ( [Date], "mmmm" ),
+    "Week num", WEEKNUM([Date],1)
+)

@@ -1,0 +1,84 @@
+{
+  "name": "dbth AttendanceCategory",
+  "lineageTag": "a68ab7c4-f9d7-475d-a571-11a55a05b27a",
+  "columns": [
+    {
+      "name": "Code",
+      "dataType": "int64",
+      "sourceColumn": "Code",
+      "formatString": "0",
+      "lineageTag": "dcebd23b-9d1d-4d27-8489-ee00128d70ac",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Code"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "dataType": "string",
+      "sourceColumn": "Description",
+      "lineageTag": "72850f8c-58e2-4f2c-a22b-939337e640f7",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Description"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth AttendanceCategory-8fbbb449-7be2-4e7c-94ba-1d4409acbeb0",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth AttendanceCategory-8fbbb449-7be2-4e7c-94ba-1d4409acbeb0.m}"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_DescriptionAtRefresh"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

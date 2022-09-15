@@ -6,9 +6,9 @@ namespace Packer.Model
 {
     /// <summary>
     /// Represents a json file in the repo. Exposes a JObject property 
-    /// that can be get/set as wellas modified. 
+    /// that can be modified. 
     /// </summary>
-    class JsonFileItem : FileSystemItem
+    public class JsonFileItem : FileSystemItem
     {
         private readonly bool noExtensionInPbit;
 

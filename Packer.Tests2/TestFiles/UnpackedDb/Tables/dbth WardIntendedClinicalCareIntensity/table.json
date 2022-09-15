@@ -1,0 +1,57 @@
+{
+  "name": "dbth WardIntendedClinicalCareIntensity",
+  "lineageTag": "594e8350-a8b3-41cf-861a-aeeb7a1c33aa",
+  "columns": [
+    {
+      "name": "Code",
+      "dataType": "int64",
+      "sourceColumn": "Code",
+      "formatString": "0",
+      "lineageTag": "342dba40-4b97-4ccb-96be-ef48ba7332aa",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "dataType": "string",
+      "sourceColumn": "Description",
+      "lineageTag": "62361de2-181f-4fb8-a357-42e9e44971e9",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth WardIntendedClinicalCareIntensity-bc1f50b7-20ad-4bfc-9702-9d8f3eee4965",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth WardIntendedClinicalCareIntensity-bc1f50b7-20ad-4bfc-9702-9d8f3eee4965.m}"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+DATEDIFF('dbth Spell'[AdmittedDate], 'dbth Spell'[DischargedDate], day)

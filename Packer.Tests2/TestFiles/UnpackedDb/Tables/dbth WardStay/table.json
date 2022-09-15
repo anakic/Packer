@@ -1,0 +1,880 @@
+{
+  "name": "dbth WardStay",
+  "lineageTag": "e68ff9db-81e9-4e33-87ad-b218eef07006",
+  "columns": [
+    {
+      "name": "Id",
+      "dataType": "int64",
+      "sourceColumn": "Id",
+      "formatString": "0",
+      "lineageTag": "73f77ba2-96cf-4b37-ac60-90e507dd9b97",
+      "summarizeBy": "count",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Id"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "SpellId",
+      "dataType": "int64",
+      "sourceColumn": "SpellId",
+      "formatString": "0",
+      "lineageTag": "0d26a85d-280f-4206-837a-03242d18f75e",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "SpellId"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Start",
+      "dataType": "dateTime",
+      "sourceColumn": "Start",
+      "formatString": "General Date",
+      "lineageTag": "87ed9a84-343a-4932-8a70-1a446f77cff3",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Start"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "End",
+      "dataType": "dateTime",
+      "sourceColumn": "End",
+      "formatString": "General Date",
+      "lineageTag": "6cad6eeb-1d67-472f-acf6-b221ba4af1fb",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "End"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "WardCode",
+      "dataType": "string",
+      "sourceColumn": "WardCode",
+      "lineageTag": "8aad4bf7-c158-4833-81f8-e7047c76a510",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "WardCode"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Number",
+      "dataType": "int64",
+      "sourceColumn": "Number",
+      "formatString": "0",
+      "lineageTag": "4715efeb-5372-47e6-9127-12e82ea12260",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Number"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardCode1",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardCode1.dax}",
+      "lineageTag": "a0a1f250-6ee3-47c0-8055-f8da6e7f128a",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardCode2",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardCode2.dax}",
+      "lineageTag": "c64ac4ef-3dc9-480e-a5dd-37a5ba1c5e07",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardCode3",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardCode3.dax}",
+      "lineageTag": "32ca2056-102d-4537-bf2a-50fcbea35b5f",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardCode4",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardCode4.dax}",
+      "lineageTag": "aeeb4c66-146b-464b-b8d7-7858454446b1",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardCode5",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardCode5.dax}",
+      "lineageTag": "41b0354e-1da3-4d96-b8fa-fb251743f469",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "PrevWardCode",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\PrevWardCode.dax}",
+      "lineageTag": "2487edba-d541-49f9-9c8f-9d44b01b1a19",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "LoS_Days",
+      "dataType": "int64",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\LoS_Days.dax}",
+      "formatString": "0",
+      "lineageTag": "bf3f1aed-4956-4e7f-92ef-3ac02881cd1c",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "IsStay",
+      "dataType": "boolean",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\IsStay.dax}",
+      "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+      "lineageTag": "7d387b53-916d-4f99-a4d0-fd8b0d22854e",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Boolean\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "DateStart",
+      "dataType": "dateTime",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\DateStart.dax}",
+      "formatString": "General Date",
+      "lineageTag": "16223452-7f41-45f2-a1fc-6375501b9c67",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "DateEnd",
+      "dataType": "dateTime",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\DateEnd.dax}",
+      "formatString": "General Date",
+      "lineageTag": "a881a466-19eb-4152-a16e-98506642aac9",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "OrderYear",
+      "dataType": "int64",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\OrderYear.dax}",
+      "formatString": "0",
+      "lineageTag": "a7421fd7-51a9-441b-b8e5-8fecd1271210",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardType1",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardType1.dax}",
+      "lineageTag": "093461b6-2845-4efb-825e-2529f74be435",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardType2",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardType2.dax}",
+      "lineageTag": "c162e0dc-2003-409a-9c4b-ec9ef8ec6356",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardName1",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardName1.dax}",
+      "lineageTag": "18549286-3414-478b-80af-e6eebc7a629a",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "NextWardName2",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\NextWardName2.dax}",
+      "lineageTag": "aaa189a2-22c4-4f35-8a7e-628f00b25f8e",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "IsLastStayInSpell",
+      "dataType": "boolean",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\IsLastStayInSpell.dax}",
+      "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+      "lineageTag": "4863d8f2-9551-44bd-bd5e-cc5d82b20ba1",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Boolean\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "PrevWardType",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\PrevWardType.dax}",
+      "lineageTag": "ec209b34-97ad-437d-ae0d-999f533f372c",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "PrevWardName",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\PrevWardName.dax}",
+      "lineageTag": "da7a0f55-1baa-4847-ae2c-36109d315903",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "ReadmittedTo",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\ReadmittedTo.dax}",
+      "lineageTag": "9741c534-06c8-4309-b74d-ccffe38583c1",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "Readmitted to (WardName)",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\Readmitted to (WardName).dax}",
+      "lineageTag": "f1ee450c-a7fc-4419-be64-a78a68758165",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth WardStay-61d9a9a2-1de4-468b-b1b5-4d5c738f0136",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth WardStay-61d9a9a2-1de4-468b-b1b5-4d5c738f0136.m}"
+      }
+    }
+  ],
+  "measures": [
+    {
+      "name": "AvgWardStayLen",
+      "expression": "{ref: MeasureExpressions\\AvgWardStayLen.dax}",
+      "lineageTag": "8e6a891e-b89f-42de-9979-fc7bd740fcea",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Over12hStays",
+      "expression": "{ref: MeasureExpressions\\Over12hStays.dax}",
+      "formatString": "0",
+      "lineageTag": "05dadb10-5f20-4c24-b5ee-04eb88062d3f",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "KPI_AMU_Admissions",
+      "expression": "{ref: MeasureExpressions\\KPI_AMU_Admissions.dax}",
+      "formatString": "0",
+      "lineageTag": "2031e8e8-0ea0-4dd6-8c50-5d65edcebf2b",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "KPI_Admissions",
+      "expression": "{ref: MeasureExpressions\\KPI_Admissions.dax}",
+      "formatString": "0",
+      "lineageTag": "80ac461e-c051-4d81-8ced-db635077493d",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "KPI_Frailty_Admissions",
+      "expression": "{ref: MeasureExpressions\\KPI_Frailty_Admissions.dax}",
+      "formatString": "0",
+      "lineageTag": "45686aa6-f3e8-4f63-8550-ea5413df8e84",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "KPI_AMDU_Admissions",
+      "expression": "{ref: MeasureExpressions\\KPI_AMDU_Admissions.dax}",
+      "formatString": "0",
+      "lineageTag": "e9426bc0-5d7f-4526-b5cc-d9a7be919bad",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "KPI_SAU_Admissions",
+      "expression": "{ref: MeasureExpressions\\KPI_SAU_Admissions.dax}",
+      "formatString": "0",
+      "lineageTag": "5b126181-5933-4517-9752-00b6399703f9",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "SDEC_WardStays",
+      "expression": "{ref: MeasureExpressions\\SDEC_WardStays.dax}",
+      "formatString": "0",
+      "lineageTag": "79982f0a-81eb-497e-af24-dec14faf24dc",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "SDEC_WardStays_2",
+      "expression": "{ref: MeasureExpressions\\SDEC_WardStays_2.dax}",
+      "formatString": "0",
+      "lineageTag": "a46d983b-1406-48f1-85a1-c90c7c4d22b6",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "First Ward Stay (in period)",
+      "expression": "{ref: MeasureExpressions\\First Ward Stay (in period).dax}",
+      "formatString": "0",
+      "lineageTag": "585753ec-b9e8-49f0-8b57-d9231ba46de5",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Number of elderly ED patients in period",
+      "expression": "{ref: MeasureExpressions\\Number of elderly ED patients in period.dax}",
+      "formatString": "0",
+      "lineageTag": "10f47729-d2c5-4203-9627-20e8e4476f53",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Bed Days in period (WS)",
+      "expression": "{ref: MeasureExpressions\\Bed Days in period (WS).dax}",
+      "formatString": "0",
+      "lineageTag": "0a89e97b-b562-4559-acc1-cb2f7251a42e",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Active Ward Stays In Period",
+      "expression": "{ref: MeasureExpressions\\Active Ward Stays In Period.dax}",
+      "formatString": "0",
+      "lineageTag": "aa9c5df3-5ce2-44ce-96cb-39eee8dbb4ca",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Bed days per ward stay",
+      "expression": "{ref: MeasureExpressions\\Bed days per ward stay.dax}",
+      "lineageTag": "85a13836-6455-4608-8f99-30328ceebee4",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Active Spells (In Period)",
+      "expression": "{ref: MeasureExpressions\\Active Spells (In Period).dax}",
+      "formatString": "0",
+      "lineageTag": "fc2444c9-02ee-4baa-9d5c-2dec49305004",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Share of patients over age 65",
+      "expression": "{ref: MeasureExpressions\\Share of patients over age 65.dax}",
+      "formatString": "0.00%;-0.00%;0.00%",
+      "lineageTag": "2c5bf106-fb43-45aa-8f1d-7b90ecc4ad2b",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Percentage\" Accuracy=\"2\" />"
+        },
+        {
+          "name": "PBI_ChangedProperties",
+          "value": "[\"FormatString\"]"
+        }
+      ]
+    },
+    {
+      "name": "TEST_COMPARE_MONTHS",
+      "expression": "{ref: MeasureExpressions\\TEST_COMPARE_MONTHS.dax}",
+      "lineageTag": "52267901-a0b6-4b83-bbdb-b65b6fbf6b28",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    },
+    {
+      "name": "Deaths (%)",
+      "expression": "{ref: MeasureExpressions\\Deaths (%).dax}",
+      "formatString": "0%;-0%;0%",
+      "lineageTag": "f625e765-7dcb-431f-b7ec-a967179453a8",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Percentage\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "PBI_ChangedProperties",
+          "value": "[\"FormatString\"]"
+        }
+      ]
+    },
+    {
+      "name": "Deaths",
+      "expression": "{ref: MeasureExpressions\\Deaths.dax}",
+      "formatString": "0",
+      "lineageTag": "81f00971-59f2-4a18-9d02-3f63380a4e40",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Daily admissions",
+      "expression": "{ref: MeasureExpressions\\Daily admissions.dax}",
+      "lineageTag": "c731ee47-848f-4ff7-b763-7ee306a079c0",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Avg occupied beds",
+      "expression": "{ref: MeasureExpressions\\Avg occupied beds.dax}",
+      "lineageTag": "d16b345a-49fe-4ecd-8198-2c14bda6f199",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Bed days per active spell",
+      "expression": "{ref: MeasureExpressions\\Bed days per active spell.dax}",
+      "lineageTag": "97b7a33d-d0de-4a44-86e1-e266527ae264",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Avg beds",
+      "expression": "{ref: MeasureExpressions\\Avg beds.dax}",
+      "lineageTag": "9d034fa0-6e63-4b1a-ba19-6a7b8a0eee2e",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Active Ward Stays Patient Age In Period",
+      "expression": "{ref: MeasureExpressions\\Active Ward Stays Patient Age In Period.dax}",
+      "lineageTag": "e32f9ac8-d6dd-441c-9913-8b73909b6644",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_DescriptionAtRefresh"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

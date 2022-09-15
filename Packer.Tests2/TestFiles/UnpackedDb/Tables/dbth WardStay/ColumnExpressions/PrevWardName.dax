@@ -1,0 +1,3 @@
+
+    var wardName =  LOOKUPVALUE('dbth Ward'[WardName], 'dbth Ward'[WardCode], 'dbth WardStay'[PrevWardCode])
+    return If (IsBlank(wardName), "<direct admission>", wardName)

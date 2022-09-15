@@ -5,7 +5,7 @@ namespace Packer.Storage
     /// <summary>
     /// Represents the file system that contains the repository files.
     /// </summary>
-    interface IFilesStore
+    public interface IFilesStore
     {
         public string EscapeName(string name);
 

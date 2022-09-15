@@ -1,0 +1,328 @@
+{
+  "name": "Dates",
+  "lineageTag": "8db70ae5-ebb4-4659-86d5-87ecd3e8846c",
+  "dataCategory": "Time",
+  "columns": [
+    {
+      "type": "calculatedTableColumn",
+      "name": "Date",
+      "dataType": "dateTime",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "isKey": true,
+      "sourceColumn": "[Date]",
+      "formatString": "General Date",
+      "lineageTag": "0ec4d862-f5c0-4b4e-87bc-e8620012511e",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "__PBI_SemanticLinks",
+          "value": "[{\"LinkTarget\":{\"TableName\":\"Dates\",\"TableItemName\":\"YearMonth\",\"ObjectType\":4},\"LinkType\":\"UsedInGroup\"},{\"LinkTarget\":{\"TableName\":\"Dates\",\"TableItemName\":\"Date (bins)\",\"ObjectType\":4},\"LinkType\":\"UsedInGroup\"}]"
+        }
+      ]
+    },
+    {
+      "type": "calculatedTableColumn",
+      "name": "Year",
+      "dataType": "int64",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "[Year]",
+      "formatString": "0",
+      "lineageTag": "0c12f964-61bb-4ffc-93c9-ed9bfaed917d",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculatedTableColumn",
+      "name": "Month",
+      "dataType": "string",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "[Month]",
+      "sortByColumn": "MonthNumber",
+      "lineageTag": "85f66461-74d4-4fe9-bd38-c339d1cd1988",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "PBI_ChangedProperties",
+          "value": "[\"SortByColumn\"]"
+        }
+      ]
+    },
+    {
+      "type": "calculatedTableColumn",
+      "name": "Week num",
+      "dataType": "int64",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "[Week num]",
+      "formatString": "0",
+      "lineageTag": "d8384fe4-b6f1-4f24-9ec3-7217e1f8df7d",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculatedTableColumn",
+      "name": "MonthNumber",
+      "dataType": "int64",
+      "isNameInferred": true,
+      "isDataTypeInferred": true,
+      "sourceColumn": "[MonthNumber]",
+      "formatString": "0",
+      "lineageTag": "93554bbe-d219-470c-a19b-a1bf29604ced",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "YearMonth",
+      "dataType": "dateTime",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\YearMonth.dax}",
+      "formatString": "mmmm yyyy",
+      "lineageTag": "47a985b9-d051-4636-bd06-006ce5185edd",
+      "summarizeBy": "none",
+      "extendedProperties": [
+        {
+          "type": "json",
+          "name": "GroupingMetadata",
+          "value": {
+            "version": 0,
+            "groupedColumns": [
+              {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dates"
+                    }
+                  },
+                  "Property": "Date"
+                }
+              }
+            ],
+            "binningMetadata": {
+              "binSize": {
+                "value": 1.0,
+                "unit": 6
+              }
+            }
+          }
+        }
+      ],
+      "annotations": [
+        {
+          "name": "GroupingDesignState",
+          "value": "{\"Version\":0,\"Sources\":[{\"Name\":\"d\",\"Entity\":\"Dates\"}],\"GroupedColumns\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"Date\"}}],\"BinItem\":{\"Expression\":{\"Floor\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"Date\"}},\"Size\":1.0,\"TimeUnit\":2}}}}"
+        },
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeCustom\"><DateTimes><DateTime LCID=\"1033\" Group=\"YearMonth\" FormatString=\"MMMM yyyy\" /></DateTimes></Format>"
+        },
+        {
+          "name": "PBI_FormatHint",
+          "value": "DateTimeCustom"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "Date (bins)",
+      "dataType": "dateTime",
+      "expression": "{ref: ColumnExpressions\\Date (bins).dax}",
+      "formatString": "Short Date",
+      "lineageTag": "41c95bc2-ca70-4f2d-8d2f-ebd2e45f47a4",
+      "summarizeBy": "none",
+      "extendedProperties": [
+        {
+          "type": "json",
+          "name": "GroupingMetadata",
+          "value": {
+            "version": 0,
+            "groupedColumns": [
+              {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dates"
+                    }
+                  },
+                  "Property": "Date"
+                }
+              }
+            ],
+            "binningMetadata": {
+              "binSize": {
+                "value": 7.0,
+                "unit": 8
+              }
+            }
+          }
+        }
+      ],
+      "annotations": [
+        {
+          "name": "GroupingDesignState",
+          "value": "{\"Version\":0,\"Sources\":[{\"Name\":\"d\",\"Entity\":\"Dates\"}],\"GroupedColumns\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"Date\"}}],\"BinItem\":{\"Expression\":{\"Floor\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"d\"}},\"Property\":\"Date\"}},\"Size\":7.0,\"TimeUnit\":0}}}}"
+        },
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"ShortDate\" FormatString=\"d\" /></DateTimes></Format>"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "Is in last 3 calendar months",
+      "dataType": "boolean",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\Is in last 3 calendar months.dax}",
+      "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+      "lineageTag": "8c244d1c-ac0a-48e0-9163-398599532155",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Boolean\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "Is in last calendar year",
+      "dataType": "boolean",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\Is in last calendar year.dax}",
+      "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+      "lineageTag": "3fad2530-e6d1-4d84-9ebf-7610f4b2ad94",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Boolean\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "CalendarMonthOrderFromLastDate",
+      "dataType": "int64",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\CalendarMonthOrderFromLastDate.dax}",
+      "formatString": "0",
+      "lineageTag": "02d0f711-ed88-447e-9fa0-c7e8ae7cd4a2",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "Dates-9430a3a2-ebbb-483b-8ce7-e209c0402be4",
+      "mode": "import",
+      "source": {
+        "type": "calculated",
+        "expression": "{ref: PartitionExpressions\\Dates-9430a3a2-ebbb-483b-8ce7-e209c0402be4.dax}"
+      }
+    }
+  ],
+  "hierarchies": [
+    {
+      "name": "Date Hierarchy",
+      "lineageTag": "375121ef-757e-47fc-a4bb-cf9899755e7e",
+      "levels": [
+        {
+          "name": "Month",
+          "ordinal": 1,
+          "column": "Month",
+          "lineageTag": "8d90ad43-15c2-44c8-8a47-e416b3868172"
+        },
+        {
+          "name": "Year",
+          "ordinal": 0,
+          "column": "Year",
+          "lineageTag": "d0816a88-4b70-44bc-b379-274c7a497ae2"
+        },
+        {
+          "name": "Date",
+          "ordinal": 2,
+          "column": "Date",
+          "lineageTag": "5616fccb-184e-4722-bfe4-ed734f866414"
+        }
+      ]
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_Id",
+      "value": "6648e37713934aadb057f78286eb0cbf"
+    }
+  ]
+}

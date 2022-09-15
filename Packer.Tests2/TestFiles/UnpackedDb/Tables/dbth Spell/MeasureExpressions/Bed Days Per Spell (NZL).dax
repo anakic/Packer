@@ -1,0 +1,13 @@
+
+    
+    var bedDays_NZL_wardExlusions = calculate( 
+        'dbth WardStay'[Bed Days in period (WS)],
+        'dbth Spell'[IsZeroLen] == FALSE()
+    )
+
+    var activeSpells = calculate( 
+        'dbth WardStay'[Active Spells (In Period)],
+        'dbth Spell'[IsZeroLen] == FALSE()
+    )
+
+    return 1.0 * bedDays_NZL_wardExlusions / activeSpells

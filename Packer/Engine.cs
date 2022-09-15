@@ -2,7 +2,9 @@
 using Packer.Model;
 using Packer.Steps;
 using Packer.Storage;
+using Packer.TMP;
 using System.IO.Compression;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Packer
 {
@@ -14,26 +16,38 @@ namespace Packer
     public class Engine
     {
         private readonly ILogger logger;
-        private readonly ILoggerFactory loggerFactory;
-        List<StepBase> steps = new List<StepBase>();
+        List<StepBase> mainRepoSteps = new List<StepBase>();
+        List<StepBase> modelRepoSteps = new List<StepBase>();
 
         public Engine(ILoggerFactory loggerFactory)
         {
-            steps.Add(new StripSecurityStep());
-            steps.Add(new StripTimestapsStep());
-            steps.Add(new ExtractTablesStep());
-            steps.Add(new ExtractDaxStep());
-            steps.Add(new ExtractMStep());
-            steps.Add(new ExtractPagesStep());
-            steps.Add(new ConsolidateVisualsOrderingStep());
-            steps.Add(new OrderArraysStep());
-            steps.Add(new StripPageGenPropsSteps());
-            steps.Add(new UnstuffJsonStep());
-            steps.Add(new ExtractBookmarksStep()); // must be after unstuff because bookmarks are stuffed inside layout/config property
-            steps.Add(new SetSchemasStep(loggerFactory.CreateLogger<SetSchemasStep>()));
-            steps.Add(new ResolveVariablesStep());
-            this.loggerFactory = loggerFactory;
+            mainRepoSteps.Add(new StripSecurityStep());
+            mainRepoSteps.Add(new StripTimestapsStep());
+            mainRepoSteps.Add(new ExtractTablesStep());
+            mainRepoSteps.Add(new ExtractDaxStep());
+            mainRepoSteps.Add(new ExtractMStep());
+            mainRepoSteps.Add(new ExtractPagesStep());
+            mainRepoSteps.Add(new ConsolidateVisualsOrderingStep());
+            mainRepoSteps.Add(new OrderArraysStep());
+            mainRepoSteps.Add(new StripPageGenPropsSteps());
+            mainRepoSteps.Add(new UnstuffJsonStep());
+            mainRepoSteps.Add(new ExtractBookmarksStep()); // must be after unstuff because bookmarks are stuffed inside layout/config property
+            mainRepoSteps.Add(new SetSchemasStep(loggerFactory.CreateLogger<SetSchemasStep>()));
+            mainRepoSteps.Add(new ResolveVariablesStep());
+
+
             logger = loggerFactory.CreateLogger<Engine>();
+        }
+
+        public void MigrateToSSAS(string sourceBimFilePath, string outputBimFilePath)
+        {
+            var store = new BimModelStore(sourceBimFilePath);
+            var outStore = new BimModelStore(outputBimFilePath);
+            var transform = new ModelSassAdapter();
+
+            var model = store.Read();
+            transform.Transform(model);
+            outStore.Save(model);
         }
 
         public void Extract(string pbitFile, string repositoryFolder)
@@ -45,7 +59,7 @@ namespace Packer
             folderStore.UpdateContentsFromZip(pbitFile);
 
             var repoModel = new RepositoryModel(folderStore);
-            foreach (var step in steps)
+            foreach (var step in mainRepoSteps)
             {
                 logger.LogDebug($"Running step {step.GetType().Name}...");
                 step.ToHumanReadable(repoModel);
@@ -69,9 +83,9 @@ namespace Packer
             var store = new FolderFilesStore(repositoryFolder);
             RepositoryModel model = new RepositoryModel(store);
             // traverse steps in reverse order
-            for (int i = steps.Count - 1; i >= 0; i--)
+            for (int i = mainRepoSteps.Count - 1; i >= 0; i--)
             {
-                var step = steps[i];
+                var step = mainRepoSteps[i];
                 logger.LogDebug($"Running step {step.GetType().Name}...");
                 step.ToMachineReadable(model);
             }
@@ -87,7 +101,6 @@ namespace Packer
             Directory.Delete(tempFolderPath, true);
 
             logger.LogInformation($"Packing complete!");
-
         }
     }
 }

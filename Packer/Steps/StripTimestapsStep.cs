@@ -14,6 +14,9 @@ namespace Packer.Steps
 
         public override void ToHumanReadable(RepositoryModel model)
         {
+            if (model.DataModelSchemaFile == null)
+                return;
+
             // strip timestamps
             model.DataModelSchemaFile!.JObj.Descendants()
                 .OfType<JProperty>()

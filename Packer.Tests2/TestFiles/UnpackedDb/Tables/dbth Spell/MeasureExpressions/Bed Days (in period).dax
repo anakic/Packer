@@ -1,0 +1,16 @@
+
+    var minDate = min(dates[date])
+    var maxDate = max(Dates[Date])
+    return 
+        calculate( 
+            sumx(
+                'dbth Spell', 
+                DATEDIFF( 
+                    max(mindate, 'dbth Spell'[AdmittedDate]), 
+                    min(maxDate, 'dbth Spell'[DischargedDate]), DAY)
+            ), 
+            FILTER(
+                'dbth Spell', 
+                'dbth Spell'[AdmittedDate] < max(Dates[Date]) && 'dbth Spell'[DischargedDate] > min(dates[date])
+            )
+        )

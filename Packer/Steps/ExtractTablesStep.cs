@@ -10,6 +10,9 @@ namespace Packer.Steps
     {
         public override void ToHumanReadable(RepositoryModel model)
         {
+            if (model.DataModelSchemaFile == null)
+                return;
+
             var arr = model.DataModelSchemaFile!.JObj.SelectToken("model.tables")!;
 
             var tableJObjects = arr

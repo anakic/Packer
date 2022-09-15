@@ -1,0 +1,84 @@
+{
+  "name": "dbth DischargeMethod",
+  "lineageTag": "7a2c2e41-2d5e-46c5-9a15-5cc4d0ec15e9",
+  "columns": [
+    {
+      "name": "Code",
+      "dataType": "int64",
+      "sourceColumn": "Code",
+      "formatString": "0",
+      "lineageTag": "94d2fc18-11f7-4418-b085-1c59f5c3dda1",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Code"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "dataType": "string",
+      "sourceColumn": "Description",
+      "lineageTag": "be51c42e-dd5f-4257-bc0f-a305b7d0805b",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Description"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth DischargeMethod-59a6cb4a-057a-4682-8f64-0b4f8d739391",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth DischargeMethod-59a6cb4a-057a-4682-8f64-0b4f8d739391.m}"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_DescriptionAtRefresh"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

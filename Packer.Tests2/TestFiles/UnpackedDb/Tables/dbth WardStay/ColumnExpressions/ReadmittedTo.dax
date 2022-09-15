@@ -1,0 +1,22 @@
+
+    if('dbth WardStay'[IsLastStayInSpell] == false(), blank(),  
+        VAR patientId = RELATED ( 'dbth Spell'[PatientIdHash] )
+        VAR spellId = RELATED ( 'dbth Spell'[Id] )
+        VAR stayEnd = 'dbth WardStay'[DateEnd]
+        VAR readmissionWindowEnd = stayEnd + 28
+        VAR readmissionSpells =
+            CALCULATETABLE (
+                'dbth WardStay',
+                'dbth WardStay'[Number] = 1,
+                'dbth WardStay'[DateStart] >= EARLIER ( 'dbth WardStay'[DateEnd] ),
+                'dbth WardStay'[DateStart] <= readmissionWindowEnd,
+                FILTER ( 'dbth WardStay', RELATED ( 'dbth Spell'[PatientIdHash] ) == patientId && RELATED ('dbth Spell'[Id]) <> spellId),
+                REMOVEFILTERS ( 'dbth WardStay' )
+            )
+            
+        VAR firstRow =
+            TOPN ( 1, readmissionSpells, 'dbth WardStay'[Start], true )
+            
+        RETURN
+            MAXX ( firstRow, 'dbth WardStay'[WardCode] )
+    )

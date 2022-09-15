@@ -1,0 +1,1 @@
+CALCULATE('dbth Attendance'[Age of ED attendance in period], filter('dbth Spell', CALCULATE( 'dbth Spell'[Non stranded bed days] ) > 0))

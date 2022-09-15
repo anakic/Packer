@@ -1,0 +1,4 @@
+
+    var minDate = min(dates[date])
+    var maxDate = max(Dates[Date])
+    return calculate( sumx('dbth WardStay', DATEDIFF( max(mindate, 'dbth WardStay'[Start]), min(maxDate, 'dbth WardStay'[End]), DAY)), FILTER('dbth WardStay', 'dbth WardStay'[Start] < max(Dates[Date]) && 'dbth WardStay'[End] > min(dates[date])))

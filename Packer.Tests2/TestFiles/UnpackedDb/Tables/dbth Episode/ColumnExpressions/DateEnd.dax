@@ -1,0 +1,1 @@
+date(year('dbth Episode'[End]), month('dbth Episode'[End]), day('dbth Episode'[End]))

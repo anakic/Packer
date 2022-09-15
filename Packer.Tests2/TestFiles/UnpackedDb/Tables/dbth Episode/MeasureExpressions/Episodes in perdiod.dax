@@ -1,0 +1,1 @@
+CALCULATE(count('dbth Episode'[Id]), USERELATIONSHIP(Dates[date], 'dbth Episode'[DateStart]))

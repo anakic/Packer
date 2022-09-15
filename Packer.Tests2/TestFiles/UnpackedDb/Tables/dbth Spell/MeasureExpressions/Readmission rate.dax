@@ -1,0 +1,12 @@
+
+
+    var dischargedSpellsInPeriod = CALCULATE (
+        // find the number of ward stays
+        COUNTROWS( 'dbth WardStay'),
+        // taking into account only disrcharge wardstays (last wardstay in spell)
+        'dbth WardStay'[IsLastStayInSpell],
+        // using discharge date for date filter
+        USERELATIONSHIP('dbth WardStay'[DateEnd], Dates[Date])
+    )
+
+    return [Readmissions] / dischargedSpellsInPeriod

@@ -1,0 +1,84 @@
+{
+  "name": "dbth DischargeDestination",
+  "lineageTag": "a1ea1e0e-5cbf-4994-9947-0afec2b17204",
+  "columns": [
+    {
+      "name": "Code",
+      "dataType": "int64",
+      "sourceColumn": "Code",
+      "formatString": "0",
+      "lineageTag": "b73412c8-2a22-4f3d-9c3e-d4dace1b93bf",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Code"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "dataType": "string",
+      "sourceColumn": "Description",
+      "lineageTag": "dcac8fe0-9d37-470a-8fe7-7bfb89b86ba1",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Description"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth DischargeDestination-5bb31d1e-0980-4b75-a478-37376f72745d",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth DischargeDestination-5bb31d1e-0980-4b75-a478-37376f72745d.m}"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_DescriptionAtRefresh"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+CALCULATE(distinctCOUNT('dbth WardStay'[spellId]), USERELATIONSHIP('dbth WardStay'[DateStart], Dates[Date]))

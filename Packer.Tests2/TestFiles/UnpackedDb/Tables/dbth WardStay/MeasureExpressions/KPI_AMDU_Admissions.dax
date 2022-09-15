@@ -1,0 +1,1 @@
+CALCULATE(DISTINCTCOUNT('dbth WardStay'[SpellId]), USERELATIONSHIP('dbth WardStay'[DateEnd], Dates[Date]), FILTER('dbth WardStay', 'dbth WardStay'[WardCode] == "AMDU"))

@@ -1,0 +1,1 @@
+SWITCH('dbth Attendance'[ArrivalMode], 1, "Ambulance", 2, "Other", BLANK())

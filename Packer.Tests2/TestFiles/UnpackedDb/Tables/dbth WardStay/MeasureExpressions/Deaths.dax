@@ -1,0 +1,1 @@
+CALCULATE('dbth WardStay'[Active Spells (In Period)], 'dbth DischargeMethod'[Code] = 4)

@@ -1,0 +1,1 @@
+CALCULATE(COUNT('dbth WardStay'[Id]), FILTER('dbth WardStay', 'dbth WardStay'[IsStay]))

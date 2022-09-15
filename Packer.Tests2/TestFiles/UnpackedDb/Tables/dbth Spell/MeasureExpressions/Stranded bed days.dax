@@ -1,0 +1,38 @@
+
+    -- todo: define a column in "Ward" table for this
+    var excludedWards = { "PARK","BARL","BARA","CLA","KNVARA","ONEHEALTH", "RHB1", "RHB2", "ON1","PARK HILL","PHO","PIONEER","PIONEERENT","THORN", "THORNBURY","TRENT","EPAU","ECL","DCL","ED WARD","DIS" }
+
+    var daysBeforeStausKicksIn = 6
+    var minDate = min(Dates[Date])
+    var maxDate = max(dates[date])
+
+    return sumx(
+        'dbth Spell',
+
+        var activeDaysBeforePeriod =
+            CALCULATE (
+                SUMX (
+                    'dbth WardStay',
+                    (
+                        DATEDIFF ( 'dbth WardStay'[DateStart], min('dbth WardStay'[DateEnd], minDate), DAY)
+                    )
+                ),
+                'dbth WardStay'[WardCode] in excludedWards = false(),
+                'dbth WardStay'[DateStart] < minDate
+            )
+            
+        var daysTillSuperStranded = max(0, daysBeforeStausKicksIn - activeDaysBeforePeriod)
+            
+        var activeDaysInPeriod =
+            CALCULATE (
+                SUMX (
+                    'dbth WardStay',
+                    DATEDIFF ( max('dbth WardStay'[DateStart], minDate), min('dbth WardStay'[DateEnd], maxDate), DAY)
+                ),
+                'dbth WardStay'[WardCode] in excludedWards = false(),
+                'dbth WardStay'[DateEnd] >= minDate,
+                'dbth WardStay'[DateStart] <= maxDate
+            )
+        
+        return max(0, activeDaysInPeriod-daysTillSuperStranded)
+    ) - 'dbth Spell'[Super stranded bed days]

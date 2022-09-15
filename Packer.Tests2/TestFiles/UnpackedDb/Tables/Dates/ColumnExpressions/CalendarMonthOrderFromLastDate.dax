@@ -1,0 +1,1 @@
+-DATEDIFF(dates[date], calculate(max(dates[date]), REMOVEFILTERS()), MONTH)

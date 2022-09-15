@@ -8,9 +8,9 @@ namespace Packer.Model
 {
     /// <summary>
     /// Represents the repository folder. Exposes the files contained in the repository via strongly typed properties.
-    /// Knows about the structure of the folder but know nothing of the contents and meanings of those files.
+    /// Knows about the structure of the folder but does not understand the semantic contents (meanings) of those files.
     /// </summary>
-    internal class RepositoryModel
+    class RepositoryModel : RepositoryModelBase, IDataRepositoryModel
     {
         string tablesFolder = @"Tables";
         string measuresFolder = @"Measures";
@@ -78,16 +78,6 @@ namespace Packer.Model
             this.source = source;
         }
 
-        // todo: return JsonSchemaFile (exposes JSchema instead of JObject)
-        private JsonFileItem ReadJsonSchema(string schemaFileDestinationPath)
-        {
-            var schemaFileName = Path.GetFileName(schemaFileDestinationPath);
-            var schemasSourceFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "Schemas");
-            var absPath = Path.Combine(schemasSourceFolder, schemaFileName);
-            var jObj = JObject.Parse(File.ReadAllText(absPath));
-            return new JsonFileItem(schemaFileDestinationPath, jObj, false);
-        }
-
         internal TextFileItem GetExtractedTextFile(string path)
         {
             // todo: instead of using EscapeName here, we should expose search methods in the IFilesStore type (and hide
@@ -153,20 +143,6 @@ namespace Packer.Model
         {
             if (source.FileExists(path))
                 return new TextFileItem(path, source.ReadAsText(path));
-            return null;
-        }
-
-        private JsonFileItem? ReadJson(IFilesStore fileSystem, string path)
-        {
-            // json files can be with or without an extension. initially they 
-            // are without an extension, but we add an extension for better VSCode support.
-            // we want to be able to load them just the same, regardless of if they have
-            // the extension or not.
-
-            if (fileSystem.FileExists(path))
-                return JsonFileItem.Read(path, fileSystem);
-            else if (fileSystem.FileExists(path + ".json"))
-                return JsonFileItem.Read(path + ".json", fileSystem);
             return null;
         }
 
@@ -257,7 +233,8 @@ namespace Packer.Model
                     DataModelSchemaFile!,
                     DiagramLayoutFile!,
                     MetadataFile!
-                });
+                })
+                .Where(jf => jf != null);
         }
     }
 }

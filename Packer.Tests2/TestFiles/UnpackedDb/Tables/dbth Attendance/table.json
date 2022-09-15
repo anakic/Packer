@@ -1,0 +1,803 @@
+{
+  "name": "dbth Attendance",
+  "lineageTag": "ae6666ee-a469-4173-a93b-12ff7b7d9bfa",
+  "columns": [
+    {
+      "name": "Id",
+      "dataType": "int64",
+      "sourceColumn": "Id",
+      "formatString": "0",
+      "lineageTag": "4e4c3f0a-56f1-4beb-a04f-c300a9030002",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Id"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "SpellId",
+      "dataType": "int64",
+      "sourceColumn": "SpellId",
+      "formatString": "0",
+      "lineageTag": "5798ec6f-124c-46f5-b32a-7df53063d358",
+      "summarizeBy": "count",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "SpellId"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "PatientIdHash",
+      "dataType": "string",
+      "sourceColumn": "PatientIdHash",
+      "lineageTag": "37bac0bf-fb29-489b-9a00-4f5a416eaea0",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "PatientIdHash"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Age",
+      "dataType": "int64",
+      "sourceColumn": "Age",
+      "formatString": "0",
+      "lineageTag": "f34687d7-b7e4-4cf3-b1eb-4c1d438e1dcf",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Age"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "ArrivalMode",
+      "dataType": "int64",
+      "sourceColumn": "ArrivalMode",
+      "formatString": "0",
+      "lineageTag": "26c37783-cf6c-42db-9ea9-aba072ad30e9",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "ArrivalMode"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "ArrivalModelSys",
+      "dataType": "string",
+      "sourceColumn": "ArrivalModelSys",
+      "lineageTag": "f4bf7a8e-c850-4e2d-b4d9-0b25b368accc",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "ArrivalModelSys"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "AttendanceCategory",
+      "dataType": "int64",
+      "sourceColumn": "AttendanceCategory",
+      "formatString": "0",
+      "lineageTag": "fa73d05f-829c-459e-b23b-42b72820a8bd",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "AttendanceCategory"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Arrived",
+      "dataType": "dateTime",
+      "sourceColumn": "Arrived",
+      "formatString": "General Date",
+      "lineageTag": "cdc21216-69a3-4605-848c-e35648397a5f",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Arrived"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Admitted",
+      "dataType": "dateTime",
+      "sourceColumn": "Admitted",
+      "formatString": "General Date",
+      "lineageTag": "9281a5c1-dd27-424a-a95b-ee9017a5c53c",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Admitted"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "AdmittedCDU",
+      "dataType": "dateTime",
+      "sourceColumn": "AdmittedCDU",
+      "formatString": "General Date",
+      "lineageTag": "55746087-e749-4f92-bff0-010ce059821e",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "AdmittedCDU"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Clerked",
+      "dataType": "dateTime",
+      "sourceColumn": "Clerked",
+      "formatString": "General Date",
+      "lineageTag": "0de36142-c7fa-4ec7-a07e-d4b8b6fecfdc",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Clerked"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Departed",
+      "dataType": "dateTime",
+      "sourceColumn": "Departed",
+      "formatString": "General Date",
+      "lineageTag": "67a5b03c-80ef-4678-a694-9a98f02b22ab",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Departed"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "AssesmentStart",
+      "dataType": "dateTime",
+      "sourceColumn": "AssesmentStart",
+      "formatString": "General Date",
+      "lineageTag": "a1a67585-d482-4f3d-adb3-79afe341da4e",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "AssesmentStart"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "AssesmentEnd",
+      "dataType": "dateTime",
+      "sourceColumn": "AssesmentEnd",
+      "formatString": "General Date",
+      "lineageTag": "cc427077-eac3-4d30-905f-fec97f5d32c9",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "AssesmentEnd"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "SeenByDoctor",
+      "dataType": "dateTime",
+      "sourceColumn": "SeenByDoctor",
+      "formatString": "General Date",
+      "lineageTag": "09434bdd-3894-4c9e-bccc-30c13b79b565",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "SeenByDoctor"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "SeenByNurse",
+      "dataType": "dateTime",
+      "sourceColumn": "SeenByNurse",
+      "formatString": "General Date",
+      "lineageTag": "144b7de2-588c-41f7-a2f8-d2cbb4f4aac6",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "SeenByNurse"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "SeenForTreatment",
+      "dataType": "dateTime",
+      "sourceColumn": "SeenForTreatment",
+      "formatString": "General Date",
+      "lineageTag": "f948b63f-6e92-42a0-8f14-9c63c823ebc9",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "DateTime#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "SeenForTreatment"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "DepartmentType",
+      "dataType": "int64",
+      "sourceColumn": "DepartmentType",
+      "formatString": "0",
+      "lineageTag": "df21007b-9acf-40c4-ade2-bc09630fbbef",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Int64#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "DepartmentType"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "DepartureDestination",
+      "dataType": "int64",
+      "sourceColumn": "DepartureDestination",
+      "formatString": "0",
+      "lineageTag": "6eefbd8b-2f36-49d4-902a-81739beacc7e",
+      "summarizeBy": "sum",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "DepartureDestination"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Site",
+      "dataType": "string",
+      "sourceColumn": "Site",
+      "lineageTag": "cd167286-f21d-462b-88c3-51ff2f01a5a5",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Site"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "Stream",
+      "dataType": "string",
+      "sourceColumn": "Stream",
+      "lineageTag": "b48d71e6-233f-473d-9b18-f8ee888ba3db",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "String#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "Stream"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "name": "IsAmbulatoryCare",
+      "dataType": "boolean",
+      "sourceColumn": "IsAmbulatoryCare",
+      "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+      "lineageTag": "91fcdf9e-0d1a-42a3-923c-196830632e07",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Boolean\" />"
+        },
+        {
+          "name": "DataTypeAtRefresh",
+          "value": "Boolean#####not a type"
+        },
+        {
+          "name": "PBI_NameAtRefresh",
+          "value": "IsAmbulatoryCare"
+        },
+        {
+          "name": "PBI_WasHiddenAtRefresh",
+          "value": "False"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "ArrivedDate",
+      "dataType": "dateTime",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\ArrivedDate.dax}",
+      "formatString": "General Date",
+      "lineageTag": "e4d474c2-8f83-4c01-bdf9-004359a60fa1",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"DateTimeGeneralPattern\"><DateTimes><DateTime LCID=\"1033\" Group=\"GeneralDateTimeLong\" FormatString=\"G\" /></DateTimes></Format>"
+        }
+      ]
+    },
+    {
+      "name": "AttendanceDisposalCode",
+      "dataType": "int64",
+      "sourceColumn": "AttendanceDisposalCode",
+      "formatString": "0",
+      "lineageTag": "a835f58c-fb9e-45b1-b35b-e9e535519987",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "type": "calculated",
+      "name": "ArrivalModeText",
+      "dataType": "string",
+      "isDataTypeInferred": true,
+      "expression": "{ref: ColumnExpressions\\ArrivalModeText.dax}",
+      "lineageTag": "7450d05c-906f-41ea-858c-22872513ee95",
+      "summarizeBy": "none",
+      "annotations": [
+        {
+          "name": "SummarizationSetBy",
+          "value": "Automatic"
+        },
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Text\" />"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "name": "dbth Attendance-da5d2828-9420-440b-a05a-cbde0eea9b65",
+      "mode": "import",
+      "source": {
+        "type": "m",
+        "expression": "{ref: PartitionExpressions\\dbth Attendance-da5d2828-9420-440b-a05a-cbde0eea9b65.m}"
+      }
+    }
+  ],
+  "measures": [
+    {
+      "name": "KPI_ED_Arrivals",
+      "expression": "{ref: MeasureExpressions\\KPI_ED_Arrivals.dax}",
+      "formatString": "0",
+      "lineageTag": "a097ca36-7efd-4da4-b08a-e6f2af44797b",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Attendances In Period",
+      "expression": "{ref: MeasureExpressions\\Attendances In Period.dax}",
+      "formatString": "0",
+      "lineageTag": "7d109721-3bf8-4a0f-9038-d10f820cbae5",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Age of ED attendance in period",
+      "expression": "{ref: MeasureExpressions\\Age of ED attendance in period.dax}",
+      "lineageTag": "3eafb950-3363-49e0-b8cd-c043495dedae",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"General\" />"
+        }
+      ]
+    },
+    {
+      "name": "Attendance in period",
+      "expression": "{ref: MeasureExpressions\\Attendance in period.dax}",
+      "formatString": "0",
+      "lineageTag": "d8eb8f2c-0fdc-4c1f-868c-18f117582d85",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+        }
+      ]
+    },
+    {
+      "name": "Share of attendance over age 65 in period",
+      "expression": "{ref: MeasureExpressions\\Share of attendance over age 65 in period.dax}",
+      "formatString": "0.00%;-0.00%;0.00%",
+      "lineageTag": "f2701e60-aade-4f90-88ec-8a86136cf14c",
+      "annotations": [
+        {
+          "name": "Format",
+          "value": "<Format Format=\"Percentage\" Accuracy=\"2\" />"
+        },
+        {
+          "name": "PBI_ChangedProperties",
+          "value": "[\"FormatString\"]"
+        }
+      ]
+    }
+  ],
+  "annotations": [
+    {
+      "name": "PBI_DescriptionAtRefresh"
+    },
+    {
+      "name": "PBI_ResultType",
+      "value": "Table"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+
+    // todo: IsLoS exluded should be a column in the Ward table
+    var excludedWards = { "PARK","BARL","BARA","CLA","KNVARA","ONEHEALTH", "RHB1", "RHB2", "ON1","PARK HILL","PHO","PIONEER","PIONEERENT","THORN",                                 "THORNBURY","TRENT","EPAU","ECL","DCL","ED WARD","DIS" }
+    return calculate( 
+        AVERAGEX(
+            'dbth Spell', 
+            calculate(
+                sum ('dbth WardStay'[LoS_Days]), 
+                'dbth WardStay'[WardCode] in excludedWards == false()
+            )
+        ), 
+        'dbth Spell'[IsZeroLen] == FALSE(), 
+        USERELATIONSHIP('dbth Spell'[DischargedDate], Dates[Date])
+    )
