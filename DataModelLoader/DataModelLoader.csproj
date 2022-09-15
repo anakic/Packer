@@ -68,6 +68,9 @@
     <Compile Include="Transofrmations\DeclareDataSourcesTransform.cs" />
     <Compile Include="Transofrmations\DowngradeTransform.cs" />
     <Compile Include="Transofrmations\IModelTransform.cs" />
+    <Compile Include="Transofrmations\PullUpExpressions.cs" />
+    <Compile Include="Transofrmations\StripCulturesTransform.cs" />
+    <Compile Include="Transofrmations\StripLocalDateTablesTransform.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
