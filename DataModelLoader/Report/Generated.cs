@@ -1,15 +1,11 @@
-﻿using Microsoft.AnalysisServices.Tabular;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace DataModelLoader.Report
