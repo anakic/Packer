@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Packer
 {
-    public class InMemoryFile : IFile
+    public class InMemoryFile : ITextFile
     {
         public string Text { get; private set; }
 
@@ -17,7 +17,7 @@ namespace Packer
         public void SetText(string text) => Text = text;
     }
 
-    public class TextBasedFile : IFile
+    public class TextBasedFile : ITextFile
     {
         private readonly string path;
 

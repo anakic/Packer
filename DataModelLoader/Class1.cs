@@ -11,7 +11,7 @@ namespace DataModelLoader
 {
     public class FolderModelStore : DataModelStore
     {
-        class JObjFile : IFile
+        class JObjFile : ITextFile
         {
             public JObject JObject { get; private set; }
 

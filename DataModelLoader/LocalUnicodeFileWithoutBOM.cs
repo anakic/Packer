@@ -4,7 +4,7 @@ namespace DataModelLoader
 {
     // some pbi files (DataModelSchema) do not have a BOM header
     // so the encoding cannot be determined automatically
-    public class LocalUnicodeFileWithoutBOM : IFile
+    public class LocalUnicodeFileWithoutBOM : ITextFile
     {
         private readonly string path;
 

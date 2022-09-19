@@ -1,6 +1,6 @@
 ﻿namespace DataModelLoader
 {
-    public interface IFile
+    public interface ITextFile
     {
         string GetText();
         void SetText(string text);

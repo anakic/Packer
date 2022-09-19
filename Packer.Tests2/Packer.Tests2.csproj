@@ -49,6 +49,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files\Microsoft Visual Studio\2022\Professional\Common7\IDE\CommonExtensions\Microsoft\SSAS\Microsoft.AnalysisServices.Tabular.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
@@ -115,6 +118,7 @@
   <ItemGroup>
     <Compile Include="DowngradeTransformTests.cs" />
     <Compile Include="FolderModelStoreTests.cs" />
+    <Compile Include="ReportParseTests.cs" />
     <Compile Include="SSASDataModelStoreTest.cs" />
     <Compile Include="BimDataModelStoreTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

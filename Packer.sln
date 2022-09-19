@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataModelLoader", "DataMode
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Packer.Tests2", "Packer.Tests2\Packer.Tests2.csproj", "{C68E247F-243A-4213-8380-F98D7E82FB03}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLineParserTEST", "CommandLineParserTEST\CommandLineParserTEST.csproj", "{AB0B5ACA-E0E6-40B6-967C-F1170E588547}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{C68E247F-243A-4213-8380-F98D7E82FB03}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C68E247F-243A-4213-8380-F98D7E82FB03}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C68E247F-243A-4213-8380-F98D7E82FB03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB0B5ACA-E0E6-40B6-967C-F1170E588547}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB0B5ACA-E0E6-40B6-967C-F1170E588547}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB0B5ACA-E0E6-40B6-967C-F1170E588547}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB0B5ACA-E0E6-40B6-967C-F1170E588547}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,7 +5,7 @@ namespace DataModelLoader
 {
     public class BimDataModelStore : DataModelStore
     {
-        private readonly IFile file;
+        private readonly ITextFile file;
 
         public static BimDataModelStore LoadFromText(string contents)
         {
@@ -16,7 +16,7 @@ namespace DataModelLoader
             return new BimDataModelStore(new TextBasedFile(filePath));
         }
 
-        public BimDataModelStore(IFile file)
+        public BimDataModelStore(ITextFile file)
         {
             this.file = file;
         }
