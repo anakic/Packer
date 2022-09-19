@@ -63,7 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BimDataModelStore.cs" />
-    <Compile Include="Class1.cs" />
+    <Compile Include="FolderModelStore.cs" />
     <Compile Include="DataModelStore.cs" />
     <Compile Include="IFile.cs" />
     <Compile Include="IModelStore.cs" />
