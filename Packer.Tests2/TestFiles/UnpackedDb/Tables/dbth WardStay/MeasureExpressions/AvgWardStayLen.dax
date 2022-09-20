@@ -1,3 +1,0 @@
-
-    -- CALCULATE(AVERAGE('dbth WardStay'[LoS_Days]), 'dbth WardStay'[LoS_Days] > 0, USERELATIONSHIP(Dates[Date],'dbth WardStay'[DateStart]))
-    'dbth WardStay'[Bed Days in period (WS)] / 'dbth WardStay'[Active Ward Stays In Period]

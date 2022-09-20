@@ -2,6 +2,9 @@
 
 namespace Packer2.Library.Report.Transforms
 {
+    // note: currently not used, parsinge the JSON is done on a new layer
+    // that sits on top of the JSON layer
+
     public class ResourceItem
     {
         [JsonProperty("type")]

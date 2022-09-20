@@ -1,1 +1,0 @@
-CALCULATE('dbth Spell'[SpellsInPeriod], FILTER('dbth Spell', CALCULATE('dbth Spell'[Super stranded bed days]) > 0))

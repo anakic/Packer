@@ -7,7 +7,7 @@ namespace Packer2.Library
     public static class Packer
     {
         public static Database ReadDataModelFromBimFile(string path)
-            => new BimDataModelStore(new TextBasedFile(path)).Read();
+            => new BimDataModelStore(new LocalTextFile(path)).Read();
 
         public static Database DeclareDataSources(this Database db)
             => new DeclareDataSourcesTransform().Transform(db);
@@ -28,6 +28,6 @@ namespace Packer2.Library
             => new FolderModelStore(folderPath).Save(db);
 
         public static void SaveToFile(this Database db, string filePath)
-            => new BimDataModelStore(new TextBasedFile(filePath)).Save(db);
+            => new BimDataModelStore(new LocalTextFile(filePath)).Save(db);
     }
 }

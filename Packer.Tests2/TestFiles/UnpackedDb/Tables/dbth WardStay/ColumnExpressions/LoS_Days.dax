@@ -1,1 +1,0 @@
-DATEDIFF('dbth WardStay'[Start], 'dbth WardStay'[End], DAY)

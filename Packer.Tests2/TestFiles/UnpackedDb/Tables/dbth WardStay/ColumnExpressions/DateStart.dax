@@ -1,1 +1,0 @@
-date(year('dbth WardStay'[Start]), MONTH('dbth WardStay'[Start]), day('dbth WardStay'[Start]))

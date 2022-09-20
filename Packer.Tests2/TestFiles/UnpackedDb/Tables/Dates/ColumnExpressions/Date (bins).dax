@@ -1,5 +1,0 @@
-IF(
-  ISBLANK('Dates'[Date]),
-  BLANK(),
-  1 + (INT((INT('Dates'[Date]) - 1) / 7) * 7)
-)

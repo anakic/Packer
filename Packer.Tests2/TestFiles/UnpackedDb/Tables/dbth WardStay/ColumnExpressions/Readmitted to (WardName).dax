@@ -1,1 +1,0 @@
-LOOKUPVALUE('dbth Ward'[WardName],'dbth Ward'[WardCode], 'dbth WardStay'[ReadmittedTo])

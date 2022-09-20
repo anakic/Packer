@@ -1,1 +1,0 @@
-CALCULATE(count('dbth Spell'[Id]), USERELATIONSHIP('dbth Spell'[AdmittedDate], Dates[Date]),'dbth Attendance'[Age] >= 75)

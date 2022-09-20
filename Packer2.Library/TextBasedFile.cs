@@ -1,10 +1,10 @@
 ﻿namespace Packer2.Library
 {
-    public class TextBasedFile : ITextFile
+    public class LocalTextFile : ITextFile
     {
         private readonly string path;
 
-        public TextBasedFile(string path)
+        public LocalTextFile(string path)
         {
             this.path = path;
         }

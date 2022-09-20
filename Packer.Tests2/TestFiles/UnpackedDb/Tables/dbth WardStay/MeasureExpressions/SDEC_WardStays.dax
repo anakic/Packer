@@ -1,6 +1,0 @@
-COUNTROWS(
-    CALCULATETABLE(
-        filter('dbth WardStay', 'dbth WardStay'[WardCode] in { "ESAC", "ACU", "ACB"}),
-        USERELATIONSHIP(Dates[Date],'dbth WardStay'[DateEnd])
-    )
-)

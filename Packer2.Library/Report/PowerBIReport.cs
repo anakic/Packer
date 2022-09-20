@@ -15,8 +15,10 @@ namespace DataModelLoader.Report
         public XDocument Report_LinguisticSchema { get; set; }
         public XDocument Content_Types { get; set; }
 
+        public string Version { get; set; }
+
         public Dictionary<string, byte[]> Blobs { get; } = new Dictionary<string, byte[]>();
 
-        public ReportLayout Layout { get; set; }
+        public JObject Layout { get; set; }
     }
 }

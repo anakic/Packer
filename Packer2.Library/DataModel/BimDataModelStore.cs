@@ -12,7 +12,7 @@ namespace Packer2.Library.DataModel
         }
         public static BimDataModelStore LoadFromFile(string filePath)
         {
-            return new BimDataModelStore(new TextBasedFile(filePath));
+            return new BimDataModelStore(new LocalTextFile(filePath));
         }
 
         public BimDataModelStore(ITextFile file)

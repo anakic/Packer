@@ -1,3 +1,0 @@
-
-    var typeKind =  LOOKUPVALUE('dbth Ward'[TypeKind], 'dbth Ward'[WardCode], 'dbth WardStay'[PrevWardCode])
-    return If (IsBlank(typeKind), "<direct admission>", typeKind)

@@ -1,1 +1,0 @@
-CALCULATE(count('dbth Attendance'[Id]), USERELATIONSHIP(Dates[Date],'dbth Attendance'[ArrivedDate]))

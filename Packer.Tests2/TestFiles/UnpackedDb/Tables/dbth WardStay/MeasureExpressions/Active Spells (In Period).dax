@@ -1,1 +1,0 @@
-CALCULATE(distinctcount('dbth WardStay'[spellId]), 'dbth Spell'[IsZeroLen] == FALSE() ,FILTER('dbth WardStay', 'dbth WardStay'[DateStart] < max(Dates[Date]) && 'dbth WardStay'[DateEnd] >= min(dates[date])))

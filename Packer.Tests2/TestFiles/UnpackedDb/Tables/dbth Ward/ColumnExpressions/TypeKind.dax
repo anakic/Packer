@@ -1,1 +1,0 @@
-if(isblank('dbth Ward'[Kind]),  'dbth Ward'[Type], 'dbth Ward'[Kind])

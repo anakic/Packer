@@ -1,5 +1,0 @@
-MINX(
-	FILTER(
-		'dbth WardStay',
-		'dbth WardStay'[SpellId] = EARLIER('dbth WardStay'[SpellId]) && 'dbth WardStay'[Number] = EARLIER('dbth WardStay'[Number])+1),
-'dbth WardStay'[WardCode])

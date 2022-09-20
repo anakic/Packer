@@ -1,1 +1,0 @@
-CALCULATe([First Ward Stay (in period)],'dbth Attendance'[Age] > 65) / [First Ward Stay (in period)]

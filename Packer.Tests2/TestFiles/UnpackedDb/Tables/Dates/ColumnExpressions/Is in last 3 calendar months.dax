@@ -1,1 +1,0 @@
-dates[date] > EOMONTH(calculate(max(dates[Date]), REMOVEFILTERS()), -3)

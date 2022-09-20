@@ -1,1 +1,0 @@
-date(year('dbth Attendance'[Arrived]), month('dbth Attendance'[Arrived]), day('dbth Attendance'[Arrived]))
