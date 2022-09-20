@@ -51,41 +51,6 @@ namespace Packer2.Library.DataModel.Transofrmations
             }
 
             return database;
-
-            /*
-
-            var fileSources = expressions.Select(e => Regex.Match(e.Value<string>()!,
-                @"Source = (Csv.Document|Excel.Workbook)\(File.Contents\(""(?'path'[^""]+)""", RegexOptions.IgnoreCase))
-                .Where(m => m.Success)
-                .Select(m => m.Groups["path"].Value)
-                .ToHashSet();
-            foreach (var path in fileSources)
-            {
-                var extension = Path.GetExtension(path).TrimStart('.');
-                var nameWithoutExtension = Path.GetFileNameWithoutExtension(path);
-
-                var dsData = new
-                {
-                    type = "structured",
-                    name = $"{extension}/{nameWithoutExtension}",
-                    connectionDetails = new
-                    {
-                        protocol = "file",
-                        address = new
-                        {
-                            path = $"{path}"
-                        },
-                        authentication = null as object,
-                        query = null as object
-                    },
-                    credential = new { }
-                };
-
-                dataSourceElement.Add(JObject.FromObject(dsData));
-            }
-
-            (obj["model"] as JObject)!.Add("dataSources", dataSourceElement);
-            */
         }
     }
 }
