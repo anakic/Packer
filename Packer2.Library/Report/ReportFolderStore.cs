@@ -107,7 +107,7 @@ namespace DataModelLoader.Report
             // todo: define or reuse constants for file names
             SaveFile(Path.Combine(folderPath, "Connections.json"), model.Connections.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "[Content_Types].xml"), model.Content_Types.ToString());
-            SaveFile(Path.Combine(folderPath, "DataModelSchema.json"), model.DataModelSchemaFile.ToString(Formatting.Indented));
+            SaveFile(Path.Combine(folderPath, "DataModelSchema.json"), model.DataModelSchemaFile?.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "DiagramLayout.json"), model.DiagramLayout.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "Metadata.json"), model.Metadata.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "Settings.json"), model.Settings.ToString(Formatting.Indented));
@@ -223,8 +223,11 @@ namespace DataModelLoader.Report
 
         private void SaveFile(string path, string text)
         {
-            EnsureDirectoryExists(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, text);
+            if (text != null)
+            {
+                EnsureDirectoryExists(Path.GetDirectoryName(path)!);
+                File.WriteAllText(path, text);
+            }
         }
 
         private void EnsureDirectoryExists(string directory)

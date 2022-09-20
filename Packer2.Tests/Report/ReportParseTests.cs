@@ -1,6 +1,7 @@
 ﻿using DataModelLoader.Report;
 using FluentAssertions;
 using Microsoft.AnalysisServices.Tabular;
+using Packer2.Library.Report.Transforms;
 using Xunit;
 
 namespace Packer2.Tests.Report
@@ -27,9 +28,9 @@ namespace Packer2.Tests.Report
         [Fact]
         public void SavesToFolder()
         {
-            var store1 = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit");
+            var store1 = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3-out-conn.pbix");
             var model = store1.Read();
-            var folderStore = new ReportFolderStore(@"c:\Models\test");
+            var folderStore = new ReportFolderStore(@"c:\Models\test2");
             folderStore.Save(model);
         }
 
@@ -39,7 +40,10 @@ namespace Packer2.Tests.Report
             var folderStore = new ReportFolderStore(@"c:\Models\test");
             var model = folderStore.Read();
 
-            var pbitStore = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3-out.pbit");
+            var transform = new RedirectToSSASTransform("Data Source=localhost:53682;Initial Catalog=f6bb0b1f-4a66-4bbd-8cff-44f69d71b6eb;Cube=Model");
+            transform.Transform(model);
+
+            var pbitStore = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3-out.pbix");
             pbitStore.Save(model);
         }
     }
