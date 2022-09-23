@@ -6,9 +6,9 @@ namespace Packer2.Library.Report.Transforms
 {
     public class RedirectToSSASTransform : IReportTransform
     {
-        private readonly string connectionString;
+        private readonly string? connectionString;
 
-        public RedirectToSSASTransform(string connectionString = null)
+        public RedirectToSSASTransform(string? connectionString = null)
         {
             this.connectionString = connectionString;
         }
@@ -17,8 +17,6 @@ namespace Packer2.Library.Report.Transforms
         {
             // remove data model schema (for .pbix files)
             model.DataModelSchemaFile = null;
-            // remove the (binary) data model file (for .pbix files)
-            model.Blobs.Remove("DataModel");
 
             var stream = typeof(RedirectToSSASTransform).Assembly.GetManifestResourceStream("Packer2.Library.Resources.DataMashup");
             using (var memoryStream = new MemoryStream())

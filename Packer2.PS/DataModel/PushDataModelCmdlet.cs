@@ -5,7 +5,7 @@ using System.Management.Automation;
 namespace Packer2.PS.DataModel
 {
     [Cmdlet(VerbsCommon.Push, "TabularModel")]
-    public class PushDataModelCmdlet : Cmdlet
+    public class PushDataModelCmdlet : PSCmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
         [Alias("d")]
@@ -16,7 +16,7 @@ namespace Packer2.PS.DataModel
 
         protected override void ProcessRecord()
         {
-            IDataModelStore store = DataModelStoreHelper.GetStore(Destination);
+            IDataModelStore store = StoreHelper.GetDataModelStore(SessionState.Path.CurrentLocation.Path, Destination);
             store.Save(Model);
         }
     }

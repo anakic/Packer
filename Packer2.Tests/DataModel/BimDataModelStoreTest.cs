@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Tests.Tools;

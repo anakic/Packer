@@ -91,6 +91,10 @@ namespace Packer2.Library.DataModel.Transofrmations
             bimStore.Save(database);
             var jobj = JObject.Parse(file.Text);
 
+            // todo: instead of the black list of incompatible properties, should we come up with a white list instead?
+            // this would eliminate the defaultPowerBIDataSourceVersion property as well
+            jobj.SelectToken(".model.defaultPowerBIDataSourceVersion")?.Parent.Remove();
+
             // remove imcompatible properties
             foreach (var jProp in jobj.DescendantsAndSelf().OfType<JProperty>().ToArray())
             {

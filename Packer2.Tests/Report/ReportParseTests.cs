@@ -1,6 +1,9 @@
 ﻿using DataModelLoader.Report;
 using FluentAssertions;
 using Microsoft.AnalysisServices.Tabular;
+using Packer2.Library.DataModel.Transofrmations;
+using Packer2.Library.DataModel;
+using Packer2.Library;
 using Packer2.Library.Report.Transforms;
 using Xunit;
 
@@ -45,6 +48,80 @@ namespace Packer2.Tests.Report
 
             var pbitStore = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3-out.pbix");
             pbitStore.Save(model);
+        }
+
+        [Fact]
+        public void TEMP_MigrateTest()
+        {
+            var ReportLocation = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3 - Copy.pbit";
+            var SsasServer = ".";
+            int? SsasVersion = null;
+            var SsasDatabaseName = "DB";
+            var CodeOutputPath = @"c:\models\ps\test_migrate_ssas_datamodel";
+
+            IModelStore<PowerBIReport> store;
+            store = new PBIArchiveStore(ReportLocation);
+            
+            Lazy<Server> lazyServer = new Lazy<Server>(() =>
+            {
+                var srv = new Server();
+                srv.Connect(SsasServer);
+                return srv;
+            });
+
+            int version;
+            if (SsasVersion.HasValue)
+                version = SsasVersion.Value;
+            else
+            {
+                version = lazyServer.Value.SupportedCompatibilityLevels.Split(",").Where(x => x.Length == 4/*removing the 100000 entry*/).Select(Int32.Parse).Max();
+            }
+
+            var reportModel = store.Read();
+
+            var dataModelStore = new BimDataModelStore(new MemoryFile(reportModel.DataModelSchemaFile!.ToString()));
+            var dataModel = dataModelStore.Read();
+            var dataTransforms = new IDataModelTransform[]
+            {
+                new DowngradeTransform(version),
+                new DeclareDataSourcesTransform(),
+                new PullUpExpressionsTranform(),
+
+                // todo: add switches to optionally add these steps?
+                // commented out because this isn't a necessary part of deployment, it's something to optionally do manually
+                new StripLocalDateTablesTransform(),
+                new StripCulturesTransform(),
+            };
+            foreach (var t in dataTransforms)
+                dataModel = t.Transform(dataModel);
+
+            // save code to folder
+            if (CodeOutputPath != null)
+            {
+                var outputDataModelStore = new FolderModelStore(CodeOutputPath);
+                outputDataModelStore.Save(dataModel);
+            }
+
+            // deploy ssas instance
+            if (SsasServer != null)
+            {
+                // var serverStore = new BimDataModelStore(new LocalTextFile(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\test.bim"));
+                var serverStore = new SSASDataModelStore(SsasServer, SsasDatabaseName);
+                serverStore.Save(dataModel);
+            }
+
+            // remove the datamodelschema from the powerbi file and add the SSAS connection
+            string? connectionString = null;
+            if (SsasServer != null)
+                connectionString = $"Data source = {SsasServer};";
+            if (SsasDatabaseName != null)
+                connectionString += $"Initial catalog={SsasDatabaseName}";
+            var reportTransforms = new IReportTransform[]
+            {
+                new RedirectToSSASTransform(connectionString)
+            };
+
+            // todo: save back to report source (pbit or folder)
         }
     }
 }

@@ -74,7 +74,7 @@ namespace Packer2.Library.DataModel
             {
                 string name = tok["name"].Value<string>();
                 var tableFolderPath = Path.Combine(path, name);
-                RefDaxExpressions(tok.SelectTokens("columns[?(@.type=='calculated')]"), tableFolderPath, "ColumnExpressions");
+                RefDaxExpressions(tok.SelectTokens("columns[?(@.type=='calculated' && @.expression != null)]"), tableFolderPath, "ColumnExpressions");
                 RefDaxExpressions(tok.SelectTokens("measures[*]"), tableFolderPath, "MeasureExpressions");
                 RefPartitionExpressions(tok.SelectTokens("partitions[*]"), tableFolderPath, "PartitionExpressions");
                 WriteToFile(Path.Combine(tableFolderPath, $"table.json"), tok);

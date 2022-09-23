@@ -6,7 +6,7 @@ namespace DataModelLoader.Report
 {
     public class PowerBIReport
     {
-        public JObject DataModelSchemaFile { get; set; }
+        public JObject? DataModelSchemaFile { get; set; }
         public JObject DiagramLayout { get; set; }
         public JObject Metadata { get; set; }
         public JObject Settings { get; set; }

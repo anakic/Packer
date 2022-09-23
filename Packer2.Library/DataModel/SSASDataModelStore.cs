@@ -1,27 +1,28 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using System.Data.SqlClient;
 
 namespace Packer2.Library.DataModel
 {
     public class SSASDataModelStore : IDataModelStore
     {
-        private readonly string server;
-        private readonly string database;
+        private readonly string serverName;
+        private readonly string? databaseName;
 
-        public SSASDataModelStore(string server, string database)
+        public SSASDataModelStore(string server, string? database)
         {
             // server can be e.g. "localhost:54287"
-            this.server = server;
-            this.database = database;
+            this.serverName = server;
+            this.databaseName = database;
         }
 
         public Database Read()
         {
             var s = new Server();
-            s.Connect($"Data source={server}");
+            s.Connect($"Data source={serverName}");
             var info = s.ConnectionInfo;
 
-            if (database != null)
-                return s.Databases[database];
+            if (databaseName != null)
+                return s.Databases[databaseName];
             else
                 return s.Databases[0];
         }
@@ -35,10 +36,17 @@ namespace Packer2.Library.DataModel
             //      a) use the update method with UpdateMode.Create (or use UpdateOrCreate with the correct server) https://docs.microsoft.com/en-us/analysis-services/tom/create-and-deploy-an-empty-database-analysis-services-amo-tom?view=asallproducts-allversions
             //      b) see decomiped TabularEditor code: TabularEditor.TOMWrapper.Utils.TabularDeployer (TOMWrapper14.dll) - it uses tsml to create the model
 
-            if (model.Server != null)
+            using (var server = new Server())
             {
-                if (model.Server.ConnectionInfo.Server == server)
-                { }
+                var builder = new SqlConnectionStringBuilder();
+                builder.DataSource = serverName;
+                server.Connect(builder.ConnectionString);
+
+                if(server.Databases.Contains(databaseName))
+                    server.Databases.Remove(databaseName);
+                model.Name = databaseName;
+                server.Databases.Add(model);
+                model.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull);
             }
         }
     }
