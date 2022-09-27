@@ -73,7 +73,7 @@ namespace Packer2.Library.DataModel
             foreach (var tok in jobj.SelectTokens(".model.tables[*]").ToArray())
             {
                 string name = tok["name"].Value<string>();
-                var tableFolderPath = Path.Combine(path, name);
+                var tableFolderPath = Path.Combine(path, EscapeName(name));
                 RefDaxExpressions(tok.SelectTokens("columns[?(@.type=='calculated' && @.expression != null)]"), tableFolderPath, "ColumnExpressions");
                 RefDaxExpressions(tok.SelectTokens("measures[*]"), tableFolderPath, "MeasureExpressions");
                 RefPartitionExpressions(tok.SelectTokens("partitions[*]"), tableFolderPath, "PartitionExpressions");
@@ -91,7 +91,7 @@ namespace Packer2.Library.DataModel
                 var type = mesTok.SelectToken("source.type").Value<string>();
                 var ext = expTypeToExtensionsMap[type];
                 var exp = mesTok.SelectToken("source.expression").Value<string>();
-                var relativePath = Path.Combine(subFolderPath, $"{name}.{ext}");
+                var relativePath = Path.Combine(subFolderPath, $"{EscapeName(name)}.{ext}");
                 WriteToFile(Path.Combine(rootFolderPath, relativePath), exp);
                 mesTok.SelectToken("source")["expression"] = $"{{ref: {relativePath}}}";
             }
@@ -101,13 +101,20 @@ namespace Packer2.Library.DataModel
         {
             foreach (var mesTok in measureTokens)
             {
-                var name = mesTok["name"];
+                var name = mesTok["name"].ToString();
                 var exp = mesTok["expression"].Value<string>();
-                var relativePath = Path.Combine(subFolderPath, $"{name}.dax");
+                var relativePath = Path.Combine(subFolderPath, $"{EscapeName(name)}.dax");
                 WriteToFile(Path.Combine(rootFolderPath, relativePath), exp);
                 mesTok["expression"] = $"{{ref: {relativePath}}}";
             }
         }
+
+        private string EscapeName(string name)
+            => new Uri("file:///" + name).AbsolutePath.Substring(1);
+
+        // don't need this currently, all the names we need are still in the extracted json files
+        //private string UnescapeName(string name)
+        //    => new Uri("file:///" + name).LocalPath.Substring(1);
 
         private void WriteToFile(string path, JToken obj)
         {
