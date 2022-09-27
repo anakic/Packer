@@ -58,8 +58,28 @@ namespace Packer2.Library.DataModel
             return inner.Read();
         }
 
+        // todo: make a common base class for this and ReportFolderStore that has this method and calls it on Save()
+        // Currently this is copy-pasted from there.
+        private void ClearFolder()
+        {
+            if (Directory.Exists(folder))
+            {
+                foreach (var childDir in Directory.GetDirectories(folder, "*", SearchOption.TopDirectoryOnly))
+                {
+                    // do not remove the .git folder
+                    if (Path.GetFileName(childDir) != ".git")
+                        Directory.Delete(childDir, true);
+                }
+
+                foreach (var file in Directory.GetFiles(folder))
+                    File.Delete(file);
+            }
+        }
+
         public void Save(Database model)
         {
+            ClearFolder();
+
             var jObjFile = new JObjFile();
             var inner = new BimDataModelStore(jObjFile);
             inner.Save(model);
