@@ -61,7 +61,7 @@ namespace Packer2.Library.DataModel
 
                 foreach (var msg in results.XmlaResults.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>()))
                 {
-                    // log warnings
+                    // todo: log warnings
                 }
             }
         }

@@ -37,7 +37,7 @@ namespace Packer2.Tests.DataModel
 
             model.Model.DataSources.OfType<StructuredDataSource>().Single().Credential.Password = "Discover2020*";
 
-            var store2 = new SSASDataModelStore("localhost", "MyModel_SingleTable_2");
+            var store2 = new SSASDataModelStore("localhost", "MyModel_SingleTable_3");
             store2.Save(model);
         }
 
@@ -49,7 +49,6 @@ namespace Packer2.Tests.DataModel
             var file = new MemoryFile(simpleModelBimContents);
             var store = new BimDataModelStore(file);
             var model = store.Read();
-
 
             new MergeDataSourcesTransform(new MemoryFile(TestResourcesHelper.GetDSOnlyModelContents())).Transform(model);
 

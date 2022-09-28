@@ -55,6 +55,19 @@
               ]
             }
           }
+        ],
+        "measures": [
+          {
+            "name": "Measure",
+            "expression": "fasdfasdf asdf ",
+            "formatString": "0",
+            "annotations": [
+              {
+                "name": "Format",
+                "value": "<Format Format=\"NumberWhole\" Accuracy=\"0\" />"
+              }
+            ]
+          }
         ]
       }
     ],
@@ -64,6 +77,5 @@
         "value": "600"
       }
     ]
-  },
-  "id": "SemanticModel"
+  }
 }
