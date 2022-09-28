@@ -6,7 +6,7 @@ namespace Packer2.PS.Report
 {
     [Cmdlet(VerbsCommon.Open, "PbiReport")]
     [OutputType(typeof(PowerBIReport))]
-    public class OpenPbiReportCmdlet : Cmdlet
+    public class OpenPbiReportCmdlet : PSCmdlet
     {
         [Parameter(Mandatory = true, ValueFromPipeline = false, Position = 0)]
         [Alias("s")]
@@ -14,13 +14,15 @@ namespace Packer2.PS.Report
 
         protected override void ProcessRecord()
         {
+            var path = Path.Combine(SessionState.Path.CurrentLocation.Path, Source);
+
             IModelStore<PowerBIReport> reportStore;
-            if (File.Exists(Source))
-                reportStore = new PBIArchiveStore(Source);
-            else if (Directory.Exists(Source))
-                reportStore = new ReportFolderStore(Source);
+            if (File.Exists(path))
+                reportStore = new PBIArchiveStore(path);
+            else if (Directory.Exists(path))
+                reportStore = new ReportFolderStore(path);
             else
-                throw new Exception("Source '{}' does not refer to an existing power bi file nor an unpacked folder");
+                throw new Exception($"Source '{Source}' does not refer to an existing power bi file nor an unpacked folder");
 
             WriteObject(reportStore.Read());
         }
