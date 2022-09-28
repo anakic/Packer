@@ -8,11 +8,13 @@
 
   <ItemGroup>
     <None Remove="DataModel\TestFiles\test_model.bim" />
+    <None Remove="DataModel\TestFiles\test_model_ds_only.bim" />
     <None Remove="DataModel\TestFiles\test_model_simple.bim" />
     <None Remove="DataModel\TestFiles\test_model_single_table.bim" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="DataModel\TestFiles\test_model_ds_only.bim" />
     <EmbeddedResource Include="DataModel\TestFiles\test_model_single_table.bim" />
     <EmbeddedResource Include="DataModel\TestFiles\test_model.bim" />
     <EmbeddedResource Include="DataModel\TestFiles\test_model_simple.bim" />

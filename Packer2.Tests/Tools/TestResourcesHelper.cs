@@ -20,6 +20,11 @@ namespace Packer2.Tests.Tools
             return GetTestFileContents("test_model_single_table.bim");
         }
 
+        public static string GetDSOnlyModelContents()
+        {
+            return GetTestFileContents("test_model_ds_only.bim");
+        }
+
         public static string GetSimpleTestModelContents()
         {
             return GetTestFileContents("test_model_simple.bim");
@@ -27,8 +32,6 @@ namespace Packer2.Tests.Tools
 
         public static string GetTestFileContents(string fileName)
         {
-            var names = typeof(TestResourcesHelper).Assembly.GetManifestResourceNames();
-
             using (var stream = typeof(TestResourcesHelper).Assembly.GetManifestResourceStream($"Packer2.Tests.DataModel.TestFiles.{fileName}"))
                 return new StreamReader(stream).ReadToEnd();
         }

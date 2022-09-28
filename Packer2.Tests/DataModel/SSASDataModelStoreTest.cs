@@ -40,5 +40,22 @@ namespace Packer2.Tests.DataModel
             var store2 = new SSASDataModelStore("localhost", "MyModel_SingleTable_2");
             store2.Save(model);
         }
+
+
+        [Fact]
+        public void TEMP()
+        {
+            var simpleModelBimContents = TestResourcesHelper.GetOneTableTestModelContents();
+            var file = new MemoryFile(simpleModelBimContents);
+            var store = new BimDataModelStore(file);
+            var model = store.Read();
+
+
+            new MergeDataSourcesTransform(new MemoryFile(TestResourcesHelper.GetDSOnlyModelContents())).Transform(model);
+
+            var ds = model.Model.DataSources["SQL/DataflowDB"].Should().BeOfType<StructuredDataSource>().Subject;
+            ds.Credential.Username.Should().Be("TEST_user");
+            ds.ConnectionDetails.Address.Server.Should().Be("TEST_SERVER");
+        }
     }
 }

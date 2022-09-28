@@ -1,0 +1,27 @@
+{
+  "compatibilityLevel": 1500,
+  "model": {
+    "dataSources": [
+      {
+        "type": "structured",
+        "name": "SQL/DataflowDB",
+        "connectionDetails": {
+          "protocol": "tds",
+          "address": {
+            "server": "TEST_SERVER",
+            "database": "Dataflow"
+          },
+          "authentication": null,
+          "query": null
+        },
+        "credential": {
+          "AuthenticationKind": "UsernamePassword",
+          "kind": "SQL",
+          "path": "20.117.159.235;Dataflow",
+          "Username": "TEST_user",
+          "EncryptConnection": false
+        }
+      }
+    ]
+  }
+}
