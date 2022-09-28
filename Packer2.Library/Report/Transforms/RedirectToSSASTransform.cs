@@ -35,16 +35,16 @@ namespace Packer2.Library.Report.Transforms
 
             if (connectionString != null)
             {
-                model.Connections.Add(
-                    new JProperty("Connections",
-                        new JArray(
-                                new JObject(
-                                        new JProperty("Name", "EntityDataSource"),
-                                        new JProperty("ConnectionString", connectionString),
-                                        new JProperty("ConnectionType", "analysisServicesDatabaseLive")
-                                )
+                if (model.Connections == null)
+                    model.Connections = JObject.FromObject(new { Version = 3 });
+
+                model.Connections["Connections"] =
+                    new JArray(
+                        new JObject(
+                                new JProperty("Name", "EntityDataSource"),
+                                new JProperty("ConnectionString", connectionString),
+                                new JProperty("ConnectionType", "analysisServicesDatabaseLive")
                         )
-                    )
                 );
             }
 
