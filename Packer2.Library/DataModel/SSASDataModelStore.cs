@@ -7,12 +7,14 @@ namespace Packer2.Library.DataModel
     {
         private readonly string serverName;
         private readonly string? databaseName;
+        private readonly bool processOnSave;
 
-        public SSASDataModelStore(string server, string? database)
+        public SSASDataModelStore(string server, string? database, bool processOnSave = true)
         {
             // server can be e.g. "localhost:54287"
             this.serverName = server;
             this.databaseName = database;
+            this.processOnSave = processOnSave;
         }
 
         public Database Read()
@@ -27,7 +29,7 @@ namespace Packer2.Library.DataModel
                 return s.Databases[0];
         }
 
-        public void Save(Database model)
+        public void Save(Database database)
         {
             // todo: implement
             // - start a local ssas server that I have rights to (docker or local)
@@ -42,13 +44,25 @@ namespace Packer2.Library.DataModel
                 builder.DataSource = serverName;
                 server.Connect(builder.ConnectionString);
 
-                model.ID = model.Name = databaseName;
+                database.ID = database.Name = databaseName;
 
-                if (server.Databases.Contains(model.Name))
-                    server.Databases.Remove(model.Name);
+                if (server.Databases.Contains(database.Name))
+                    server.Databases.Remove(database.Name);
 
-                server.Databases.Add(model);
-                model.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
+                server.Databases.Add(database);
+                database.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
+
+                // process
+                server.BeginTransaction();
+                if(processOnSave)
+                    database.Model.RequestRefresh(RefreshType.Full);
+                var results = database.Model.SaveChanges(new SaveOptions() { SaveFlags = SaveFlags.ForceValidation });
+                server.CommitTransaction();
+
+                foreach (var msg in results.XmlaResults.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>()))
+                {
+                    // log warnings
+                }
             }
         }
     }
