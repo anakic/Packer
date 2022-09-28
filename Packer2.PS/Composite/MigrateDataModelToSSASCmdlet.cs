@@ -32,8 +32,11 @@ namespace Packer2.PS.Composite
         [Alias("s")]
         public string? SsasServer { get; set; }
 
+        [Parameter, Alias("d")]
+        public bool DeployDatabaseToSSAS { get; set; }
+
         [Parameter]
-        [Alias("n")]
+        [Alias("db")]
         public string? SsasDatabaseName { get; set; }
 
         [Parameter]
@@ -92,7 +95,7 @@ namespace Packer2.PS.Composite
             }
 
             // deploy ssas instance
-            if (SsasServer != null)
+            if (SsasServer != null && DeployDatabaseToSSAS)
             {
                 var serverStore = new SSASDataModelStore(SsasServer, SsasDatabaseName);
                 serverStore.Save(dataModel);
