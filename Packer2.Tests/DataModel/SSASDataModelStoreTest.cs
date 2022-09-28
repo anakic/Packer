@@ -1,7 +1,10 @@
 ﻿using DataModelLoader;
 using FluentAssertions;
+using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library;
 using Packer2.Library.DataModel;
+using Packer2.Library.DataModel.Transofrmations;
+using Packer2.Tests.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +25,20 @@ namespace Packer2.Tests.DataModel
 
             var store2 = new BimDataModelStore(new LocalTextFile(@"C:\Projects\Packer\Packer.Tests2\TestFiles\test_model.bim"));
             store2.Save(database);
+        }
+
+        [Fact]
+        public void SavesDataModel()
+        {
+            var simpleModelBimContents = TestResourcesHelper.GetOneTableTestModelContents();
+            var file = new MemoryFile(simpleModelBimContents);
+            var store = new BimDataModelStore(file);
+            var model = store.Read();
+
+            model.Model.DataSources.OfType<StructuredDataSource>().Single().Credential.Password = "Discover2020*";
+
+            var store2 = new SSASDataModelStore("localhost", "MyModel_SingleTable_2");
+            store2.Save(model);
         }
     }
 }

@@ -1,0 +1,69 @@
+{
+  "name": "SemanticModel",
+  "compatibilityLevel": 1500,
+  "model": {
+    "culture": "en-US",
+    "dataSources": [
+      {
+        "type": "structured",
+        "name": "SQL/20 117 159 235;Dataflow",
+        "connectionDetails": {
+          "protocol": "tds",
+          "address": {
+            "server": "20.117.159.235",
+            "database": "Dataflow"
+          },
+          "authentication": null,
+          "query": null
+        },
+        "credential": {
+          "AuthenticationKind": "UsernamePassword",
+          "kind": "SQL",
+          "path": "20.117.159.235;Dataflow",
+          "Username": "dosapp",
+          "EncryptConnection": false
+        }
+      }
+    ],
+    "tables": [
+      {
+        "name": "dbth AttendanceCategory",
+        "columns": [
+          {
+            "name": "Code",
+            "dataType": "int64",
+            "sourceColumn": "Code"
+          },
+          {
+            "name": "Description",
+            "dataType": "string",
+            "sourceColumn": "Description"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Partition",
+            "dataView": "full",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = #\"SQL/20 117 159 235;Dataflow\",",
+                "    dbth_AttendanceCategory = Source{[Schema=\"dbth\",Item=\"AttendanceCategory\"]}[Data]",
+                "in",
+                "    dbth_AttendanceCategory"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "ClientCompatibilityLevel",
+        "value": "600"
+      }
+    ]
+  },
+  "id": "SemanticModel"
+}

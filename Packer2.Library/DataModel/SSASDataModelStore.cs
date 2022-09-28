@@ -42,11 +42,13 @@ namespace Packer2.Library.DataModel
                 builder.DataSource = serverName;
                 server.Connect(builder.ConnectionString);
 
-                if(server.Databases.Contains(databaseName))
-                    server.Databases.Remove(databaseName);
-                model.Name = databaseName;
+                model.ID = model.Name = databaseName;
+
+                if (server.Databases.Contains(model.Name))
+                    server.Databases.Remove(model.Name);
+
                 server.Databases.Add(model);
-                model.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull);
+                model.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
             }
         }
     }
