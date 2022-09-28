@@ -39,16 +39,21 @@ namespace DataModelLoader.Report
 
             var layoutJObj = ReadJsonFile(Path.Combine(folderPath, "Report\\Layout.json"));
             var layoutConfigJObj = ReadJsonFile(Path.Combine(folderPath, "Report\\config.json"));
-            foreach (var bf in Directory.GetFiles(Path.Combine(folderPath, "Report\\Bookmarks")))
+
+            var bookmarksDir = Path.Combine(folderPath, "Report\\Bookmarks");
+            if (Directory.Exists(bookmarksDir))
             {
-                var bookmarkJObj = ReadJsonFile(bf);
-                var groupVal = bookmarkJObj["$GroupName"];
-                if (groupVal != null)
+                foreach (var bf in Directory.GetFiles(bookmarksDir))
                 {
-                    (layoutConfigJObj.SelectToken($".bookmarks[?(@.displayName=='{groupVal.Value<string>()}')].children") as JArray)!.Add(bookmarkJObj);
+                    var bookmarkJObj = ReadJsonFile(bf);
+                    var groupVal = bookmarkJObj["$GroupName"];
+                    if (groupVal != null)
+                    {
+                        (layoutConfigJObj.SelectToken($".bookmarks[?(@.displayName=='{groupVal.Value<string>()}')].children") as JArray)!.Add(bookmarkJObj);
+                    }
+                    else
+                        (layoutConfigJObj.SelectToken($".bookmarks") as JArray)!.Add(bookmarkJObj);
                 }
-                else
-                    (layoutConfigJObj.SelectToken($".bookmarks") as JArray)!.Add(bookmarkJObj);
             }
             layoutJObj["config"] = layoutConfigJObj.ToString(Formatting.None);
 
@@ -61,7 +66,7 @@ namespace DataModelLoader.Report
                 pagesArr!.Add(pageJObj);
             }
             model.Layout = layoutJObj;
-            
+
             return model;
         }
 
@@ -90,8 +95,18 @@ namespace DataModelLoader.Report
             ((JProperty)arrToken.Parent!).Remove();
         }
 
-        private JObject ReadJsonFile(string path) => JObject.Parse(File.ReadAllText(path));
-        private XDocument ReadXmlFile(string path) => XDocument.Parse(File.ReadAllText(path));
+        private JObject? ReadJsonFile(string path)
+        {
+            if (File.Exists(path) == false)
+                return null;
+            return JObject.Parse(File.ReadAllText(path));
+        }
+        private XDocument? ReadXmlFile(string path)
+        {
+            if (File.Exists(path) == false)
+                return null;
+            return XDocument.Parse(File.ReadAllText(path));
+        }
 
         public void Save(PowerBIReport model)
         {
@@ -105,14 +120,14 @@ namespace DataModelLoader.Report
             }
 
             // todo: define or reuse constants for file names
-            SaveFile(Path.Combine(folderPath, "Connections.json"), model.Connections.ToString(Formatting.Indented));
+            SaveFile(Path.Combine(folderPath, "Connections.json"), model.Connections?.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "[Content_Types].xml"), model.Content_Types.ToString());
             SaveFile(Path.Combine(folderPath, "DataModelSchema.json"), model.DataModelSchemaFile?.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "DiagramLayout.json"), model.DiagramLayout.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "Metadata.json"), model.Metadata.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "Settings.json"), model.Settings.ToString(Formatting.Indented));
             SaveFile(Path.Combine(folderPath, "Version.txt"), model.Version);
-            SaveFile(Path.Combine(folderPath, "Report\\LinguisticSchema.xml"), model.Report_LinguisticSchema.ToString());
+            SaveFile(Path.Combine(folderPath, "Report\\LinguisticSchema.xml"), model.Report_LinguisticSchema?.ToString());
 
             // we're mutating the JObject so working on a copy just to do things by the book. using the original
             // object would probably not cause any issues because nobody else is using it, but there's no guarantee
@@ -221,7 +236,7 @@ namespace DataModelLoader.Report
             configJValue!.Parent!.Remove();
         }
 
-        private void SaveFile(string path, string text)
+        private void SaveFile(string path, string? text)
         {
             if (text != null)
             {
