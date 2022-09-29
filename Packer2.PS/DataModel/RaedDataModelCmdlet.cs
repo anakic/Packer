@@ -6,7 +6,7 @@ namespace Packer2.PS.DataModel
 {
     [Cmdlet(VerbsCommon.Open, "TabularModel")]
     [OutputType(typeof(Database))]
-    public class OpenDataModelCmdlet : StoreCmdletBase
+    public class RaedDataModelCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
         [Alias("s")]

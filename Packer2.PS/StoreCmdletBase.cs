@@ -45,9 +45,23 @@ namespace Packer2.PS
                     combinedPath = Path.Combine(currentPath, location); //if path is already rooted it will ignore the first arg
 
                 if (Path.HasExtension(combinedPath))
-                    store = new BimDataModelStore(new LocalTextFile(combinedPath));
+                {
+                    var extension = Path.GetExtension(combinedPath);
+                    if (extension.ToLower().TrimStart('.') == "pbit")
+                    {
+                        var reportStore = GetReportStore(combinedPath);
+                        var reportModel = reportStore.Read();
+                        if (reportModel.DataModelSchemaFile == null)
+                            throw new ArgumentException($"Cannot read data model from pbit file at {combinedPath}. This report does not have an integrated data model.");
+                        store = new BimDataModelStore(new MemoryFile(reportModel.DataModelSchemaFile.ToString()));
+                    }
+                    else
+                        store = new BimDataModelStore(new LocalTextFile(combinedPath));
+                }
                 else
+                {
                     store = new FolderModelStore(combinedPath);
+                }
             }
 
             return store;
