@@ -5,7 +5,7 @@ using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
-    [Cmdlet("Merge", "DataSources")]
+    [Cmdlet(VerbsData.Import, "DataSources")]
     [OutputType(typeof(Database))]
     public class MergeDataSourcesCmdlet : PSCmdlet
     {
