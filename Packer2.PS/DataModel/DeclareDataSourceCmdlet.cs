@@ -4,7 +4,7 @@ using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
-    [Cmdlet("Transform", "DeclareDataSources")]
+    [Cmdlet(VerbsData.Export, "TabularModelDataSources")]
     [OutputType(typeof(Database))]
     public class DeclareDataSourceCmdlet : Cmdlet
     {
@@ -13,7 +13,7 @@ namespace Packer2.PS.DataModel
 
         protected override void ProcessRecord()
         {
-            IDataModelTransform transform = new DeclareDataSourcesTransform();
+            IDataModelTransform transform = new ExportDataSourcesTransform();
             WriteObject(transform.Transform(Model));
         }
     }

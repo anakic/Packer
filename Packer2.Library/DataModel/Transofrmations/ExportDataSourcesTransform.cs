@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Packer2.Library.DataModel.Transofrmations
 {
-    public class DeclareDataSourcesTransform : IDataModelTransform
+    public class ExportDataSourcesTransform : IDataModelTransform
     {
         public Database Transform(Database database)
         {
@@ -12,13 +12,18 @@ namespace Packer2.Library.DataModel.Transofrmations
                 .Union(database.Model.Expressions.Where(e => e.Kind == ExpressionKind.M).Select(x => x.Expression))
                 .ToList();
 
-            PullUpSqlServerDataSources(database, expressions);
-            PullUpLocalFileDataSources(database, expressions);
+            /*arbitrary name and compatibility level (because they always get serialized, even if not specified so might as well specify)*/
+            var exportDatabase = new Database() { Name = "Data sources", CompatibilityLevel = 1400, Model = new Model() };
+            var sqlSevDataSources = FindSqlServerDataSources(database, expressions);
+            var localFileDataSources = FindLocalFileDataSources(database, expressions);
 
-            return database;
+            foreach (var ds in sqlSevDataSources.Concat(localFileDataSources))
+                exportDatabase.Model.DataSources.Add(ds);
+
+            return exportDatabase;
         }
 
-        private static void PullUpLocalFileDataSources(Database database, List<string> expressions)
+        private static IEnumerable<DataSource> FindLocalFileDataSources(Database database, List<string> expressions)
         {
             var fileSources = expressions
                 .Select(exp => Regex.Match(exp, @"Source = (Csv.Document|Excel.Workbook)\(File.Contents\(""(?'path'[^""]+)""", RegexOptions.IgnoreCase))
@@ -36,10 +41,10 @@ namespace Packer2.Library.DataModel.Transofrmations
                 if (database.Model.DataSources.Contains(name))
                     continue;
 
-                database.Model.DataSources.Add(new StructuredDataSource()
+                yield return new StructuredDataSource()
                 {
                     Name = name,
-                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username="dosapp", Password="Discover2020*", EncryptConnection=false },
+                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username="...", Password="...", EncryptConnection=false },
                     ConnectionDetails = new ConnectionDetails($@"{{
                         protocol: ""file"",
                         address:
@@ -49,14 +54,14 @@ namespace Packer2.Library.DataModel.Transofrmations
                         authentication: null,
                         query: null
                     }}")
-                });
+                };
             }
         }
 
-        private static void PullUpSqlServerDataSources(Database database, List<string> expressions)
+        private static IEnumerable<DataSource> FindSqlServerDataSources(Database database, List<string> expressions)
         {
             var sqlServerSources = expressions
-                .Select(e => Regex.Match(e, @"Source = Sql.Database\(""(?'server'[^""]+)"",\s*""(?'database'[^""]+)""\)", RegexOptions.IgnoreCase))
+                .Select(e => Regex.Match(e, @"(Source = Sql.Database\(""(?'server'[^""]+)"",\s*""(?'database'[^""]+)""\))|(Source = Sql.Databases\(""(?'server'[^""]+)""[^=]*=\s*Source{\[Name=""(?'database'[^""]+))", RegexOptions.IgnoreCase))
                 .Where(m => m.Success)
                 .Select(m => new { server = m.Groups["server"].Value, database = m.Groups["database"].Value })
                 .Distinct()
@@ -68,10 +73,10 @@ namespace Packer2.Library.DataModel.Transofrmations
                 if (database.Model.DataSources.Contains(name))
                     continue;
 
-                database.Model.DataSources.Add(new StructuredDataSource()
+                yield return new StructuredDataSource()
                 {
                     Name = name,
-                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username = "dosapp", Password = "Discover2020*", EncryptConnection = false },
+                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username = "...", Password = "...", EncryptConnection = false },
                     ConnectionDetails = new ConnectionDetails($@"{{
                         protocol: ""tds"",
                         address:
@@ -82,7 +87,7 @@ namespace Packer2.Library.DataModel.Transofrmations
                         authentication: null,
                         query: null
                     }}")
-                });
+                };
             }
         }
     }

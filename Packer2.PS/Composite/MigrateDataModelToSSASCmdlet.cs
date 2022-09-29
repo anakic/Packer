@@ -73,7 +73,7 @@ namespace Packer2.PS.Composite
             var dataModel = dataModelStore.Read();
             IEnumerable<IDataModelTransform> dataTransforms = new IDataModelTransform[] 
             {
-                new DeclareDataSourcesTransform(),
+                new ExportDataSourcesTransform(),
                 new PullUpExpressionsTranform(),
                 new DowngradeTransform(version),
             };

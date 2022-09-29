@@ -10,7 +10,7 @@ namespace Packer2.Library
             => new BimDataModelStore(new LocalTextFile(path)).Read();
 
         public static Database DeclareDataSources(this Database db)
-            => new DeclareDataSourcesTransform().Transform(db);
+            => new ExportDataSourcesTransform().Transform(db);
 
         public static Database DowngradeTo(this Database db, int compatibilityLevel)
             => new DowngradeTransform(compatibilityLevel).Transform(db);

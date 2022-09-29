@@ -18,7 +18,7 @@ namespace Packer2.Tests.DataModel
             {
                 new DowngradeTransform(1500),
                 new PullUpExpressionsTranform(),
-                new DeclareDataSourcesTransform(),
+                new ExportDataSourcesTransform(),
                 new StripLocalDateTablesTransform(),
                 new StripCulturesTransform(),
             };
