@@ -1,11 +1,12 @@
-﻿using Microsoft.AnalysisServices.Tabular;
+﻿using DataModelLoader.Report;
+using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
     [Cmdlet(VerbsCommon.Push, "TabularModel")]
-    public class PushDataModelCmdlet : PSCmdlet
+    public class PushDataModelCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
         [Alias("d")]
@@ -16,7 +17,7 @@ namespace Packer2.PS.DataModel
 
         protected override void ProcessRecord()
         {
-            IDataModelStore store = StoreHelper.GetDataModelStore(SessionState.Path.CurrentLocation.Path, Destination);
+            IDataModelStore store = GetDataModelStore(Destination);
             store.Save(Model);
         }
     }

@@ -2,13 +2,12 @@
 using Newtonsoft.Json.Linq;
 using Packer2.Library;
 using Packer2.Library.DataModel;
-using Packer2.PS.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.Composite
 {
     [Cmdlet("Pack", "Report")]
-    public class PackReportCmdlet : PSCmdlet
+    public class PackReportCmdlet : StoreCmdletBase
     {
         [Parameter(Position = 0, Mandatory = true)]
         [Alias("s")]
@@ -34,7 +33,7 @@ namespace Packer2.PS.Composite
                 bimModelStore.Save(database);
                 reportModel.DataModelSchemaFile = JObject.Parse(inMemoryFile.Text!);
             }
-            var reportStore = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, Destination);
+            var reportStore = GetReportStore(Destination);
             reportStore.Save(reportModel);
         }
     }

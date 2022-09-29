@@ -11,7 +11,7 @@ using System.Management.Automation;
 namespace Packer2.PS.Composite
 {
     [Cmdlet("Migrate", "DataModelToSSAS")]
-    public class MigrateDataModelToSSASCmdlet : PSCmdlet
+    public class MigrateDataModelToSSASCmdlet : StoreCmdletBase
     {
         [Parameter(Position = 0, Mandatory = false)]
         public string? ReportLocation { get; set; }
@@ -49,7 +49,7 @@ namespace Packer2.PS.Composite
 
         protected override void ProcessRecord()
         {
-            IModelStore<PowerBIReport> reportStore = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, ReportLocation);
+            IModelStore<PowerBIReport> reportStore = GetReportStore(ReportLocation);
 
             Lazy<Server> lazyServer = new Lazy<Server>(() => 
             {
@@ -90,7 +90,7 @@ namespace Packer2.PS.Composite
             // save code to folder
             if (ModelCodeOutputPath != null)
             {
-                var outputDataModelStore = StoreHelper.GetDataModelStore(SessionState.Path.CurrentLocation.Path, ModelCodeOutputPath);
+                var outputDataModelStore = GetDataModelStore(ModelCodeOutputPath);
                 outputDataModelStore.Save(dataModel);
             }
 
@@ -119,7 +119,7 @@ namespace Packer2.PS.Composite
 
             var outputStore = reportStore;
             if (!string.IsNullOrEmpty(ReportOutputPath))
-                outputStore = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, ReportOutputPath);
+                outputStore = GetReportStore(ReportOutputPath);
 
             outputStore.Save(reportModel);
 

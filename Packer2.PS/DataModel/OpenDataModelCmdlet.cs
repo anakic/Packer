@@ -6,7 +6,7 @@ namespace Packer2.PS.DataModel
 {
     [Cmdlet(VerbsCommon.Open, "TabularModel")]
     [OutputType(typeof(Database))]
-    public class OpenDataModelCmdlet : PSCmdlet
+    public class OpenDataModelCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
         [Alias("s")]
@@ -14,7 +14,7 @@ namespace Packer2.PS.DataModel
 
         protected override void ProcessRecord()
         {
-            IDataModelStore store = StoreHelper.GetDataModelStore(SessionState.Path.CurrentLocation.Path, Source);
+            IDataModelStore store = GetDataModelStore(Source);
             WriteObject(store.Read());
         }
     }

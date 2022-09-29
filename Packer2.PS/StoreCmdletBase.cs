@@ -2,13 +2,15 @@
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using System.Data.SqlClient;
+using System.Management.Automation;
 
-namespace Packer2.PS.DataModel
+namespace Packer2.PS
 {
-    static class StoreHelper
+    public abstract class StoreCmdletBase : PSCmdlet
     {
-        public static IModelStore<PowerBIReport> GetReportStore(string currentPath, string? path)
+        protected IModelStore<PowerBIReport> GetReportStore(string? path)
         {
+            string currentPath = SessionState.Path.CurrentLocation.Path;
             string combinedPath = currentPath;
             if (!string.IsNullOrEmpty(path))
                 combinedPath = Path.Combine(currentPath, path); //if path is already rooted it will ignore the first arg
@@ -19,8 +21,9 @@ namespace Packer2.PS.DataModel
                 return new ReportFolderStore(combinedPath);
         }
 
-        public static IDataModelStore GetDataModelStore(string currentPath, string? location)
+        protected IDataModelStore GetDataModelStore(string? location)
         {
+            string currentPath = SessionState.Path.CurrentLocation.Path;
             IDataModelStore store;
             try
             {
@@ -43,3 +46,4 @@ namespace Packer2.PS.DataModel
         }
     }
 }
+

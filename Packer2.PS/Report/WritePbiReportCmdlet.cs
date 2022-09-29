@@ -1,23 +1,21 @@
 ﻿using DataModelLoader.Report;
-using Packer2.Library;
-using Packer2.PS.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.Report
 {
-    [Cmdlet(VerbsCommon.Push, "PbiReport")]
-    public class WritePbiReportCmdlet : PSCmdlet
+    [Cmdlet(VerbsCommunications.Read, "PbiReport")]
+    public class WritePbiReportCmdlet : StoreCmdletBase
     {
-        [Parameter(Mandatory = true, ValueFromPipeline = false, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0)]
         [Alias("d")]
         public string Destionation { get; set; }
 
-        [Parameter(ValueFromPipeline = true)]
+        [Parameter(ValueFromPipeline = true, Mandatory = true)]
         public PowerBIReport Report { get; set; }
 
         protected override void ProcessRecord()
         {
-            var store = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, Destionation);
+            var store = GetReportStore(Destionation);
             store.Save(Report);
         }
     }

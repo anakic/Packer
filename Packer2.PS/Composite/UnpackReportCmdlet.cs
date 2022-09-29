@@ -7,7 +7,7 @@ using System.Management.Automation;
 namespace Packer2.PS.Composite
 {
     [Cmdlet("Unpack", "Report")]
-    public class UnpackReportCmdlet : PSCmdlet
+    public class UnpackReportCmdlet : StoreCmdletBase
     {
         [Parameter(Position = 0, Mandatory = true)]
         [Alias("s")]
@@ -25,7 +25,7 @@ namespace Packer2.PS.Composite
         {
             var destinationFolder = Path.Combine(SessionState.Path.CurrentLocation.Path, Destination);
 
-            var archiveStore = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, Source);
+            var archiveStore = GetReportStore(Source);
             var reportModel = archiveStore.Read();
 
             var dataModelSchema = reportModel.DataModelSchemaFile;
