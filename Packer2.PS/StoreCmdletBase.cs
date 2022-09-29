@@ -8,7 +8,7 @@ namespace Packer2.PS
 {
     public abstract class StoreCmdletBase : PSCmdlet
     {
-        protected IModelStore<PowerBIReport> GetReportStore(string? path)
+        protected IModelStore<PowerBIReport> GetReportStore(string? path, bool checkExists = false)
         {
             string currentPath = SessionState.Path.CurrentLocation.Path;
             string combinedPath = currentPath;
@@ -16,9 +16,17 @@ namespace Packer2.PS
                 combinedPath = Path.Combine(currentPath, path); //if path is already rooted it will ignore the first arg
 
             if (Path.HasExtension(combinedPath))
+            {
+                if (checkExists && !File.Exists(combinedPath))
+                    throw new Exception($"Report file not found at path {combinedPath}");
                 return new PBIArchiveStore(combinedPath);
+            }
             else
+            {
+                if(checkExists && !Directory.Exists(combinedPath))
+                    throw new Exception($"Report folder not found at path {combinedPath}");
                 return new ReportFolderStore(combinedPath);
+            }
         }
 
         protected IDataModelStore GetDataModelStore(string? location)

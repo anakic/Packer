@@ -3,10 +3,10 @@ using System.Management.Automation;
 
 namespace Packer2.PS.Report
 {
-    [Cmdlet(VerbsCommunications.Read, "PbiReport")]
+    [Cmdlet(VerbsCommunications.Write, "PbiReport")]
     public class WritePbiReportCmdlet : StoreCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, HelpMessage = "The destination where the report will be written to. Can be a .pbit file, a .pbix file, or a folder.")]
         [Alias("d")]
         public string Destionation { get; set; }
 
