@@ -5,7 +5,7 @@ using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
-    [Cmdlet(VerbsCommon.Push, "TabularModel")]
+    [Cmdlet(VerbsCommunications.Write, "TabularModel")]
     public class PushDataModelCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]

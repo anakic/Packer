@@ -4,18 +4,16 @@ namespace Packer2.Library.DataModel.Transofrmations
 {
     public class MergeDataSourcesTransform : IDataModelTransform
     {
-        private readonly ITextFile sourceFile;
+        private readonly Database source;
 
-        public MergeDataSourcesTransform(ITextFile sourceFile)
+        public MergeDataSourcesTransform(Database source)
         {
-            this.sourceFile = sourceFile;
+            this.source = source;
         }
 
         public Database Transform(Database database)
         {
-            var db = JsonSerializer.DeserializeDatabase(sourceFile.GetText());
-
-            foreach (var ds in db.Model.DataSources)
+            foreach (var ds in source.Model.DataSources)
             {
                 if(database.Model.DataSources.Contains(ds.Name))
                     database.Model.DataSources.Remove(ds.Name);

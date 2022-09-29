@@ -5,20 +5,21 @@ using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
-    [Cmdlet(VerbsData.Import, "DataSources")]
+    [Cmdlet(VerbsData.Import, "TabularModelDataSources")]
     [OutputType(typeof(Database))]
-    public class MergeDataSourcesCmdlet : PSCmdlet
+    public class ImportTabularModelDataSourcesCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
         public Database Database { get; set; }
 
         [Parameter(Mandatory = true, Position = 0)]
-        [Alias("ds")]
-        public string DataSourcesFilePath { get; set; }
+        [Alias("s")]
+        public string SourceModel { get; set; }
 
         protected override void ProcessRecord()
         {
-            new MergeDataSourcesTransform(new LocalTextFile(Path.Combine(SessionState.Path.CurrentLocation.Path, DataSourcesFilePath))).Transform(Database);
+            var sourceDb = GetDataModelStore(SourceModel).Read();
+            new MergeDataSourcesTransform(sourceDb).Transform(Database);
             WriteObject(Database);
         }
     }
