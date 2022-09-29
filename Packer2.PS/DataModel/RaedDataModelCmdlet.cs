@@ -4,7 +4,7 @@ using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
-    [Cmdlet(VerbsCommon.Open, "TabularModel")]
+    [Cmdlet(VerbsCommunications.Read, "TabularModel")]
     [OutputType(typeof(Database))]
     public class RaedDataModelCmdlet : StoreCmdletBase
     {
