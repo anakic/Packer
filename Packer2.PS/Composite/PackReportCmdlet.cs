@@ -19,8 +19,7 @@ namespace Packer2.PS.Composite
 
         protected override void ProcessRecord()
         {
-            var repoFolder = Source ?? SessionState.Path.CurrentFileSystemLocation.Path;
-
+            var repoFolder = Path.Combine(SessionState.Path.CurrentLocation.Path, Source);
             var reportSourceStore = new ReportFolderStore(repoFolder);
             var reportModel = reportSourceStore.Read();
 

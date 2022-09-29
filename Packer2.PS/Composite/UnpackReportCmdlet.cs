@@ -1,6 +1,7 @@
 ﻿using DataModelLoader.Report;
 using Packer2.Library;
 using Packer2.Library.DataModel;
+using Packer2.PS.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.Composite
@@ -22,9 +23,9 @@ namespace Packer2.PS.Composite
 
         protected override void ProcessRecord()
         {
-            var destinationFolder = Destination ?? SessionState.Path.CurrentFileSystemLocation.Path;
+            var destinationFolder = Path.Combine(SessionState.Path.CurrentLocation.Path, Destination);
 
-            var archiveStore = new PBIArchiveStore(Source);
+            var archiveStore = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, Source);
             var reportModel = archiveStore.Read();
 
             var dataModelSchema = reportModel.DataModelSchemaFile;

@@ -1,11 +1,12 @@
 ﻿using DataModelLoader.Report;
 using Packer2.Library;
+using Packer2.PS.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.Report
 {
     [Cmdlet(VerbsCommon.Push, "PbiReport")]
-    public class WritePbiReportCmdlet : Cmdlet
+    public class WritePbiReportCmdlet : PSCmdlet
     {
         [Parameter(Mandatory = true, ValueFromPipeline = false, Position = 0)]
         [Alias("d")]
@@ -16,13 +17,8 @@ namespace Packer2.PS.Report
 
         protected override void ProcessRecord()
         {
-            IModelStore<PowerBIReport> reportStore;
-            if (Path.HasExtension(Destionation))
-                reportStore = new PBIArchiveStore(Destionation);
-            else
-                reportStore = new ReportFolderStore(Destionation);
-
-            reportStore.Save(Report);
+            var store = StoreHelper.GetReportStore(SessionState.Path.CurrentLocation.Path, Destionation);
+            store.Save(Report);
         }
     }
 }
