@@ -1,11 +1,14 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Newtonsoft.Json.Linq;
+using Packer2.Library.Tools;
 using System.Text.RegularExpressions;
 
 namespace Packer2.Library.DataModel
 {
     public class FolderModelStore : IDataModelStore
     {
+        PathEscaper pathEscaper = new PathEscaper();
+
         class JObjFile : ITextFile
         {
             public JObject JObject { get; private set; }
@@ -93,7 +96,7 @@ namespace Packer2.Library.DataModel
             foreach (var tok in jobj.SelectTokens(".model.tables[*]").ToArray())
             {
                 string name = tok["name"].Value<string>();
-                var tableFolderPath = Path.Combine(path, EscapeName(name));
+                var tableFolderPath = Path.Combine(path, pathEscaper.EscapeName(name));
                 RefDaxExpressions(tok.SelectTokens("columns[?(@.type=='calculated' && @.expression != null)]"), tableFolderPath, "ColumnExpressions");
                 RefDaxExpressions(tok.SelectTokens("measures[*]"), tableFolderPath, "MeasureExpressions");
                 RefPartitionExpressions(tok.SelectTokens("partitions[*]"), tableFolderPath, "PartitionExpressions");
@@ -111,7 +114,7 @@ namespace Packer2.Library.DataModel
                 var type = mesTok.SelectToken("source.type").Value<string>();
                 var ext = expTypeToExtensionsMap[type];
                 var exp = mesTok.SelectToken("source.expression").Value<string>();
-                var relativePath = Path.Combine(subFolderPath, $"{EscapeName(name)}.{ext}");
+                var relativePath = Path.Combine(subFolderPath, $"{pathEscaper.EscapeName(name)}.{ext}");
                 WriteToFile(Path.Combine(rootFolderPath, relativePath), exp);
                 mesTok.SelectToken("source")["expression"] = $"{{ref: {relativePath}}}";
             }
@@ -123,18 +126,11 @@ namespace Packer2.Library.DataModel
             {
                 var name = mesTok["name"].ToString();
                 var exp = mesTok["expression"].Value<string>();
-                var relativePath = Path.Combine(subFolderPath, $"{EscapeName(name)}.dax");
+                var relativePath = Path.Combine(subFolderPath, $"{pathEscaper.EscapeName(name)}.dax");
                 WriteToFile(Path.Combine(rootFolderPath, relativePath), exp);
                 mesTok["expression"] = $"{{ref: {relativePath}}}";
             }
         }
-
-        private string EscapeName(string name)
-            => new Uri("file:///" + name).AbsolutePath.Substring(1);
-
-        // don't need this currently, all the names we need are still in the extracted json files
-        //private string UnescapeName(string name)
-        //    => new Uri("file:///" + name).LocalPath.Substring(1);
 
         private void WriteToFile(string path, JToken obj)
         {

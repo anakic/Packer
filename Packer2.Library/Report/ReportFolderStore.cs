@@ -11,6 +11,8 @@ namespace DataModelLoader.Report
 {
     public class ReportFolderStore : IModelStore<PowerBIReport>
     {
+        PathEscaper pathEscaper = new PathEscaper();
+
         private readonly string folderPath;
 
         public ReportFolderStore(string folderPath)
@@ -177,7 +179,7 @@ namespace DataModelLoader.Report
                 Consolidate(pageFileObj, "z");
 
                 var pageName = pageFileObj["displayName"]!.ToString();
-                SaveFile(Path.Combine(folderPath, @"Report\Pages", $"{pageName}.json"), pageFileObj.ToString(Formatting.Indented));
+                SaveFile(Path.Combine(folderPath, @"Report\Pages", $"{pathEscaper.EscapeName(pageName)}.json"), pageFileObj.ToString(Formatting.Indented));
                 pageFileObj.Remove();
             }
         }
@@ -229,7 +231,7 @@ namespace DataModelLoader.Report
             foreach (var pageJObj in bookmarkJObjs)
             {
                 var pageName = pageJObj["displayName"]!.Value<string>()!;
-                SaveFile(Path.Combine(folderPath, @"Report\Bookmarks", $"{pageName}.json"), pageJObj.ToString(Formatting.Indented));
+                SaveFile(Path.Combine(folderPath, @"Report\Bookmarks", $"{pathEscaper.EscapeName(pageName)}.json"), pageJObj.ToString(Formatting.Indented));
                 pageJObj.Remove();
             }
             SaveFile(Path.Combine(folderPath, @"Report\Config.json"), configObj.ToString(Formatting.Indented));
