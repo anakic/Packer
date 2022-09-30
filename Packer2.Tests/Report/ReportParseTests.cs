@@ -43,7 +43,7 @@ namespace Packer2.Tests.Report
             var folderStore = new ReportFolderStore(@"c:\Models\test");
             var model = folderStore.Read();
 
-            var transform = new RedirectToSSASTransform("Data Source=localhost:53682;Initial Catalog=f6bb0b1f-4a66-4bbd-8cff-44f69d71b6eb;Cube=Model");
+            var transform = new SwitchDataSourceToSSASTransform("Data Source=localhost:53682;Initial Catalog=f6bb0b1f-4a66-4bbd-8cff-44f69d71b6eb;Cube=Model");
             transform.Transform(model);
 
             var pbitStore = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3-out.pbix");
@@ -118,7 +118,7 @@ namespace Packer2.Tests.Report
                 connectionString += $"Initial catalog={SsasDatabaseName}";
             var reportTransforms = new IReportTransform[]
             {
-                new RedirectToSSASTransform(connectionString)
+                new SwitchDataSourceToSSASTransform(connectionString)
             };
 
             // todo: save back to report source (pbit or folder)

@@ -1,14 +1,15 @@
 ﻿using DataModelLoader.Report;
 using Newtonsoft.Json.Linq;
+using System.Data.SqlClient;
 using System.Xml.Linq;
 
 namespace Packer2.Library.Report.Transforms
 {
-    public class RedirectToSSASTransform : IReportTransform
+    public class SwitchDataSourceToSSASTransform : IReportTransform
     {
         private readonly string? connectionString;
 
-        public RedirectToSSASTransform(string? connectionString = null)
+        public SwitchDataSourceToSSASTransform(string? connectionString = null)
         {
             this.connectionString = connectionString;
         }
@@ -18,7 +19,7 @@ namespace Packer2.Library.Report.Transforms
             // remove data model schema (for .pbix files)
             model.DataModelSchemaFile = null;
 
-            var stream = typeof(RedirectToSSASTransform).Assembly.GetManifestResourceStream("Packer2.Library.Resources.DataMashup");
+            var stream = typeof(SwitchDataSourceToSSASTransform).Assembly.GetManifestResourceStream("Packer2.Library.Resources.DataMashup");
             using (var memoryStream = new MemoryStream())
             {
                 stream.CopyTo(memoryStream);
@@ -27,10 +28,12 @@ namespace Packer2.Library.Report.Transforms
 
             var ns = @"http://schemas.openxmlformats.org/package/2006/content-types";
 
+            var nodesToRemove = new[] { "/DataModelSchema", "/DataModel", "/DataMashup", "/Connections" }.ToHashSet();
             model.Content_Types.Descendants(XName.Get("Override", ns))
-                .SingleOrDefault(xe => xe.Attribute("PartName")?.Value == "/DataModelSchema")
+                .Where(xe => nodesToRemove.Contains(xe.Attribute("PartName")?.Value))
                 ?.Remove();
 
+            model.Content_Types.Root!.Add(new XElement(XName.Get("Override", ns), new XAttribute("PartName", "/Connections"), new XAttribute("ContentType", "")));
             model.Content_Types.Root!.Add(new XElement(XName.Get("Override", ns), new XAttribute("PartName", "/DataMashup"), new XAttribute("ContentType", "")));
 
             if (connectionString != null)
@@ -42,7 +45,7 @@ namespace Packer2.Library.Report.Transforms
                     new JArray(
                         new JObject(
                                 new JProperty("Name", "EntityDataSource"),
-                                new JProperty("ConnectionString", connectionString),
+                                new JProperty("ConnectionString", new SqlConnectionStringBuilder(connectionString).ConnectionString /* this will convert "Server" to "Data source" and "Database" to "Initial catalog" which seems to be required by powerbi*/),
                                 new JProperty("ConnectionType", "analysisServicesDatabaseLive")
                         )
                 );

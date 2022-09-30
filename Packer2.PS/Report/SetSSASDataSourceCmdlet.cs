@@ -4,7 +4,7 @@ using System.Management.Automation;
 
 namespace Packer2.PS.Report
 {
-    [Cmdlet(VerbsCommon.Set, "SSASDataSource")]
+    [Cmdlet(VerbsCommon.Switch, "DataSource")]
     [OutputType(typeof(PowerBIReport))]
     public class SetSSASDataSourceCmdlet : Cmdlet
     {
@@ -16,7 +16,7 @@ namespace Packer2.PS.Report
 
         protected override void ProcessRecord()
         {
-            var transform = new RedirectToSSASTransform(ConnectionString);
+            var transform = new SwitchDataSourceToSSASTransform(ConnectionString);
             WriteObject(transform.Transform(Report));
         }
     }

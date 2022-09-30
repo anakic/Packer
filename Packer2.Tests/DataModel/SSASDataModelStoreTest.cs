@@ -50,7 +50,8 @@ namespace Packer2.Tests.DataModel
             var store = new BimDataModelStore(file);
             var model = store.Read();
 
-            new MergeDataSourcesTransform(new MemoryFile(TestResourcesHelper.GetDSOnlyModelContents())).Transform(model);
+            var store2 = new BimDataModelStore(new MemoryFile(TestResourcesHelper.GetDSOnlyModelContents()));
+            new MergeDataSourcesTransform(store2.Read()).Transform(model);
 
             var ds = model.Model.DataSources["SQL/DataflowDB"].Should().BeOfType<StructuredDataSource>().Subject;
             ds.Credential.Username.Should().Be("TEST_user");

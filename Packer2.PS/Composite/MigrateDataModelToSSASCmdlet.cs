@@ -109,7 +109,7 @@ namespace Packer2.PS.Composite
                 connectionString += $"Initial catalog={SsasDatabaseName}";
             var reportTransforms = new IReportTransform[]
             {
-                new RedirectToSSASTransform(connectionString)
+                new SwitchDataSourceToSSASTransform(connectionString)
             };
 
             foreach (var t in reportTransforms)
