@@ -1,50 +1,53 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Packer2.Library.DataModel.Transofrmations
 {
-    public class ExportDataSourcesTransform : IDataModelTransform
+    public class RegisterDataSourcesTransform : IDataModelTransform
     {
         public Database Transform(Database database)
         {
-            var expressions = database.Model.Tables.SelectMany(t => t.Partitions).Select(p => p.Source).OfType<MPartitionSource>()
-                .Select(s => s.Expression)
-                .Union(database.Model.Expressions.Where(e => e.Kind == ExpressionKind.M).Select(x => x.Expression))
-                .ToList();
+            var partitionExpressions = database.Model.Tables.SelectMany(t => t.Partitions).Select(p => p.Source).OfType<MPartitionSource>();
+            var modelExpressions = database.Model.Expressions.Where(e => e.Kind == ExpressionKind.M);
 
-            /*arbitrary name and compatibility level (because they always get serialized, even if not specified so might as well specify)*/
-            var exportDatabase = new Database() { Name = "Data sources", CompatibilityLevel = 1400, Model = new Model() };
-            var sqlSevDataSources = FindSqlServerDataSources(database, expressions);
-            var localFileDataSources = FindLocalFileDataSources(database, expressions);
+            PullUpSqlServerDataSources(database, partitionExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
+            PullUpSqlServerDataSources(database, modelExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
+            PullUpLocalFileDataSources(database, partitionExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
+            PullUpLocalFileDataSources(database, modelExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
 
-            foreach (var ds in sqlSevDataSources.Concat(localFileDataSources))
-                exportDatabase.Model.DataSources.Add(ds);
-
-            return exportDatabase;
+            return database;
         }
 
-        private static IEnumerable<DataSource> FindLocalFileDataSources(Database database, List<string> expressions)
+        private static void PullUpLocalFileDataSources<T>(Database database, IEnumerable<T> expressionObjs, Func<T, string> getExpression, Action<T, string> setExpression)
         {
-            var fileSources = expressions
-                .Select(exp => Regex.Match(exp, @"Source = (Csv.Document|Excel.Workbook)\(File.Contents\(""(?'path'[^""]+)""", RegexOptions.IgnoreCase))
-                .Where(m => m.Success)
-                .Select(m => m.Groups["path"].Value)
+            var fileSources = expressionObjs
+                .Select(exp => new { exp, expTxt = getExpression(exp), match = Regex.Match(getExpression(exp), @"Source = (Csv.Document|Excel.Workbook)\(File.Contents\(""(?'path'[^""]+)""\)[^)]*\)", RegexOptions.IgnoreCase) })
+                .Where(x => x.match.Success);
+
+            var dsNames = fileSources.Select(fs => fs.match.Groups["path"].Value)
                 .Distinct()
-                .ToList();
+                .ToDictionary(
+                    path => path,
+                    path =>
+                    {
+                        var extension = Path.GetExtension(path).TrimStart('.');
+                        var nameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+                        return $"{extension}/{nameWithoutExtension}";
+                    });
 
-            foreach (var path in fileSources)
+            foreach (var kvp in dsNames)
             {
-                var extension = Path.GetExtension(path).TrimStart('.');
-                var nameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+                var path = kvp.Key;
+                var name = kvp.Value;
 
-                var name = $"{extension}/{nameWithoutExtension}";
                 if (database.Model.DataSources.Contains(name))
                     continue;
 
-                yield return new StructuredDataSource()
+                var ds = new StructuredDataSource()
                 {
                     Name = name,
-                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username="...", Password="...", EncryptConnection=false },
+                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username = "...", Password = "...", EncryptConnection = false },
                     ConnectionDetails = new ConnectionDetails($@"{{
                         protocol: ""file"",
                         address:
@@ -55,25 +58,39 @@ namespace Packer2.Library.DataModel.Transofrmations
                         query: null
                     }}")
                 };
+
+                database.Model.DataSources.Add(ds);
+            }
+
+            foreach (var x in fileSources)
+            {
+                var name = dsNames[x.match.Groups["path"].Value];
+                var newText = x.expTxt.Remove(x.match.Index, x.match.Length).Insert(x.match.Index, @$"Source=#""{name}""");
+                setExpression(x.exp, newText);
             }
         }
 
-        private static IEnumerable<DataSource> FindSqlServerDataSources(Database database, List<string> expressions)
+        private static void PullUpSqlServerDataSources<T>(Database database, IEnumerable<T> expressionObjs, Func<T, string> getExpression, Action<T, string> setExpression)
         {
-            var sqlServerSources = expressions
-                .Select(e => Regex.Match(e, @"(Source = Sql.Database\(""(?'server'[^""]+)"",\s*""(?'database'[^""]+)""\))|(Source = Sql.Databases\(""(?'server'[^""]+)""[^=]*=\s*Source{\[Name=""(?'database'[^""]+))", RegexOptions.IgnoreCase))
-                .Where(m => m.Success)
-                .Select(m => new { server = m.Groups["server"].Value, database = m.Groups["database"].Value })
-                .Distinct()
-                .ToList();
+            var sqlServerSources = expressionObjs
+                .Select(exp => new { exp, text = getExpression(exp) })
+                .Select(x => new { x.exp, expTxt = x.text, match = Regex.Match(x.text, @"((?'var'Source) = Sql.Database\(""(?'server'[^""]+)"",\s*""(?'database'[^""]+)""\))|(Source = Sql.Databases\(""(?'server'[^""]+)""\),\s+(?'var'[^=]+)=\s*Source{\[Name=""(?'database'[^""]+))""\]}\[Data\]", RegexOptions.IgnoreCase) })
+                .Where(x => x.match.Success)
+                .Select(x => new { x.match, x.expTxt, x.exp, server = x.match.Groups["server"].Value, database = x.match.Groups["database"].Value, variable = x.match.Groups["var"].Value });
 
-            foreach (var conn in sqlServerSources)
+            var dsNames = sqlServerSources.Select(fs => new { fs.server, fs.database })
+                .Distinct()
+                .ToDictionary(conn => conn, conn =>$"SQL/{conn.server};{conn.database}");
+
+            foreach (var kvp in dsNames)
             {
-                var name = $"SQL/{conn.server};{conn.database}";
+                var conn = kvp.Key;
+                var name = kvp.Value;
+
                 if (database.Model.DataSources.Contains(name))
                     continue;
 
-                yield return new StructuredDataSource()
+                var ds = new StructuredDataSource()
                 {
                     Name = name,
                     Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username = "...", Password = "...", EncryptConnection = false },
@@ -88,6 +105,15 @@ namespace Packer2.Library.DataModel.Transofrmations
                         query: null
                     }}")
                 };
+
+                database.Model.DataSources.Add(ds);
+            }
+
+            foreach (var x in sqlServerSources)
+            {
+                var name = dsNames[new { x.server, x.database }];
+                var newText = x.expTxt.Remove(x.match.Index, x.match.Length).Insert(x.match.Index, $"{x.variable}= #\"{name}\"");
+                setExpression(x.exp, newText);
             }
         }
     }

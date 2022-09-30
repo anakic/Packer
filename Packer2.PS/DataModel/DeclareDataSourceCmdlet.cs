@@ -4,16 +4,16 @@ using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
-    [Cmdlet(VerbsData.Export, "TabularModelDataSources")]
+    [Cmdlet(VerbsLifecycle.Register, "TabularModelDataSources")]
     [OutputType(typeof(Database))]
-    public class DeclareDataSourceCmdlet : Cmdlet
+    public class RegisterTabularModelDataSourceCmdlet : Cmdlet
     {
         [Parameter(ValueFromPipeline = true, Mandatory = true)]
         public Database Model { get; set; }
 
         protected override void ProcessRecord()
         {
-            IDataModelTransform transform = new ExportDataSourcesTransform();
+            IDataModelTransform transform = new RegisterDataSourcesTransform();
             WriteObject(transform.Transform(Model));
         }
     }

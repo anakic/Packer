@@ -84,7 +84,7 @@ namespace Packer2.Tests.Report
             var dataTransforms = new IDataModelTransform[]
             {
                 new DowngradeTransform(version),
-                new ExportDataSourcesTransform(),
+                new RegisterDataSourcesTransform(),
                 new PullUpExpressionsTranform(),
 
                 // todo: add switches to optionally add these steps?
