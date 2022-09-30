@@ -16,7 +16,7 @@ namespace Packer2.PS.DataModel
         {
             IDataModelTransform transform = CreateTransform();
             var transformed = transform.Transform(Database);
-            WriteObject(transform.Transform(transformed));
+            WriteObject(transformed);
         }
     }
 }
