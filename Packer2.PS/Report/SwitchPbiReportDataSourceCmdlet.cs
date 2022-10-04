@@ -4,9 +4,9 @@ using System.Management.Automation;
 
 namespace Packer2.PS.Report
 {
-    [Cmdlet(VerbsCommon.Switch, "DataSource")]
+    [Cmdlet(VerbsCommon.Switch, "PbiReportDataSource")]
     [OutputType(typeof(PowerBIReport))]
-    public class SetSSASDataSourceCmdlet : Cmdlet
+    public class SwitchPbiReportDataSourceCmdlet : Cmdlet
     {
         [Parameter(Mandatory = false, ValueFromPipeline = false, Position = 0)]
         public string ConnectionString { get; set; }

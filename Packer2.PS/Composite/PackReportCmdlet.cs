@@ -6,7 +6,7 @@ using System.Management.Automation;
 
 namespace Packer2.PS.Composite
 {
-    [Cmdlet("Pack", "Report")]
+    [Cmdlet(VerbsData.Compress, "PbiReport")]
     public class PackReportCmdlet : StoreCmdletBase
     {
         [Parameter(Position = 0, Mandatory = true)]

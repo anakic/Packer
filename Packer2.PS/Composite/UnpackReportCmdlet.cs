@@ -1,12 +1,11 @@
 ﻿using DataModelLoader.Report;
 using Packer2.Library;
 using Packer2.Library.DataModel;
-using Packer2.PS.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.Composite
 {
-    [Cmdlet("Unpack", "Report")]
+    [Cmdlet(VerbsData.Expand, "PbiReport")]
     public class UnpackReportCmdlet : StoreCmdletBase
     {
         [Parameter(Position = 0, Mandatory = true)]
