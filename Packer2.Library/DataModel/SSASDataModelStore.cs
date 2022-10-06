@@ -52,17 +52,29 @@ namespace Packer2.Library.DataModel
                 server.Databases.Add(database);
                 database.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
 
-                // process
-                server.BeginTransaction();
-                if(processOnSave)
-                    database.Model.RequestRefresh(RefreshType.Full);
-                var results = database.Model.SaveChanges(new SaveOptions() { SaveFlags = SaveFlags.ForceValidation });
-                server.CommitTransaction();
-
-                foreach (var msg in results.XmlaResults.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>()))
+                try
                 {
-                    // todo: log warnings
+                    // process
+                    server.BeginTransaction();
+                    if (processOnSave)
+                        database.Model.RequestRefresh(RefreshType.Full);
+                    var results = database.Model.SaveChanges(new SaveOptions() { SaveFlags = SaveFlags.ForceValidation });
+                    server.CommitTransaction();
+                    PrintMessages(results.XmlaResults);
                 }
+                catch(Microsoft.AnalysisServices.OperationException ex)
+                {
+                    PrintMessages(ex.Results);
+                }
+            }
+        }
+
+        private void PrintMessages(Microsoft.AnalysisServices.XmlaResultCollection results)
+        {
+            var messages = results.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>());
+            foreach (var m in messages)
+            {
+                var x = m.Location.SourceObject;
             }
         }
     }

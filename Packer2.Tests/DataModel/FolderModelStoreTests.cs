@@ -33,18 +33,14 @@ namespace Packer2.Tests.DataModel
         }
 
         [Fact]
-        public void TEST()
+        public void TEST_Dax()
         {
-            var file = new MemoryFile(TestResourcesHelper.GetTestModelContents());
+            var file = new MemoryFile(TestResourcesHelper.GetOneTableTestModelContents());
             var store2 = new BimDataModelStore(file);
             var database = store2.Read();
 
-            database = new PullUpExpressionsTranform().Transform(database);
-
-            var store = new FolderModelStore(tempFolder);
-            store.Save(database);
-
-            store.Read();
+            var storeSSAS = new SSASDataModelStore(".", "test_model_single_table");
+            storeSSAS.Save(database);
         }
     }
 }
