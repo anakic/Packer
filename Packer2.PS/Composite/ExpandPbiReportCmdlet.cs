@@ -6,7 +6,7 @@ using System.Management.Automation;
 namespace Packer2.PS.Composite
 {
     [Cmdlet(VerbsData.Expand, "PbiReport")]
-    public class UnpackReportCmdlet : StoreCmdletBase
+    public class ExpandPbiReportCmdlet : StoreCmdletBase
     {
         [Parameter(Position = 0, Mandatory = true)]
         [Alias("s")]

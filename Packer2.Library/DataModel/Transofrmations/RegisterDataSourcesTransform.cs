@@ -46,7 +46,7 @@ namespace Packer2.Library.DataModel.Transofrmations
                 var ds = new StructuredDataSource()
                 {
                     Name = name,
-                    Credential = new Credential() { AuthenticationKind = "UsernamePassword", Username = "...", Password = "...", EncryptConnection = false },
+                    Credential = new Credential() { AuthenticationKind = "Windows", Username = "...", Password = "...", EncryptConnection = false },
                     ConnectionDetails = new ConnectionDetails($@"{{
                         protocol: ""file"",
                         address:
