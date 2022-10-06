@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Packer2.Library;
 using Packer2.Library.DataModel;
+using Packer2.Library.DataModel.Transofrmations;
 using Packer2.Tests.Tools;
 using Xunit;
 
@@ -29,6 +30,21 @@ namespace Packer2.Tests.DataModel
             var database = store2.Read();
 
             store.Save(database);
+        }
+
+        [Fact]
+        public void TEST()
+        {
+            var file = new MemoryFile(TestResourcesHelper.GetTestModelContents());
+            var store2 = new BimDataModelStore(file);
+            var database = store2.Read();
+
+            database = new PullUpExpressionsTranform().Transform(database);
+
+            var store = new FolderModelStore(tempFolder);
+            store.Save(database);
+
+            store.Read();
         }
     }
 }

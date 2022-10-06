@@ -56,6 +56,23 @@ namespace Packer2.Library.DataModel
 
                 tablesArr.Add(tableObj);
             }
+
+            // todo: this could be a static member
+            var extensionToExtTypeMap = expTypeToExtensionsMap.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+            var expsArr = root.SelectToken(".model.expressions") as JArray;
+            if (expsArr != null)
+            {
+                foreach (var node in expsArr)
+                {
+                    var val = node["expression"].ToString();
+                    var m = Regex.Match(val, @"{ref:\s*(?'path'[^}]+)}");
+                    if (m.Success)
+                    {
+                        var expression = File.ReadAllText(Path.Combine(folder, m.Groups["path"].Value));
+                        node["expression"] = expression;
+                    }
+                }
+            }
             var file = new JObjFile(root);
             var inner = new BimDataModelStore(file);
             return inner.Read();
@@ -88,7 +105,22 @@ namespace Packer2.Library.DataModel
             inner.Save(model);
             var jobj = jObjFile.JObject;
             ExpandTables(jobj, Path.Combine(folder, "Tables"));
+            ExpandExpressions(jobj.SelectTokens(".model.expressions[*]"), folder);
             WriteToFile(Path.Combine(folder, "database.json"), jobj);
+        }
+
+        private void ExpandExpressions(IEnumerable<JToken> nodes, string folderPath)
+        {
+            foreach (var expNode in nodes)
+            {
+                var name = expNode["name"]!.Value<string>()!;
+                var type = expNode["kind"]!.Value<string>()!;
+                var ext = expTypeToExtensionsMap[type];
+                var exp = expNode.SelectToken("expression")!.Value<string>();
+                var relativePath = Path.Combine("Expressions", $"{pathEscaper.EscapeName(name)}.{ext}");
+                WriteToFile(Path.Combine(folderPath, relativePath), exp);
+                expNode["expression"] = $"{{ref: {relativePath}}}";
+            }
         }
 
         private void ExpandTables(JObject jobj, string path)
