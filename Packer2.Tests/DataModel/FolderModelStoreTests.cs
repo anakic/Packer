@@ -39,7 +39,7 @@ namespace Packer2.Tests.DataModel
             var store2 = new BimDataModelStore(file);
             var database = store2.Read();
 
-            var storeSSAS = new SSASDataModelStore(".", "test_model_single_table");
+            var storeSSAS = new SSASDataModelStore(".", "test_model_single_table", true);
             storeSSAS.Save(database);
         }
     }

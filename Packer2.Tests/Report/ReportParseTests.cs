@@ -106,7 +106,7 @@ namespace Packer2.Tests.Report
             if (SsasServer != null)
             {
                 // var serverStore = new BimDataModelStore(new LocalTextFile(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\test.bim"));
-                var serverStore = new SSASDataModelStore(SsasServer, SsasDatabaseName);
+                var serverStore = new SSASDataModelStore(SsasServer, SsasDatabaseName, true);
                 serverStore.Save(dataModel);
             }
 

@@ -1,4 +1,5 @@
 ﻿using DataModelLoader.Report;
+using Microsoft.Extensions.Logging;
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using System.Data.SqlClient;
@@ -29,6 +30,9 @@ namespace Packer2.PS
             }
         }
 
+        protected ILogger<T> CreateLogger<T>()
+            => new PSLogger<T>(this);
+
         protected IDataModelStore GetDataModelStore(string? location)
         {
             string currentPath = SessionState.Path.CurrentLocation.Path;
@@ -36,7 +40,7 @@ namespace Packer2.PS
             try
             {
                 var connStrBuilder = new SqlConnectionStringBuilder(location);
-                store = new SSASDataModelStore(connStrBuilder.DataSource, connStrBuilder.InitialCatalog);
+                store = new SSASDataModelStore(connStrBuilder.DataSource, connStrBuilder.InitialCatalog, true, CreateLogger<SSASDataModelStore>());
             }
             catch
             {

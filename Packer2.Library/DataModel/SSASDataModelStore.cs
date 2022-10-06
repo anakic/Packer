@@ -1,4 +1,5 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using Microsoft.Extensions.Logging;
 using System.Data.SqlClient;
 
 namespace Packer2.Library.DataModel
@@ -8,13 +9,15 @@ namespace Packer2.Library.DataModel
         private readonly string serverName;
         private readonly string? databaseName;
         private readonly bool processOnSave;
+        private readonly ILogger<SSASDataModelStore>? logger;
 
-        public SSASDataModelStore(string server, string? database, bool processOnSave = true)
+        public SSASDataModelStore(string server, string? database, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
         {
             // server can be e.g. "localhost:54287"
             this.serverName = server;
             this.databaseName = database;
             this.processOnSave = processOnSave;
+            this.logger = logger;
         }
 
         public Database Read()
@@ -31,13 +34,6 @@ namespace Packer2.Library.DataModel
 
         public void Save(Database database)
         {
-            // todo: implement
-            // - start a local ssas server that I have rights to (docker or local)
-            // - test save (if the model is already connected to the server/datase that were specified in the ctor)
-            // - if the server is empty, or the server/db are not the same as passed in ctor, create a new db
-            //      a) use the update method with UpdateMode.Create (or use UpdateOrCreate with the correct server) https://docs.microsoft.com/en-us/analysis-services/tom/create-and-deploy-an-empty-database-analysis-services-amo-tom?view=asallproducts-allversions
-            //      b) see decomiped TabularEditor code: TabularEditor.TOMWrapper.Utils.TabularDeployer (TOMWrapper14.dll) - it uses tsml to create the model
-
             using (var server = new Server())
             {
                 var builder = new SqlConnectionStringBuilder();
@@ -71,11 +67,32 @@ namespace Packer2.Library.DataModel
 
         private void PrintMessages(Microsoft.AnalysisServices.XmlaResultCollection results)
         {
+            if (logger == null)
+                return;
+
             var messages = results.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>());
             foreach (var m in messages)
             {
                 var x = m.Location.SourceObject;
+                if (m is Microsoft.AnalysisServices.XmlaWarning)
+                {
+                    // todo: can also get error positions (start index and length) for dax errors
+                    logger.LogWarning("{location}: {message}", LocationStr(m.Location?.SourceObject), m.Description);
+                }
+                else if (m is Microsoft.AnalysisServices.XmlaError)
+                {
+                    logger.LogError("{location}: {message}", LocationStr(m.Location?.SourceObject), m.Description);
+                }
+                else
+                    logger.LogError("Packer to-do: don't know how to display message {message}", m);
             }
+        }
+
+        private string LocationStr(Microsoft.AnalysisServices.XmlaLocationReference? locationRef)
+        {
+            if (locationRef == null)
+                return "<Unknown location>";
+            return $"{locationRef.TableName }[{locationRef.ColumnName ?? locationRef.MeasureName}]";
         }
     }
 }

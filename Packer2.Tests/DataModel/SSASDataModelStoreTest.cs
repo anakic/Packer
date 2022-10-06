@@ -19,7 +19,7 @@ namespace Packer2.Tests.DataModel
         [Fact]
         public void ReadsDataModel()
         {
-            var store = new SSASDataModelStore("localhost:54287", null);
+            var store = new SSASDataModelStore("localhost:54287", null, true);
             var database = store.Read();
             database.Model.Tables.Count.Should().NotBe(0);
 
@@ -37,7 +37,7 @@ namespace Packer2.Tests.DataModel
 
             model.Model.DataSources.OfType<StructuredDataSource>().Single().Credential.Password = "Discover2020*";
 
-            var store2 = new SSASDataModelStore("localhost", "MyModel_SingleTable_3");
+            var store2 = new SSASDataModelStore("localhost", "MyModel_SingleTable_3", true);
             store2.Save(model);
         }
 
