@@ -4,7 +4,7 @@ using Packer2.Library.DataModel.Transofrmations;
 
 namespace Packer2.Library
 {
-    public static class Packer
+    public static class Packer2Extensions
     {
         public static Database ReadDataModelFromBimFile(string path)
             => new BimDataModelStore(new LocalTextFile(path)).Read();
