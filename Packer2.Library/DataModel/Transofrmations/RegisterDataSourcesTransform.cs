@@ -1,24 +1,33 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using Microsoft.Extensions.Logging;
+using Packer2.Library.Tools;
 using System.Text.RegularExpressions;
 
 namespace Packer2.Library.DataModel.Transofrmations
 {
     public class RegisterDataSourcesTransform : IDataModelTransform
     {
+        private readonly ILogger<RegisterDataSourcesTransform> logger;
+
+        public RegisterDataSourcesTransform(ILogger<RegisterDataSourcesTransform>? logger = null)
+        {
+            this.logger = logger ?? new DummyLogger<RegisterDataSourcesTransform>();
+        }
+
         public Database Transform(Database database)
         {
             var partitionExpressions = database.Model.Tables.SelectMany(t => t.Partitions).Select(p => p.Source).OfType<MPartitionSource>();
             var modelExpressions = database.Model.Expressions.Where(e => e.Kind == ExpressionKind.M);
 
-            PullUpSqlServerDataSources(database, partitionExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
-            PullUpSqlServerDataSources(database, modelExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
-            PullUpLocalFileDataSources(database, partitionExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
-            PullUpLocalFileDataSources(database, modelExpressions, pe => pe.Expression, (pe, ex) => pe.Expression = ex);
+            PullUpSqlServerDataSources(database, partitionExpressions, pe => pe.Expression, (pe, ex) => { pe.Expression = ex; logger.LogInformation("Updating expression in partition '{partitionName}' or table '{tableName}'", pe.Partition.Name, pe.Partition.Table.Name); });
+            PullUpSqlServerDataSources(database, modelExpressions, pe => pe.Expression, (pe, ex) => { pe.Expression = ex; logger.LogInformation("Updating expression '{expressionName}'", pe.Name); });
+            PullUpLocalFileDataSources(database, partitionExpressions, pe => pe.Expression, (pe, ex) => { pe.Expression = ex; logger.LogInformation("Updating expression in partition '{partitionName}' or table '{tableName}'", pe.Partition.Name, pe.Partition.Table.Name); });
+            PullUpLocalFileDataSources(database, modelExpressions, pe => pe.Expression, (pe, ex) => { pe.Expression = ex; logger.LogInformation("Updating expression '{expressionName}'", pe.Name); });
 
             return database;
         }
 
-        private static void PullUpLocalFileDataSources<T>(Database database, IEnumerable<T> expressionObjs, Func<T, string> getExpression, Action<T, string> setExpression)
+        private void PullUpLocalFileDataSources<T>(Database database, IEnumerable<T> expressionObjs, Func<T, string> getExpression, Action<T, string> setExpression)
         {
             var fileSources = expressionObjs
                 .Select(exp => new { exp, expTxt = getExpression(exp), match = Regex.Match(getExpression(exp), @"Source = (Csv.Document|Excel.Workbook)\(File.Contents\(""(?'path'[^""]+)""\)[^)]*\)", RegexOptions.IgnoreCase) })
@@ -41,7 +50,12 @@ namespace Packer2.Library.DataModel.Transofrmations
                 var name = kvp.Value;
 
                 if (database.Model.DataSources.Contains(name))
+                {
+                    logger.LogInformation("Found a reference to a local file data source '{dataSource}' but it's already registered so skipping", name);
                     continue;
+                }
+
+                logger.LogInformation("Registering local file data source '{dataSource}'.", name);
 
                 var ds = new StructuredDataSource()
                 {
@@ -69,7 +83,7 @@ namespace Packer2.Library.DataModel.Transofrmations
             }
         }
 
-        private static void PullUpSqlServerDataSources<T>(Database database, IEnumerable<T> expressionObjs, Func<T, string> getExpression, Action<T, string> setExpression)
+        private void PullUpSqlServerDataSources<T>(Database database, IEnumerable<T> expressionObjs, Func<T, string> getExpression, Action<T, string> setExpression)
         {
             var sqlServerSources = expressionObjs
                 .Select(exp => new { exp, text = getExpression(exp) })
@@ -87,7 +101,12 @@ namespace Packer2.Library.DataModel.Transofrmations
                 var name = kvp.Value;
 
                 if (database.Model.DataSources.Contains(name))
+                {
+                    logger.LogInformation("Found a reference to a SQLServer data source '{dataSource}' but it's already registered so skipping", name);
                     continue;
+                }
+
+                logger.LogInformation("Registering SQLServer data source '{dataSource}'.", name);
 
                 var ds = new StructuredDataSource()
                 {
