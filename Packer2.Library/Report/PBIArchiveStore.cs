@@ -1,12 +1,9 @@
-﻿using Microsoft.AnalysisServices.Tabular;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Packer2.Library;
 using Packer2.Library.Tools;
 using System.IO.Compression;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks.Dataflow;
 using System.Xml.Linq;
 using SaveOptions = System.Xml.Linq.SaveOptions;
 
@@ -32,13 +29,15 @@ namespace DataModelLoader.Report
         private readonly Action<PowerBIReport, T> setValueAction;
         private readonly Encoding encoding;
         private readonly bool hasPreamble;
+        private readonly ILogger logger;
 
         public string RelativePath { get; }
 
-        protected TextFileLoaderBase(string relativePath, Func<PowerBIReport, T> getValueFunc, Action<PowerBIReport, T> setValueAction, Encoding encoding, bool hasPreamble)
+        protected TextFileLoaderBase(string relativePath, Func<PowerBIReport, T> getValueFunc, Action<PowerBIReport, T> setValueAction, Encoding encoding, bool hasPreamble, ILogger logger)
         {
             this.encoding = encoding;
             this.hasPreamble = hasPreamble;
+            this.logger = logger;
             RelativePath = relativePath;
             this.getValueFunc = getValueFunc;
             this.setValueAction = setValueAction;
@@ -46,6 +45,8 @@ namespace DataModelLoader.Report
 
         public void LoadIntoModel(byte[] bytes, PowerBIReport model)
         {
+            logger.LogTrace("Loading file {path} into model", RelativePath);
+
             if (hasPreamble)
             {
                 var preamble = encoding.GetPreamble();
@@ -84,8 +85,8 @@ namespace DataModelLoader.Report
 
     class TextFileLoader : TextFileLoaderBase<string>
     {
-        public TextFileLoader(string relativePath, Func<PowerBIReport, string> getValueFunc, Action<PowerBIReport, string> setValueAction, Encoding encoding, bool hasPreamble) 
-            : base(relativePath, getValueFunc, setValueAction, encoding, hasPreamble)
+        public TextFileLoader(string relativePath, Func<PowerBIReport, string> getValueFunc, Action<PowerBIReport, string> setValueAction, Encoding encoding, bool hasPreamble, ILogger logger) 
+            : base(relativePath, getValueFunc, setValueAction, encoding, hasPreamble, logger)
         {
         }
 
@@ -97,8 +98,8 @@ namespace DataModelLoader.Report
     {
         private readonly bool indentation;
 
-        public XmlFileLoader(string expectedRelativeFilePath, Action<PowerBIReport, XDocument> setValueAction, Func<PowerBIReport, XDocument> getValueFunc, Encoding encoding, bool hasPreamble, bool indentation = false)
-            : base(expectedRelativeFilePath, getValueFunc, setValueAction, encoding, hasPreamble)
+        public XmlFileLoader(string expectedRelativeFilePath, Action<PowerBIReport, XDocument> setValueAction, Func<PowerBIReport, XDocument> getValueFunc, Encoding encoding, bool hasPreamble, bool indentation, ILogger logger)
+            : base(expectedRelativeFilePath, getValueFunc, setValueAction, encoding, hasPreamble, logger)
         {
             this.indentation = indentation;
         }
@@ -110,8 +111,8 @@ namespace DataModelLoader.Report
     {
         private readonly bool indentation;
 
-        public JsonFileLoader(string expectedRelativeFilePath, Action<PowerBIReport, JObject> setValueAction, Func<PowerBIReport, JObject> getValueFunc, Encoding encoding, bool hasPreamble, bool indentation = false)
-            : base(expectedRelativeFilePath, getValueFunc, setValueAction, encoding, hasPreamble)
+        public JsonFileLoader(string expectedRelativeFilePath, Action<PowerBIReport, JObject> setValueAction, Func<PowerBIReport, JObject> getValueFunc, Encoding encoding, bool hasPreamble, bool indentation, ILogger logger)
+            : base(expectedRelativeFilePath, getValueFunc, setValueAction, encoding, hasPreamble, logger)
         {
             this.indentation = indentation;
         }
@@ -122,8 +123,8 @@ namespace DataModelLoader.Report
 
     class ContentTypesFileLoader : XmlFileLoader
     {
-        public ContentTypesFileLoader()
-            : base("[Content_Types].xml", (m, v) => m.Content_Types = v, m => m.Content_Types, Encoding.UTF8, true, false)
+        public ContentTypesFileLoader(ILogger logger)
+            : base("[Content_Types].xml", (m, v) => m.Content_Types = v, m => m.Content_Types, Encoding.UTF8, true, false, logger)
         {
         }
 
@@ -144,22 +145,23 @@ namespace DataModelLoader.Report
         IKnownArchiveFileLoader[] knowFileLoaders;
 
         private readonly string archivePath;
+        private readonly ILogger<PBIArchiveStore> logger;
 
-        public PBIArchiveStore(string archivePath)
+        public PBIArchiveStore(string archivePath, ILogger<PBIArchiveStore>? logger)
         {
             this.archivePath = archivePath;
-
+            this.logger = logger ?? new DummyLogger<PBIArchiveStore>();
             knowFileLoaders = new IKnownArchiveFileLoader[]
             {
-                new JsonFileLoader("DiagramLayout", (m, v) => m.DiagramLayout = v, m => m.DiagramLayout, Encoding.Unicode, false),
-                new JsonFileLoader("DataModelSchema", (m, v) => m.DataModelSchemaFile = v, m => m.DataModelSchemaFile, Encoding.Unicode, false, true),
-                new JsonFileLoader("Metadata", (m, v) => m.Metadata = v, m => m.Metadata, Encoding.Unicode, false),
-                new JsonFileLoader("Settings", (m, v) => m.Settings = v, m => m.Settings, Encoding.Unicode, false),
-                new TextFileLoader("Version", m => m.Version, (m, v) => m.Version= v, Encoding.Unicode, false),
-                new JsonFileLoader("Connections", (m, v) => m.Connections = v, m => m.Connections, Encoding.UTF8, false),
-                new JsonFileLoader("Report\\Layout", (m, v) => m.Layout = v, m => m.Layout, Encoding.Unicode, false),
-                new XmlFileLoader("Report\\LinguisticSchema", (m, v) => m.Report_LinguisticSchema= v, m => m.Report_LinguisticSchema, Encoding.Unicode, false),
-                new ContentTypesFileLoader(),
+                new JsonFileLoader("DiagramLayout", (m, v) => m.DiagramLayout = v, m => m.DiagramLayout, Encoding.Unicode, false, false, logger),
+                new JsonFileLoader("DataModelSchema", (m, v) => m.DataModelSchemaFile = v, m => m.DataModelSchemaFile, Encoding.Unicode, false, true, logger),
+                new JsonFileLoader("Metadata", (m, v) => m.Metadata = v, m => m.Metadata, Encoding.Unicode, false, false, logger),
+                new JsonFileLoader("Settings", (m, v) => m.Settings = v, m => m.Settings, Encoding.Unicode, false, false, logger),
+                new TextFileLoader("Version", m => m.Version, (m, v) => m.Version= v, Encoding.Unicode, false, logger),
+                new JsonFileLoader("Connections", (m, v) => m.Connections = v, m => m.Connections, Encoding.UTF8, false, false, logger),
+                new JsonFileLoader("Report\\Layout", (m, v) => m.Layout = v, m => m.Layout, Encoding.Unicode, false, false, logger),
+                new XmlFileLoader("Report\\LinguisticSchema", (m, v) => m.Report_LinguisticSchema= v, m => m.Report_LinguisticSchema, Encoding.Unicode, false, false, logger),
+                new ContentTypesFileLoader(logger),
                 new SecurityBindingsFileLoader(),
             };
         }
