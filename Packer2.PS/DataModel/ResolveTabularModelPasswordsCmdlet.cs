@@ -8,6 +8,6 @@ namespace Packer2.PS.DataModel
     public class ResolveTabularModelPasswordsCmdlet : DataModelTransformCmdletBase
     {
         protected override IDataModelTransform CreateTransform()
-            => new PasswordResolveTransform();
+            => new PasswordResolveTransform(CreateLogger<PasswordResolveTransform>());
     }
 }
