@@ -8,6 +8,6 @@ namespace Packer2.PS.DataModel
     public class RemoveTabularModelCulturesCmdlet : DataModelTransformCmdletBase
     {
         protected override IDataModelTransform CreateTransform()
-            => new StripCulturesTransform();
+            => new StripCulturesTransform(CreateLogger<StripCulturesTransform>());
     }
 }
