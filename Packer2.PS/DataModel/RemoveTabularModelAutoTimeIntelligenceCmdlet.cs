@@ -7,6 +7,6 @@ namespace Packer2.PS.DataModel
     public class RemoveTabularModelAutoTimeIntelligenceCmdlet : DataModelTransformCmdletBase
     {
         protected override IDataModelTransform CreateTransform()
-            => new StripLocalDateTablesTransform();
+            => new StripLocalDateTablesTransform(CreateLogger<StripLocalDateTablesTransform>());
     }
 }
