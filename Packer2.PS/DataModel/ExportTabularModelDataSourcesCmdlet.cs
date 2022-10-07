@@ -7,6 +7,6 @@ namespace Packer2.PS.DataModel
     public class ExportTabularModelDataSourcesCmdlet : DataModelTransformCmdletBase
     {
         protected override IDataModelTransform CreateTransform()
-            => new ExportDataSourcesTransform();
+            => new ExportDataSourcesTransform(CreateLogger<ExportDataSourcesTransform>());
     }
 }
