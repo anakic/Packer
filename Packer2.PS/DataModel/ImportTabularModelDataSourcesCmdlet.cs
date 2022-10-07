@@ -13,7 +13,7 @@ namespace Packer2.PS.DataModel
         protected override IDataModelTransform CreateTransform()
         {
             var sourceDb = GetDataModelStore(SourceModel).Read();
-            return new MergeDataSourcesTransform(sourceDb);
+            return new MergeDataSourcesTransform(sourceDb, CreateLogger<MergeDataSourcesTransform>());
         }
     }
 }
