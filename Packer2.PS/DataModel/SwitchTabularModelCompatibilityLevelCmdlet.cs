@@ -11,6 +11,6 @@ namespace Packer2.PS.DataModel
         public int Version { get; set; }
 
         protected override IDataModelTransform CreateTransform()
-            => new DowngradeTransform(Version);
+            => new DowngradeTransform(Version, CreateLogger<DowngradeTransform>());
     }
 }

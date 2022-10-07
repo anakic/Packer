@@ -1,4 +1,5 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -7,6 +8,7 @@ namespace Packer2.Library.DataModel.Transofrmations
 {
     public class DowngradeTransform : IDataModelTransform
     {
+        private readonly ILogger<DowngradeTransform> logger;
         private readonly int targetCompatibilityLevel;
 
         #region reflection to load compatibility levels for types/properties
@@ -53,8 +55,9 @@ namespace Packer2.Library.DataModel.Transofrmations
         }
         #endregion
 
-        public DowngradeTransform(int targetCompatibilityLevel)
+        public DowngradeTransform(int targetCompatibilityLevel, ILogger<DowngradeTransform> logger = null)
         {
+            this.logger = logger ?? new DummyLogger<DowngradeTransform>();
             this.targetCompatibilityLevel = targetCompatibilityLevel;
         }
 
@@ -91,19 +94,23 @@ namespace Packer2.Library.DataModel.Transofrmations
             bimStore.Save(database);
             var jobj = JObject.Parse(file.Text);
 
+            // this property is invalid, but I didn't find it as a property in the AS dll
             // todo: instead of the black list of incompatible properties, should we come up with a white list instead?
             // this would eliminate the defaultPowerBIDataSourceVersion property as well
-            jobj.SelectToken(".model.defaultPowerBIDataSourceVersion")?.Parent.Remove();
+            var aForbiddenToken = jobj.SelectToken(".model.defaultPowerBIDataSourceVersion");
+            if (aForbiddenToken != null)
+            {
+                aForbiddenToken.Parent!.Remove();
+                logger.LogInformation("Removed model.defaultPowerBIDataSourceVersion property");
+            }
 
             // remove imcompatible properties
             foreach (var jProp in jobj.DescendantsAndSelf().OfType<JProperty>().ToArray())
             {
                 if (incompatibleProperties.Contains(jProp.Name))
                 {
-                    // todo: use ILogger
-                    System.Diagnostics.Trace.WriteLine($"Removing {jProp.Name} from {jProp.Path}");
-
                     jProp.Remove();
+                    logger.LogTrace("Removed incompatible property {propertyName} from path {jPath}", jProp.Name, jProp.Path);
                 }
             }
 
