@@ -6,7 +6,7 @@ namespace Packer2.PS.Report
 {
     [Cmdlet(VerbsCommon.Switch, "PbiReportDataSource")]
     [OutputType(typeof(PowerBIReport))]
-    public class SwitchPbiReportDataSourceCmdlet : Cmdlet
+    public class SwitchPbiReportDataSourceCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = false, ValueFromPipeline = false, Position = 0)]
         public string ConnectionString { get; set; }
@@ -16,7 +16,7 @@ namespace Packer2.PS.Report
 
         protected override void ProcessRecord()
         {
-            var transform = new SwitchDataSourceToSSASTransform(ConnectionString);
+            var transform = new SwitchDataSourceToSSASTransform(ConnectionString, CreateLogger<SwitchDataSourceToSSASTransform>());
             WriteObject(transform.Transform(Report));
         }
     }
