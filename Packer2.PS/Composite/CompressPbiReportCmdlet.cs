@@ -20,7 +20,7 @@ namespace Packer2.PS.Composite
         protected override void ProcessRecord()
         {
             var repoFolder = Path.Combine(SessionState.Path.CurrentLocation.Path, Source);
-            var reportSourceStore = new ReportFolderStore(repoFolder);
+            var reportSourceStore = new ReportFolderStore(repoFolder, CreateLogger<ReportFolderStore>());
             var reportModel = reportSourceStore.Read();
             var dataModelFolder = Path.Combine(repoFolder, "Data Model Schema"/*todo: constant*/);
             if (Directory.Exists(dataModelFolder))

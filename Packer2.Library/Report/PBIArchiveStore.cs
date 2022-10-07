@@ -147,7 +147,7 @@ namespace DataModelLoader.Report
         private readonly string archivePath;
         private readonly ILogger<PBIArchiveStore> logger;
 
-        public PBIArchiveStore(string archivePath, ILogger<PBIArchiveStore>? logger)
+        public PBIArchiveStore(string archivePath, ILogger<PBIArchiveStore>? logger = null)
         {
             this.archivePath = archivePath;
             this.logger = logger ?? new DummyLogger<PBIArchiveStore>();

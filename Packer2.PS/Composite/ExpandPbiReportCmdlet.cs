@@ -35,7 +35,7 @@ namespace Packer2.PS.Composite
                 reportModel.DataModelSchemaFile = null;
             }
 
-            var folderStore = new ReportFolderStore(destinationFolder);
+            var folderStore = new ReportFolderStore(destinationFolder, CreateLogger<ReportFolderStore>());
             folderStore.Save(reportModel);
 
             // must let the report folderStore complete first because it clears the repo folder first before saving

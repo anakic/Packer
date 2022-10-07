@@ -30,7 +30,7 @@ namespace Packer2.PS
             {
                 if (checkExists && !File.Exists(combinedPath))
                     throw new Exception($"Report file not found at path {combinedPath}");
-                store = new PBIArchiveStore(combinedPath);
+                store = new PBIArchiveStore(combinedPath, CreateLogger<PBIArchiveStore>());
                 logger = this.CreateLogger<StoreCmdletBase>();
                 logger.LogTrace("Created .pbit/.pbix report model store '({location})'", combinedPath);
             }
@@ -38,7 +38,7 @@ namespace Packer2.PS
             {
                 if(checkExists && !Directory.Exists(combinedPath))
                     throw new Exception($"Report folder not found at path {combinedPath}");
-                store = new ReportFolderStore(combinedPath);
+                store = new ReportFolderStore(combinedPath, CreateLogger<ReportFolderStore>());
                 logger.LogTrace("Created folder report model store '({location})'", combinedPath);
             }
             return store;

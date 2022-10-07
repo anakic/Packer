@@ -1,10 +1,8 @@
-﻿using Microsoft.AnalysisServices.Tabular;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Packer2.Library;
 using Packer2.Library.Tools;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Xml.Linq;
 
 namespace DataModelLoader.Report
@@ -15,7 +13,7 @@ namespace DataModelLoader.Report
 
         private readonly string folderPath;
 
-        public ReportFolderStore(string folderPath)
+        public ReportFolderStore(string folderPath, ILogger<ReportFolderStore> logger = null)
         {
             this.folderPath = folderPath;
         }
