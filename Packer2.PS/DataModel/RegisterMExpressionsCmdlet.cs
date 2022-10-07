@@ -1,5 +1,4 @@
-﻿using Microsoft.AnalysisServices.Tabular;
-using Packer2.Library.DataModel.Transofrmations;
+﻿using Packer2.Library.DataModel.Transofrmations;
 using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
@@ -8,6 +7,6 @@ namespace Packer2.PS.DataModel
     public class RegisterMExpressionsCmdlet : DataModelTransformCmdletBase
     {
         protected override IDataModelTransform CreateTransform() 
-            => new PullUpExpressionsTranform();
+            => new PullUpExpressionsTranform(CreateLogger<PullUpExpressionsTranform>());
     }
 }

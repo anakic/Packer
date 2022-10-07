@@ -1,9 +1,17 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using Microsoft.Extensions.Logging;
 
 namespace Packer2.Library.DataModel.Transofrmations
 {
     public class PullUpExpressionsTranform : IDataModelTransform
     {
+        private readonly ILogger<PullUpExpressionsTranform> logger;
+
+        public PullUpExpressionsTranform(ILogger<PullUpExpressionsTranform> logger = null)
+        {
+            this.logger = logger;
+        }
+
         public Database Transform(Database database)
         {
             var mPartitionSources = database.Model
@@ -32,6 +40,11 @@ namespace Packer2.Library.DataModel.Transofrmations
 	Source = #""{tableName}""
 in
   Source";
+                    logger.LogInformation("Pulled up M expression from table {tableName} into global expressions", tableName);
+                }
+                else
+                {
+                    logger.LogInformation("Skipped pulling up M expression from table {tableName} into global expressions because global expressions already contains an expression with this name.", tableName);
                 }
             }
 
