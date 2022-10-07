@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Packer2.Library.Tools;
 using System.Data.SqlClient;
+using System.Text;
 
 namespace Packer2.Library.DataModel
 {
@@ -10,7 +11,7 @@ namespace Packer2.Library.DataModel
         private readonly string serverName;
         private readonly string? databaseName;
         private readonly bool processOnSave;
-        private readonly ILogger<SSASDataModelStore>? logger;
+        private readonly ILogger<SSASDataModelStore> logger;
 
         public SSASDataModelStore(string server, string? database, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
         {
@@ -25,7 +26,6 @@ namespace Packer2.Library.DataModel
         {
             var s = new Server();
             s.Connect($"Data source={serverName}");
-            var info = s.ConnectionInfo;
 
             if (databaseName != null)
                 return s.Databases[databaseName];
@@ -39,18 +39,27 @@ namespace Packer2.Library.DataModel
             {
                 var builder = new SqlConnectionStringBuilder();
                 builder.DataSource = serverName;
+
+                logger.LogInformation("Connecting to server '{serverName}'...", serverName);
                 server.Connect(builder.ConnectionString);
 
                 database.ID = database.Name = databaseName;
 
                 if (server.Databases.Contains(database.Name))
+                {
+                    logger.LogInformation("Replacing existing database '{databaseName}'...", database.Name);
                     server.Databases.Remove(database.Name);
+                }
+                else
+                    logger.LogInformation("Creating database '{databaseName}'...", database.Name);
 
                 server.Databases.Add(database);
                 database.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
 
                 try
                 {
+                    logger.LogInformation("Processing database '{databaseName}'...", database.Name);
+
                     // process
                     server.BeginTransaction();
                     if (processOnSave)
@@ -58,10 +67,12 @@ namespace Packer2.Library.DataModel
                     var results = database.Model.SaveChanges(new SaveOptions() { SaveFlags = SaveFlags.ForceValidation });
                     server.CommitTransaction();
                     PrintMessages(results.XmlaResults);
+                    logger.LogInformation("Processing database '{databaseName}' complete.", database.Name);
                 }
                 catch(Microsoft.AnalysisServices.OperationException ex)
                 {
                     PrintMessages(ex.Results);
+                    logger.LogError("Failed to process database '{databaseName}'.", database.Name);
                 }
             }
         }
@@ -71,7 +82,6 @@ namespace Packer2.Library.DataModel
             var messages = results.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>());
             foreach (var m in messages)
             {
-                var x = m.Location.SourceObject;
                 if (m is Microsoft.AnalysisServices.XmlaWarning)
                 {
                     // todo: can also get error positions (start index and length) for dax errors
@@ -90,7 +100,34 @@ namespace Packer2.Library.DataModel
         {
             if (locationRef == null)
                 return "<Unknown location>";
-            return $"{locationRef.TableName }[{locationRef.ColumnName ?? locationRef.MeasureName}]";
+
+            StringBuilder sb = new StringBuilder("<");
+            if (!string.IsNullOrEmpty(locationRef.TableName))
+                sb.Append($"nameof({locationRef.TableName}):{locationRef.TableName}; ");
+            if (!string.IsNullOrEmpty(locationRef.PartitionName))
+                sb.Append($"nameof({locationRef.PartitionName}):{locationRef.PartitionName}; ");
+            if (!string.IsNullOrEmpty(locationRef.Role))
+                sb.Append($"nameof({locationRef.Role}):{locationRef.Role}; ");
+            if (!string.IsNullOrEmpty(locationRef.RoleName))
+                sb.Append($"nameof({locationRef.RoleName}):{locationRef.RoleName}; ");
+            if (!string.IsNullOrEmpty(locationRef.Dimension))
+                sb.Append($"nameof({locationRef.Dimension}):{locationRef.Dimension}; ");
+            if (!string.IsNullOrEmpty(locationRef.ColumnName))
+                sb.Append($"nameof({locationRef.ColumnName}):{locationRef.ColumnName}; ");
+            if (!string.IsNullOrEmpty(locationRef.CalculationItemName))
+                sb.Append($"nameof({locationRef.CalculationItemName}):{locationRef.CalculationItemName}; ");
+            if (!string.IsNullOrEmpty(locationRef.MeasureGroup))
+                sb.Append($"nameof({locationRef.MeasureGroup}):{locationRef.MeasureGroup}; ");
+            if (!string.IsNullOrEmpty(locationRef.MeasureName))
+                sb.Append($"nameof({locationRef.MeasureName}):{locationRef.MeasureName}; ");
+            if (!string.IsNullOrEmpty(locationRef.Attribute))
+                sb.Append($"nameof({locationRef.Attribute}):{locationRef.Attribute}; ");
+            if (!string.IsNullOrEmpty(locationRef.Hierarchy))
+                sb.Append($"nameof({locationRef.Hierarchy}):{locationRef.Hierarchy}; ");
+            sb.Remove(sb.Length - 2, 2);
+            sb.Append(">");
+
+            return sb.ToString();
         }
     }
 }
