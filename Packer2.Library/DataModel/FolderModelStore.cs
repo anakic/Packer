@@ -11,16 +11,16 @@ namespace Packer2.Library.DataModel
 
         class JObjFile : ITextFile
         {
-            public JObject JObject { get; private set; }
+            public JObject? JObject { get; private set; }
 
-            public JObjFile(JObject jobj = null)
+            public JObjFile(JObject? jobj = null)
             {
                 JObject = jobj;
             }
 
             public string GetText()
             {
-                return JObject.ToString();
+                return JObject?.ToString() ?? "";
             }
 
             public void SetText(string text)
