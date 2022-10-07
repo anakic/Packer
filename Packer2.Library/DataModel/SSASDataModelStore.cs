@@ -1,5 +1,6 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
+using Packer2.Library.DataModel.Transofrmations;
 using System.Data.SqlClient;
 
 namespace Packer2.Library.DataModel
@@ -17,7 +18,7 @@ namespace Packer2.Library.DataModel
             this.serverName = server;
             this.databaseName = database;
             this.processOnSave = processOnSave;
-            this.logger = logger;
+            this.logger = logger ?? new DummyLogger<SSASDataModelStore>();
         }
 
         public Database Read()
@@ -67,9 +68,6 @@ namespace Packer2.Library.DataModel
 
         private void PrintMessages(Microsoft.AnalysisServices.XmlaResultCollection results)
         {
-            if (logger == null)
-                return;
-
             var messages = results.OfType<Microsoft.AnalysisServices.XmlaResult>().SelectMany(r => r.Messages.OfType<Microsoft.AnalysisServices.XmlaMessage>());
             foreach (var m in messages)
             {
