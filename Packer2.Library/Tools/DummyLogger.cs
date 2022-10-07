@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace Packer2.Library.DataModel.Transofrmations
+namespace Packer2.Library.Tools
 {
     class DummyLogger<T> : ILogger<T>
     {

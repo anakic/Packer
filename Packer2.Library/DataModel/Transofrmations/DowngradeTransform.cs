@@ -1,6 +1,7 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using Packer2.Library.Tools;
 using System.Reflection;
 using System.Text.RegularExpressions;
 

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
-using Packer2.Library.DataModel.Transofrmations;
+using Packer2.Library.Tools;
 using System.Data.SqlClient;
 
 namespace Packer2.Library.DataModel
