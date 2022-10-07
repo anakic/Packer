@@ -83,7 +83,7 @@ namespace Packer2.PS
                 }
                 else
                 {
-                    store = new FolderModelStore(combinedPath, CreateLogger<FolderModelStore>());
+                    store = new FolderDatabaseStore(combinedPath, CreateLogger<FolderDatabaseStore>());
                     logger.LogTrace("Created folder data model store '({location})'", location);
                 }
             }

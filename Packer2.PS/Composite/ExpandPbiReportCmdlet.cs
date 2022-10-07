@@ -44,7 +44,7 @@ namespace Packer2.PS.Composite
             {
                 var bimModelStore = new BimDataModelStore(new MemoryFile(dataModelSchema.ToString()));
                 var database = bimModelStore.Read();
-                var folderModelStore = new FolderModelStore(Path.Combine(destinationFolder, "Data Model Schema"/*todo: define const and share with pack-report cmdlet*/));
+                var folderModelStore = new FolderDatabaseStore(Path.Combine(destinationFolder, "Data Model Schema"/*todo: define const and share with pack-report cmdlet*/));
                 folderModelStore.Save(database);
             }
 

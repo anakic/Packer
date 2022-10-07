@@ -25,7 +25,7 @@ namespace Packer2.Library
             => new StripLocalDateTablesTransform().Transform(db);
 
         public static void SaveToRepo(this Database db, string folderPath)
-            => new FolderModelStore(folderPath).Save(db);
+            => new FolderDatabaseStore(folderPath).Save(db);
 
         public static void SaveToFile(this Database db, string filePath)
             => new BimDataModelStore(new LocalTextFile(filePath)).Save(db);

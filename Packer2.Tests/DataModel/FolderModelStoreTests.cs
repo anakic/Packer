@@ -15,7 +15,7 @@ namespace Packer2.Tests.DataModel
         [Fact]
         public void Read()
         {
-            var store = new FolderModelStore(testRepoFolder);
+            var store = new FolderDatabaseStore(testRepoFolder);
             var database = store.Read();
             database.Model.Tables.Should().NotBeEmpty();
         }
@@ -23,7 +23,7 @@ namespace Packer2.Tests.DataModel
         [Fact]
         public void Write()
         {
-            var store = new FolderModelStore(tempFolder);
+            var store = new FolderDatabaseStore(tempFolder);
 
             var file = new MemoryFile(TestResourcesHelper.GetTestModelContents());
             var store2 = new BimDataModelStore(file);

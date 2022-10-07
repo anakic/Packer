@@ -26,7 +26,7 @@ namespace Packer2.PS.Composite
             if (Directory.Exists(dataModelFolder))
             {
                 // load the DataModelSchema into the reportmodel from the folder (instead of from the DataModelSchema file)
-                var folderModelStore = new FolderModelStore(dataModelFolder);
+                var folderModelStore = new FolderDatabaseStore(dataModelFolder);
                 var database = folderModelStore.Read();
                 var inMemoryFile = new MemoryFile();
                 var bimModelStore = new BimDataModelStore(inMemoryFile);

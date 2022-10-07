@@ -98,7 +98,7 @@ namespace Packer2.Tests.Report
             // save code to folder
             if (CodeOutputPath != null)
             {
-                var outputDataModelStore = new FolderModelStore(CodeOutputPath);
+                var outputDataModelStore = new FolderDatabaseStore(CodeOutputPath);
                 outputDataModelStore.Save(dataModel);
             }
 
