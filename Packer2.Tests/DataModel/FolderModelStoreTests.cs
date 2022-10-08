@@ -22,7 +22,7 @@ namespace Packer2.Tests.DataModel
 
         [Fact]
         public void Write()
-        {
+        { 
             var store = new FolderDatabaseStore(tempFolder);
 
             var file = new MemoryFile(TestResourcesHelper.GetTestModelContents());
@@ -30,6 +30,18 @@ namespace Packer2.Tests.DataModel
             var database = store2.Read();
 
             store.Save(database);
+
+            var db2 = store.Read();
+
+            var fileA = new MemoryFile();
+            var storeA = new BimDataModelStore(fileA);
+            storeA.Save(database);
+
+            var fileB = new MemoryFile();
+            var storeB = new BimDataModelStore(fileB);
+            storeB.Save(db2);
+
+            fileA.Text.Should().Be(fileB.Text);
         }
 
         [Fact]
