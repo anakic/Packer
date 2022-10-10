@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace DataModelLoader.Report
 {
-    public class ReportFolderStore : IModelStore<PowerBIReport>
+    public class ReportFolderStore : FolderModelStore<PowerBIReport>
     {
         PathEscaper pathEscaper = new PathEscaper();
 
@@ -18,7 +18,7 @@ namespace DataModelLoader.Report
             this.folderPath = folderPath;
         }
 
-        public PowerBIReport Read()
+        public override PowerBIReport Read()
         {
             var model = new PowerBIReport();
             var blobFolderPath = Path.Combine(folderPath, "Blobs");
@@ -108,10 +108,8 @@ namespace DataModelLoader.Report
             return XDocument.Parse(File.ReadAllText(path));
         }
 
-        public void Save(PowerBIReport model)
+        protected override void DoSave(PowerBIReport model)
         {
-            ClearFolder();
-
             foreach (var kvp in model.Blobs)
             {
                 var path = Path.Combine(folderPath, "Blobs", kvp.Key);
