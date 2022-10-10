@@ -37,7 +37,7 @@ namespace DataModelLoader.Report
         {
             this.encoding = encoding;
             this.hasPreamble = hasPreamble;
-            this.logger = logger;
+            this.logger = logger ?? new DummyLogger<TextFileLoaderBase<T>>();
             RelativePath = relativePath;
             this.getValueFunc = getValueFunc;
             this.setValueAction = setValueAction;
