@@ -246,21 +246,6 @@ namespace DataModelLoader.Report
             return model;
         }
 
-
-
-        private JObject? ReadJsonFile(string path)
-        {
-            if (File.Exists(path) == false)
-                return null;
-            return JObject.Parse(File.ReadAllText(path));
-        }
-        private XDocument? ReadXmlFile(string path)
-        {
-            if (File.Exists(path) == false)
-                return null;
-            return XDocument.Parse(File.ReadAllText(path));
-        }
-
         protected override void DoSave(PowerBIReport model)
         {
             foreach (var kvp in model.Blobs)
@@ -285,6 +270,20 @@ namespace DataModelLoader.Report
             var layoutJObjClone = (JObject)model.Layout.DeepClone();
             transforms.ForEach(t => t.Transform(layoutJObjClone));
             reportFolderMapper.Write(layoutJObjClone, Path.Combine(folderPath, ReportFolderPath));
+        }
+
+        private static JObject? ReadJsonFile(string path)
+        {
+            if (File.Exists(path) == false)
+                return null;
+            return JObject.Parse(File.ReadAllText(path));
+        }
+
+        private static XDocument? ReadXmlFile(string path)
+        {
+            if (File.Exists(path) == false)
+                return null;
+            return XDocument.Parse(File.ReadAllText(path));
         }
     }
 }
