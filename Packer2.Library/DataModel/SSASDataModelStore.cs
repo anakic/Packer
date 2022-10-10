@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Packer2.Library.DataModel
 {
-    public class SSASDataModelStore : IDataModelStore
+    public class SSASDataModelStore : IModelStore<Database>
     {
         private readonly string serverName;
         private readonly string? databaseName;

@@ -1,4 +1,5 @@
 ﻿using DataModelLoader.Report;
+using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Packer2.Library;
 using Packer2.Library.DataModel;
@@ -47,10 +48,10 @@ namespace Packer2.PS
         protected ILogger<T> CreateLogger<T>()
             => new PSLogger<T>(this);
 
-        protected IDataModelStore GetDataModelStore(string? location)
+        protected IModelStore<Database> GetDataModelStore(string? location)
         {
             string currentPath = SessionState.Path.CurrentLocation.Path;
-            IDataModelStore store;
+            IModelStore<Database> store;
             try
             {
                 var connStrBuilder = new SqlConnectionStringBuilder(location);

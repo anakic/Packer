@@ -1,6 +1,5 @@
-﻿using DataModelLoader.Report;
-using Microsoft.AnalysisServices.Tabular;
-using Packer2.Library.DataModel;
+﻿using Microsoft.AnalysisServices.Tabular;
+using Packer2.Library;
 using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
@@ -17,7 +16,7 @@ namespace Packer2.PS.DataModel
 
         protected override void ProcessRecord()
         {
-            IDataModelStore store = GetDataModelStore(Destination);
+            IModelStore<Database> store = GetDataModelStore(Destination);
             store.Save(Database);
         }
     }

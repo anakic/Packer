@@ -2,7 +2,7 @@
 
 namespace Packer2.Library.DataModel
 {
-    public class BimDataModelStore : IDataModelStore
+    public class BimDataModelStore : IModelStore<Database>
     {
         private readonly ITextFile file;
 
