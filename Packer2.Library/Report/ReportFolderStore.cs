@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Packer2.Library;
 using Packer2.Library.Tools;
-using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
 namespace DataModelLoader.Report
@@ -187,7 +186,18 @@ namespace DataModelLoader.Report
                 }
             }
         }
+        
         #endregion
+
+        private const string ConnectionsFilePath = "Connections.json";
+        private const string ContentTypesFilePath = "[Content_Types].xml";
+        private const string DataModelSchemaFilePath = "DataModelSchema.json";
+        private const string DiagramLayoutFilePath = "DiagramLayout.json";
+        private const string MedataFilePath = "Metadata.json";
+        private const string SettingsFilePath = "Settings.json";
+        private const string VersionFilePath = "Version.txt";
+        private const string ReportLinguisticSchemaFilePath = "Report\\LinguisticSchema.xml";
+        private const string ReportFolderPath = "Report";
 
         private readonly string folderPath;
         private readonly ILogger<ReportFolderStore> logger;
@@ -220,16 +230,16 @@ namespace DataModelLoader.Report
             }
 
             // todo: log
-            model.Connections = ReadJsonFile(Path.Combine(folderPath, "Connections.json"));
-            model.Content_Types = ReadXmlFile(Path.Combine(folderPath, "[Content_Types].xml"));
-            model.DataModelSchemaFile = ReadJsonFile(Path.Combine(folderPath, "DataModelSchema.json"));
-            model.DiagramLayout = ReadJsonFile(Path.Combine(folderPath, "DiagramLayout.json"));
-            model.Metadata = ReadJsonFile(Path.Combine(folderPath, "Metadata.json"));
-            model.Settings = ReadJsonFile(Path.Combine(folderPath, "Settings.json"));
-            model.Version = File.ReadAllText(Path.Combine(folderPath, "Version.txt"));
-            model.Report_LinguisticSchema = ReadXmlFile(Path.Combine(folderPath, "Report\\LinguisticSchema.xml"));
+            model.Connections = ReadJsonFile(Path.Combine(folderPath, ConnectionsFilePath));
+            model.Content_Types = ReadXmlFile(Path.Combine(folderPath, ContentTypesFilePath));
+            model.DataModelSchemaFile = ReadJsonFile(Path.Combine(folderPath, DataModelSchemaFilePath));
+            model.DiagramLayout = ReadJsonFile(Path.Combine(folderPath, DiagramLayoutFilePath));
+            model.Metadata = ReadJsonFile(Path.Combine(folderPath, MedataFilePath));
+            model.Settings = ReadJsonFile(Path.Combine(folderPath, SettingsFilePath));
+            model.Version = File.ReadAllText(Path.Combine(folderPath, VersionFilePath));
+            model.Report_LinguisticSchema = ReadXmlFile(Path.Combine(folderPath, ReportLinguisticSchemaFilePath));
 
-            var rpt = reportFolderMapper.Read(Path.Combine(folderPath, "Report"));
+            var rpt = reportFolderMapper.Read(Path.Combine(folderPath, ReportFolderPath));
             transforms.ForEach(t => t.Restore(rpt));
             model.Layout = rpt;
 
@@ -260,21 +270,21 @@ namespace DataModelLoader.Report
             }
 
             // todo: define or reuse constants for file names
-            FileTools.WriteToFile(Path.Combine(folderPath, "Connections.json"), model.Connections?.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, "[Content_Types].xml"), model.Content_Types.ToString());
-            FileTools.WriteToFile(Path.Combine(folderPath, "DataModelSchema.json"), model.DataModelSchemaFile?.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, "DiagramLayout.json"), model.DiagramLayout.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, "Metadata.json"), model.Metadata.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, "Settings.json"), model.Settings.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, "Version.txt"), model.Version);
-            FileTools.WriteToFile(Path.Combine(folderPath, "Report\\LinguisticSchema.xml"), model.Report_LinguisticSchema?.ToString());
+            FileTools.WriteToFile(Path.Combine(folderPath, ConnectionsFilePath), model.Connections?.ToString(Formatting.Indented));
+            FileTools.WriteToFile(Path.Combine(folderPath, ContentTypesFilePath), model.Content_Types.ToString());
+            FileTools.WriteToFile(Path.Combine(folderPath, DataModelSchemaFilePath), model.DataModelSchemaFile?.ToString(Formatting.Indented));
+            FileTools.WriteToFile(Path.Combine(folderPath, DiagramLayoutFilePath), model.DiagramLayout.ToString(Formatting.Indented));
+            FileTools.WriteToFile(Path.Combine(folderPath, MedataFilePath), model.Metadata.ToString(Formatting.Indented));
+            FileTools.WriteToFile(Path.Combine(folderPath, SettingsFilePath), model.Settings.ToString(Formatting.Indented));
+            FileTools.WriteToFile(Path.Combine(folderPath, VersionFilePath), model.Version);
+            FileTools.WriteToFile(Path.Combine(folderPath, ReportLinguisticSchemaFilePath), model.Report_LinguisticSchema?.ToString());
 
             // we're mutating the JObject so working on a copy just to do things by the book. using the original
             // object would probably not cause any issues because nobody else is using it, but there's no guarantee
             // this will always continue to be the case so using the clone just in case.
             var layoutJObjClone = (JObject)model.Layout.DeepClone();
             transforms.ForEach(t => t.Transform(layoutJObjClone));
-            reportFolderMapper.Write(layoutJObjClone, Path.Combine(folderPath, "Report"));
+            reportFolderMapper.Write(layoutJObjClone, Path.Combine(folderPath, ReportFolderPath));
         }
     }
 }
