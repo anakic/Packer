@@ -2,6 +2,7 @@
 
 namespace Packer2.Library.Tools
 {
+    // todo: add logging to this class and all zone-mapping base classes
     abstract class MappingZone
     {
         PathEscaper pathEscaper = new PathEscaper();

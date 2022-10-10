@@ -225,11 +225,10 @@ namespace DataModelLoader.Report
             foreach (var file in Directory.GetFiles(blobFolderPath, "*", SearchOption.AllDirectories))
             {
                 var relativePath = PathTools.GetRelativePath(file, blobFolderPath);
-                // todo: log
+                logger.LogInformation("Reading blob file '{filePath}'.", file);
                 model.Blobs[relativePath] = File.ReadAllBytes(file);
             }
 
-            // todo: log
             model.Connections = ReadJsonFile(Path.Combine(folderPath, ConnectionsFilePath));
             model.Content_Types = ReadXmlFile(Path.Combine(folderPath, ContentTypesFilePath));
             model.DataModelSchemaFile = ReadJsonFile(Path.Combine(folderPath, DataModelSchemaFilePath));
@@ -240,7 +239,11 @@ namespace DataModelLoader.Report
             model.Report_LinguisticSchema = ReadXmlFile(Path.Combine(folderPath, ReportLinguisticSchemaFilePath));
 
             var rpt = reportFolderMapper.Read(Path.Combine(folderPath, ReportFolderPath));
-            transforms.ForEach(t => t.Restore(rpt));
+            transforms.ForEach(t => 
+            { 
+                logger.LogInformation("Restoring report transformation '{transformation}'", t.GetType().Name); 
+                t.Restore(rpt); 
+            });
             model.Layout = rpt;
 
             return model;
@@ -251,6 +254,7 @@ namespace DataModelLoader.Report
             foreach (var kvp in model.Blobs)
             {
                 var path = Path.Combine(folderPath, "Blobs", kvp.Key);
+                logger.LogInformation("Writing blob file '{filePath}'.", path);
                 FileTools.WriteToFile(path, kvp.Value);
             }
 
@@ -268,21 +272,35 @@ namespace DataModelLoader.Report
             // object would probably not cause any issues because nobody else is using it, but there's no guarantee
             // this will always continue to be the case so using the clone just in case.
             var layoutJObjClone = (JObject)model.Layout.DeepClone();
-            transforms.ForEach(t => t.Transform(layoutJObjClone));
+            transforms.ForEach(t =>
+            {
+                logger.LogInformation("Applying report transformation '{transformation}'", t.GetType().Name); 
+                t.Transform(layoutJObjClone);
+            });
             reportFolderMapper.Write(layoutJObjClone, Path.Combine(folderPath, ReportFolderPath));
         }
 
-        private static JObject? ReadJsonFile(string path)
+        private JObject? ReadJsonFile(string path)
         {
             if (File.Exists(path) == false)
+            {
+                logger.LogInformation("Attempted to read json file '{filePath}' but file does not exist.", path);
                 return null;
+            }
+
+            logger.LogInformation("Reading json file '{filePath}'", path);
             return JObject.Parse(File.ReadAllText(path));
         }
 
-        private static XDocument? ReadXmlFile(string path)
+        private XDocument? ReadXmlFile(string path)
         {
             if (File.Exists(path) == false)
+            {
+                logger.LogInformation("Attempted to read xml file '{filePath}' but file does not exist.", path);
                 return null;
+            }
+
+            logger.LogInformation("Reading xml file '{filePath}'", path);
             return XDocument.Parse(File.ReadAllText(path));
         }
     }

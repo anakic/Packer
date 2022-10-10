@@ -22,15 +22,16 @@ namespace Packer2.Library.DataModel.Transofrmations
                 var m = Regex.Match(pwd, @"{(?'name'[^}]+)}");
                 if (m.Success)
                 {
-                    var value = Environment.GetEnvironmentVariable(m.Groups["name"].Value);
+                    var placeholder = m.Groups["name"].Value;
+                    var value = Environment.GetEnvironmentVariable(placeholder);
                     if (value != null)
                     {
-                        logger.LogInformation("Filling password placeholder '{passwordPlaceholder}' in data source '{dataSource}'", value, ds.Name);
+                        logger.LogInformation("Filling password placeholder '{passwordPlaceholder}' in data source '{dataSource}'", placeholder, ds.Name);
                         ds.Credential.Password = value;
                     }
                     else
                     {
-                        logger.LogInformation("Found password placeholder '{passwordPlaceholder}' in data source '{dataSource}' but a matching environment variable has not been found.", value, ds.Name);
+                        logger.LogInformation("Found password placeholder '{passwordPlaceholder}' in data source '{dataSource}' but a matching environment variable has not been found.", placeholder, ds.Name);
                         // todo: prompt user for password?
                     }
                 }

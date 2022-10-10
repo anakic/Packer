@@ -29,13 +29,9 @@ namespace Packer2.PS
             switch (logLevel)
             {
                 case LogLevel.Trace:
-                    cmdlet.WriteVerbose(str);
-                    break;
                 case LogLevel.Debug:
-                    cmdlet.WriteDebug(str);
-                    break;
                 case LogLevel.Information:
-                    cmdlet.WriteInformation(new InformationRecord(str, state.ToString()));
+                    cmdlet.WriteVerbose(str);
                     break;
                 case LogLevel.Warning:
                     cmdlet.WriteWarning(str);
