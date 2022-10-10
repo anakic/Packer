@@ -3,7 +3,7 @@ using Packer2.Library.Tools;
 
 namespace Packer2.Library.Tools
 {
-    abstract class JsonMappedRepository
+    abstract class JsonMappedFolder
     {
         protected abstract string RootFileName { get; }
 

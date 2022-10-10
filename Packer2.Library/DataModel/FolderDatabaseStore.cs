@@ -105,7 +105,7 @@ namespace Packer2.Library.DataModel
             }
         }
 
-        class BimMappedRepository : JsonMappedRepository
+        class BimMappedRepository : JsonMappedFolder
         {
             public BimMappedRepository()
             {

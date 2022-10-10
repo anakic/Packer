@@ -31,10 +31,13 @@ namespace Packer2.Tests.Report
         [Fact]
         public void SavesToFolder()
         {
-            var store1 = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3-out-conn.pbix");
+            var store1 = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit");
             var model = store1.Read();
             var folderStore = new ReportFolderStore(@"c:\Models\test2");
             folderStore.Save(model);
+
+            var folderStore2 = new ReportFolderStore(@"c:\Models\test2");
+            var model2 = folderStore.Read();
         }
 
         [Fact]
