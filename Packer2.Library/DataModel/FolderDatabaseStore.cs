@@ -18,13 +18,14 @@ namespace Packer2.Library.DataModel
             protected override string PayloadProperty => "expression";
 
 
-            static Dictionary<string, string> expTypeToExtensionsMap = new Dictionary<string, string>() { { "m", "m" }, { "calculated", "dax" } };
             protected override string GetFileName(JToken elem)
+                => elem["name"]!.Value<string>()!;
+            
+            static Dictionary<string, string> expTypeToExtensionsMap = new Dictionary<string, string>() { { "m", "m" }, { "calculated", "dax" } };
+            protected override string GetFileExtension(JToken elem)
             {
-                var name = elem["name"]!.Value<string>();
                 var type = elem.SelectToken("source.type")!.Value<string>()!;
-                var ext = expTypeToExtensionsMap[type];
-                return $"{name}.{ext}";
+                return expTypeToExtensionsMap[type];
             }
         }
 
@@ -38,7 +39,9 @@ namespace Packer2.Library.DataModel
 
             protected override string ElementsSelector => ".columns[?(@.type=='calculated')]";
 
-            protected override string GetFileName(JToken elem) => $"{(string)elem["name"]!}.dax";
+            protected override string GetFileName(JToken elem) => $"{(string)elem["name"]!}";
+
+            protected override string GetFileExtension(JToken elem) => "dax";
         }
 
         class MeasureExpressionsMapping : JsonPropertyZone
@@ -51,7 +54,9 @@ namespace Packer2.Library.DataModel
 
             protected override string ElementsSelector => ".measures[*]";
 
-            protected override string GetFileName(JToken elem) => $"{(string)elem["name"]!}.dax";
+            protected override string GetFileName(JToken elem) => $"{(string)elem["name"]!}";
+            
+            protected override string GetFileExtension(JToken elem) => "dax";
         }
 
         class ModelExpressionsMapping : JsonPropertyZone
@@ -65,6 +70,13 @@ namespace Packer2.Library.DataModel
             protected override string ElementsSelector => ".model.expressions[*]";
 
             protected override string GetFileName(JToken elem) => (string)elem["name"]!;
+
+            static Dictionary<string, string> expTypeToExtensionsMap = new Dictionary<string, string>() { { "m", "m" }, { "calculated", "dax" } };
+            protected override string GetFileExtension(JToken elem)
+            {
+                var type = elem.SelectToken("kind")!.Value<string>()!;
+                return expTypeToExtensionsMap[type];
+            }
         }
 
         class TablesMapping : JsonElementZone
@@ -76,7 +88,9 @@ namespace Packer2.Library.DataModel
             protected override string GetSubfolderForElement(JToken elem)
                 => (string)elem["name"]!;
 
-            protected override string GetFileName(JToken elem) => "table.json";
+            protected override string GetFileName(JToken elem) => "table";
+
+            protected override string GetFileExtension(JToken elem) => "json";
 
             protected override IEnumerable<MappingZone> ChildMappings { get; }
 
@@ -84,9 +98,9 @@ namespace Packer2.Library.DataModel
             {
                 ChildMappings = new MappingZone[]
                 {
-                new PartitionExpressionsMapping(),
-                new ColumnExpressionsMapping(),
-                new MeasureExpressionsMapping()
+                    new PartitionExpressionsMapping(),
+                    new ColumnExpressionsMapping(),
+                    new MeasureExpressionsMapping()
                 };
             }
         }

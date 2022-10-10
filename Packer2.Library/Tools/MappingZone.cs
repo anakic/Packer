@@ -21,6 +21,9 @@ namespace Packer2.Library.Tools
         // how shall we name the file for an element
         protected abstract string GetFileName(JToken elem);
 
+        // which extension will the file for a given element have
+        protected abstract string GetFileExtension(JToken elem);
+
         // what payload should we store from the element (JToken) into the file
         public abstract string GetPayload(JToken obj);
 
@@ -73,7 +76,7 @@ namespace Packer2.Library.Tools
                 var payload = GetPayload(elem);
 
                 // store the payload into a file
-                var destinationFileNameRelativeToParent = Path.Combine(subFolderForElementRelativeToParent, pathEscaper.EscapeName(GetFileName(elem)));
+                var destinationFileNameRelativeToParent = Path.Combine(subFolderForElementRelativeToParent, $"{pathEscaper.EscapeName(GetFileName(elem))}.{GetFileExtension(elem)}" );
                 WriteToFile(Path.Combine(baseFolder, relativeFolder, destinationFileNameRelativeToParent), payload);
 
                 // register the location of the payload in the JToken
