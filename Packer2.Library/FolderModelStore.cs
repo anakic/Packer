@@ -12,7 +12,7 @@ namespace Packer2.Library
         }
 
         protected virtual bool IsProtectedFolder(string relativePath)
-            => relativePath == ".git";
+            => relativePath == ".git" || relativePath == ".config";
 
         protected virtual bool IsProtectedFile(string relativePath) => false;
 
