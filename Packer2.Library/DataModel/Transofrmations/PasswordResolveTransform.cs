@@ -7,10 +7,13 @@ namespace Packer2.Library.DataModel.Transofrmations
 {
     public class PasswordResolveTransform : IDataModelTransform
     {
+        Func<string, string> promptForInputFunc;
+
         private readonly ILogger<PasswordResolveTransform> logger;
 
-        public PasswordResolveTransform(ILogger<PasswordResolveTransform> logger = null)
+        public PasswordResolveTransform(Func<string, string> promptForInputFunc, ILogger<PasswordResolveTransform> logger = null)
         {
+            this.promptForInputFunc = promptForInputFunc;
             this.logger = logger ?? new DummyLogger<PasswordResolveTransform>();
         }
 
@@ -24,16 +27,15 @@ namespace Packer2.Library.DataModel.Transofrmations
                 {
                     var placeholder = m.Groups["name"].Value;
                     var value = Environment.GetEnvironmentVariable(placeholder);
+                    
                     if (value != null)
                     {
-                        logger.LogInformation("Filling password placeholder '{passwordPlaceholder}' in data source '{dataSource}'", placeholder, ds.Name);
-                        ds.Credential.Password = value;
+                        logger.LogInformation("Found password placeholder '{passwordPlaceholder}' in data source '{dataSource}' but a matching environment variable has not been found. Prompting for password.", placeholder, ds.Name);
+                        value = promptForInputFunc(placeholder);
                     }
-                    else
-                    {
-                        logger.LogInformation("Found password placeholder '{passwordPlaceholder}' in data source '{dataSource}' but a matching environment variable has not been found.", placeholder, ds.Name);
-                        // todo: prompt user for password?
-                    }
+
+                    logger.LogInformation("Filling password placeholder '{passwordPlaceholder}' in data source '{dataSource}'", placeholder, ds.Name);
+                    ds.Credential.Password = value;
                 }
             }
             return database;
