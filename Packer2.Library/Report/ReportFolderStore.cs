@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AnalysisServices;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Packer2.Library;
@@ -47,7 +48,12 @@ namespace DataModelLoader.Report
         {
             protected override string ContainingFolder => "Bookmarks";
 
-            protected override string ElementsSelector => ".#config.bookmarks[?(@.explorationState)]";
+            // how to find bookmarks in original json
+            protected override string ElementsSelector => ".#config.bookmarks[*]";
+
+            // only target bookmarks that do not have children
+            protected override bool FilterSelectedElements(JToken element)
+                => element["children"] == null;
 
             protected override IEnumerable<MappingZone> ChildMappings => Array.Empty<MappingZone>();
 
@@ -289,7 +295,13 @@ namespace DataModelLoader.Report
             }
 
             logger.LogInformation("Reading json file '{filePath}'", path);
-            return JObject.Parse(File.ReadAllText(path));
+            var content = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(content))
+            {
+                logger.LogInformation("Attempted to read json file '{filePath}' but file is empty.", path);
+                return null;
+            }
+            return JObject.Parse(content);
         }
 
         private XDocument? ReadXmlFile(string path)
@@ -301,7 +313,13 @@ namespace DataModelLoader.Report
             }
 
             logger.LogInformation("Reading xml file '{filePath}'", path);
-            return XDocument.Parse(File.ReadAllText(path));
+            var content = File.ReadAllText(path);
+            if (string.IsNullOrEmpty(content))
+            {
+                logger.LogInformation("Attempted to read json file '{filePath}' but file is empty.", path);
+                return null;
+            }
+            return XDocument.Parse(content);
         }
     }
 }

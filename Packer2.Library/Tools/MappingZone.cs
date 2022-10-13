@@ -13,6 +13,10 @@ namespace Packer2.Library.Tools
         // how to find child elements in the parent jobj
         protected abstract string ElementsSelector { get; }
 
+        protected virtual bool FilterSelectedElements(JToken element) => true;
+
+        protected virtual bool FilterSelectedProcessedElements(JToken element) => true;
+
         // which child elements are we mapping (recursively)
         protected abstract IEnumerable<MappingZone> ChildMappings { get; }
         
@@ -37,7 +41,7 @@ namespace Packer2.Library.Tools
 
         public void Read(JToken obj, string baseFolder, string relativeFolder)
         {
-            var elements = obj.SelectTokens(ElementsSelector);
+            var elements = obj.SelectTokens(ElementsSelector).Where(FilterSelectedProcessedElements);
             foreach (var elem in elements.ToArray())
             {
                 var element = elem;
@@ -62,7 +66,7 @@ namespace Packer2.Library.Tools
 
         public void Write(JToken obj, string baseFolder, string relativeFolder)
         {
-            var elements = obj.SelectTokens(ElementsSelector);
+            var elements = obj.SelectTokens(ElementsSelector).Where(FilterSelectedElements);
             foreach (var elem in elements.ToArray())
             {
                 // where shall we store the data from this element
