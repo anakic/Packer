@@ -1,6 +1,6 @@
 ﻿namespace Packer2.Library
 {
-    public class MemoryFile : ITextFile
+    public class MemoryFile : ITextStore
     {
         public string? Text { get; private set; }
 

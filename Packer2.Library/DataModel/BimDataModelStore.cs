@@ -4,7 +4,7 @@ namespace Packer2.Library.DataModel
 {
     public class BimDataModelStore : IModelStore<Database>
     {
-        private readonly ITextFile file;
+        private readonly ITextStore file;
 
         public static BimDataModelStore LoadFromText(string contents)
         {
@@ -12,10 +12,10 @@ namespace Packer2.Library.DataModel
         }
         public static BimDataModelStore LoadFromFile(string filePath)
         {
-            return new BimDataModelStore(new LocalTextFile(filePath));
+            return new BimDataModelStore(new TextFileStore(filePath));
         }
 
-        public BimDataModelStore(ITextFile file)
+        public BimDataModelStore(ITextStore file)
         {
             this.file = file;
         }

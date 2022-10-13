@@ -78,7 +78,7 @@ namespace Packer2.PS
                     }
                     else
                     {
-                        store = new BimDataModelStore(new LocalTextFile(combinedPath));
+                        store = new BimDataModelStore(new TextFileStore(combinedPath));
                         logger.LogTrace("Created .bim file data model store '({location})'", location);
                     }
                 }

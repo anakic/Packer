@@ -23,7 +23,7 @@ namespace Packer2.Tests.DataModel
             var database = store.Read();
             database.Model.Tables.Count.Should().NotBe(0);
 
-            var store2 = new BimDataModelStore(new LocalTextFile(@"C:\Projects\Packer\Packer.Tests2\TestFiles\test_model.bim"));
+            var store2 = new BimDataModelStore(new TextFileStore(@"C:\Projects\Packer\Packer.Tests2\TestFiles\test_model.bim"));
             store2.Save(database);
         }
 

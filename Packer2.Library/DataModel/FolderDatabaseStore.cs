@@ -123,7 +123,7 @@ namespace Packer2.Library.DataModel
 
         BimMappedRepository map = new BimMappedRepository();
 
-        class JObjFile : ITextFile
+        class JObjFile : ITextStore
         {
             public JObject? JObject { get; private set; }
 
