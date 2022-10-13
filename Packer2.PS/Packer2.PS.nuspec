@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+	<metadata>
+		<id>Packer2.PS</id>
+		<version>0.0.14</version>
+		<authors>Antonio Nakic-Alfirev</authors>
+		<owners>Antonio Nakic-Alfirev</owners>
+		<projectUrl>https://github.com/anakic/packer</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>Packer is a command line tool that offers commands for version controlling and manipulating PowerBI reports and data models.</description>
+		<releaseNotes>First published version of Packer2.</releaseNotes>
+		<copyright>Copyright 2022</copyright>
+		<tags>PowerBI VersionControl SSAS Tabular DataModel Report</tags>
+	</metadata>
+	<files>
+		<file src="*.dll"/>
+		<file src="*.psd1" />
+	</files>
+</package>

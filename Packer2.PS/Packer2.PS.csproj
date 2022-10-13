@@ -18,4 +18,13 @@
     </ProjectReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Packer2.Ps.psd1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Packer2.PS.nuspec">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
