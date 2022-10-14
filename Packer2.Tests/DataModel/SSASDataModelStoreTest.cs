@@ -9,7 +9,7 @@ using Xunit;
 namespace Packer2.Tests.DataModel
 {
 // these are for ad hoc testing, not for unit testing. they can't be run by CI runner because it doesn't have access to an SSAS instance.
-#if DEBUG
+#if DEBUG_xx
     public class SSASDataModelStoreTest
     {
         [Fact]
