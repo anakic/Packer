@@ -1,0 +1,13 @@
+﻿# for authors (allows push)
+$repoName = "TEST2"
+$repoUrl = "https://pkgs.dev.azure.com/antonionakic-alfirevic/Packer2/_packaging/TEST2/nuget/v2"
+$patToken = "..." | ConvertTo-SecureString -AsPlainText -Force
+$repoUserName = "...@ssghealth.com"
+
+$credsAzureDevopsServices = New-Object System.Management.Automation.PSCredential($repoUserName, $patToken)
+Register-PSRepository -Name @$repoName -SourceLocation $repoUrl -PublishLocation $repoUrl -InstallationPolicy Trusted -Credential $credsAzureDevopsServices
+Register-PackageSource -Name $repoName + "PackageSource" -Location $repoUrl -ProviderName NuGet -SkipValidate
+
+# for readers
+Register-PSRepository -Name @$repoName -SourceLocation $repoUrl -InstallationPolicy Trusted
+Register-PackageSource -Name $repoName + "PackageSource" -Location $repoUrl -ProviderName NuGet -SkipValidate
