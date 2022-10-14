@@ -28,7 +28,7 @@ namespace Packer2.Library.DataModel.Transofrmations
                     var placeholder = m.Groups["name"].Value;
                     var value = Environment.GetEnvironmentVariable(placeholder);
                     
-                    if (value != null)
+                    if (value == null)
                     {
                         logger.LogInformation("Found password placeholder '{passwordPlaceholder}' in data source '{dataSource}' but a matching environment variable has not been found. Prompting for password.", placeholder, ds.Name);
                         value = promptForInputFunc(placeholder);
