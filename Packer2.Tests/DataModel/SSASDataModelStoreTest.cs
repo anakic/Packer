@@ -1,19 +1,15 @@
-﻿using DataModelLoader;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Library.DataModel.Transofrmations;
 using Packer2.Tests.Tools;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Packer2.Tests.DataModel
 {
+// these are for ad hoc testing, not for unit testing. they can't be run by CI runner because it doesn't have access to an SSAS instance.
+#if DEBUG
     public class SSASDataModelStoreTest
     {
         [Fact]
@@ -58,4 +54,5 @@ namespace Packer2.Tests.DataModel
             ds.ConnectionDetails.Address.Server.Should().Be("TEST_SERVER");
         }
     }
+#endif
 }

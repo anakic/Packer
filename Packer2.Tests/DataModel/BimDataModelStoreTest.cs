@@ -12,25 +12,69 @@ namespace Packer2.Tests.DataModel
         [Fact]
         public void ReadsDataModel()
         {
-            var file = new MemoryFile(TestResourcesHelper.GetTestModelContents());
+            var databaseStr = @"{
+  ""name"": ""Test"",
+  ""compatibilityLevel"": 1400,
+  ""model"": {
+    ""tables"": [
+      {
+        ""name"": ""My table"",
+        ""columns"": [
+          {
+            ""name"": ""SomeNumber"",
+            ""dataType"": ""double""
+          }
+        ]
+      }
+    ]
+  }
+}";
+
+            var file = new MemoryFile(databaseStr);
             var store = new BimDataModelStore(file);
             var database = store.Read();
-            database.Model.Tables.Should().NotBeEmpty();
-            // todo: proper tests
+            database.Name.Should().Be("Test");
+            database.CompatibilityLevel.Should().Be(1400);
+            database.Model.Tables.Single().Name.Should().Be("My table");
+            database.Model.Tables.Single().Columns.Single().Name.Should().Be("SomeNumber");
+            database.Model.Tables.Single().Columns.Single().DataType.Should().Be(DataType.Double);
         }
 
         [Fact]
         public void SavesDataModel()
         {
-            var file = new MemoryFile(TestResourcesHelper.GetTestModelContents());
-            var store = new BimDataModelStore(file);
-            var database = store.Read();
+            var database = new Database("Test")
+            {
+                CompatibilityLevel = 1400,
+                Model = new Model()
+            };
+
+            var table1 = new Table() { Name = "My table" };
+            table1.Columns.Add(new DataColumn() { Name = "SomeNumber", DataType = DataType.Double });
+            database.Model.Tables.Add(table1);
 
             var file2 = new MemoryFile();
             var store2 = new BimDataModelStore(file2);
             store2.Save(database);
 
-            file2.Text.Should().Be(file.Text);
+            file2.Text.Should().Be(
+@"{
+  ""name"": ""Test"",
+  ""compatibilityLevel"": 1400,
+  ""model"": {
+    ""tables"": [
+      {
+        ""name"": ""My table"",
+        ""columns"": [
+          {
+            ""name"": ""SomeNumber"",
+            ""dataType"": ""double""
+          }
+        ]
+      }
+    ]
+  }
+}");
         }
     }
 }
