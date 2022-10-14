@@ -9,8 +9,8 @@ namespace Packer2.FileSystem
 
         public Encoding Encoding { get; set; } = Encoding.UTF8;
 
-        HashSet<string> folders = new HashSet<string>() { "" };
-        Dictionary<string, byte[]> data = new Dictionary<string, byte[]>();
+        HashSet<string> folders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "" };
+        Dictionary<string, byte[]> data = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, DateTime> dataTimestamps = new Dictionary<string, DateTime>();
 
         public IPathResolver PathResolver => DefaultPathResolver.Instance;
