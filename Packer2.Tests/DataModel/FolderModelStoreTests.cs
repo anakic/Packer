@@ -148,15 +148,15 @@ namespace Packer2.Tests.DataModel
             fileSystem.ReadAsString("Tables\\table1\\partitions\\An M partition with %42; funky%60;%37; name.m").Should().Be(@"let source = #""otherDataSource"" in source");
         }
 
-        [Fact]
-        public void TEST_Dax()
-        {
-            var file = new MemoryFile(TestResourcesHelper.GetOneTableTestModelContents());
-            var store2 = new BimDataModelStore(file);
-            var database = store2.Read();
+        //[Fact]
+        //public void TEST_Dax()
+        //{
+        //    var file = new MemoryFile(TestResourcesHelper.GetOneTableTestModelContents());
+        //    var store2 = new BimDataModelStore(file);
+        //    var database = store2.Read();
 
-            var storeSSAS = new SSASDataModelStore(".", "test_model_single_table", true);
-            storeSSAS.Save(database);
-        }
+        //    var storeSSAS = new SSASDataModelStore(".", "test_model_single_table", true);
+        //    storeSSAS.Save(database);
+        //}
     }
 }
