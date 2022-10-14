@@ -40,7 +40,7 @@ namespace Packer2.Library.DataModel.Transofrmations
                     path =>
                     {
                         var extension = Path.GetExtension(path).TrimStart('.');
-                        var nameWithoutExtension = Path.GetFileNameWithoutExtension(path);
+                        var nameWithoutExtension = Path.GetFileNameWithoutExtension(path).Replace(".", " ");
                         return $"{extension}/{nameWithoutExtension}";
                     });
 
@@ -93,7 +93,7 @@ namespace Packer2.Library.DataModel.Transofrmations
 
             var dsNames = sqlServerSources.Select(fs => new { fs.server, fs.database })
                 .Distinct()
-                .ToDictionary(conn => conn, conn =>$"SQL/{conn.server};{conn.database}");
+                .ToDictionary(conn => conn, conn =>$"SQL/{EscapeServerName(conn.server)};{conn.database.Replace(".", " ")}");
 
             foreach (var kvp in dsNames)
             {
@@ -133,6 +133,14 @@ namespace Packer2.Library.DataModel.Transofrmations
                 var newText = x.expTxt.Remove(x.match.Index, x.match.Length).Insert(x.match.Index, $"{x.variable}= #\"{name}\"");
                 setExpression(x.exp, newText);
             }
+        }
+
+        private string EscapeServerName(string server)
+        {
+            if (server.Trim() == ".")
+                return "localhost";
+            else
+                return server.Replace(".", " ");
         }
     }
 }
