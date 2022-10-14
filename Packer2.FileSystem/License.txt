@@ -1,0 +1,1 @@
+﻿This code in this assembly is copied from the QueryStorm project and belongs to Windy Range Software d.o.o.

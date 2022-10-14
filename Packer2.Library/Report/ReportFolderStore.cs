@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Packer2.FileSystem;
 using Packer2.Library;
 using Packer2.Library.Tools;
 using System.Xml.Linq;
@@ -205,13 +206,18 @@ namespace DataModelLoader.Report
         private const string ReportLinguisticSchemaFilePath = "Report\\LinguisticSchema.xml";
         private const string ReportFolderPath = "Report";
 
-        private readonly string folderPath;
+        private readonly IFileSystem fileSystem;
         private readonly ILogger<ReportFolderStore> logger;
         ReportMappedFolder reportFolderMapper = new ReportMappedFolder();
         List<IJObjTransform> transforms;
 
         public ReportFolderStore(string folderPath, ILogger<ReportFolderStore>? logger = null)
-            : base(folderPath)
+            : this(new LocalFileSystem(folderPath), logger)
+        {
+        }
+
+        public ReportFolderStore(IFileSystem fileSystem, ILogger<ReportFolderStore>? logger = null)
+            : base(fileSystem)
         {
             transforms = new List<IJObjTransform>
             {
@@ -220,31 +226,31 @@ namespace DataModelLoader.Report
                 new StripVisualStatePropertiesTransform() 
             };
 
-            this.folderPath = folderPath;
+            this.fileSystem = fileSystem;
             this.logger = logger ?? new DummyLogger<ReportFolderStore>();
         }
 
         public override PowerBIReport Read()
         {
             var model = new PowerBIReport();
-            var blobFolderPath = Path.Combine(folderPath, "Blobs");
-            foreach (var file in Directory.GetFiles(blobFolderPath, "*", SearchOption.AllDirectories))
+            
+            // todo: introduce constant for "Blobs"
+            foreach (var file in fileSystem.GetFilesRecursive("Blobs"))
             {
-                var relativePath = PathTools.GetRelativePath(file, blobFolderPath);
                 logger.LogInformation("Reading blob file '{filePath}'.", file);
-                model.Blobs[relativePath] = File.ReadAllBytes(file);
+                model.Blobs[file] = File.ReadAllBytes(file);
             }
 
-            model.Connections = ReadJsonFile(Path.Combine(folderPath, ConnectionsFilePath));
-            model.Content_Types = ReadXmlFile(Path.Combine(folderPath, ContentTypesFilePath));
-            model.DataModelSchemaFile = ReadJsonFile(Path.Combine(folderPath, DataModelSchemaFilePath));
-            model.DiagramLayout = ReadJsonFile(Path.Combine(folderPath, DiagramLayoutFilePath));
-            model.Metadata = ReadJsonFile(Path.Combine(folderPath, MedataFilePath));
-            model.Settings = ReadJsonFile(Path.Combine(folderPath, SettingsFilePath));
-            model.Version = File.ReadAllText(Path.Combine(folderPath, VersionFilePath));
-            model.Report_LinguisticSchema = ReadXmlFile(Path.Combine(folderPath, ReportLinguisticSchemaFilePath));
+            model.Connections = ReadJsonFile(ConnectionsFilePath);
+            model.Content_Types = ReadXmlFile(ContentTypesFilePath);
+            model.DataModelSchemaFile = ReadJsonFile(DataModelSchemaFilePath);
+            model.DiagramLayout = ReadJsonFile(DiagramLayoutFilePath);
+            model.Metadata = ReadJsonFile(MedataFilePath);
+            model.Settings = ReadJsonFile(SettingsFilePath);
+            model.Version = File.ReadAllText(VersionFilePath);
+            model.Report_LinguisticSchema = ReadXmlFile(ReportLinguisticSchemaFilePath);
 
-            var rpt = reportFolderMapper.Read(Path.Combine(folderPath, ReportFolderPath));
+            var rpt = reportFolderMapper.Read(fileSystem.Sub(ReportFolderPath));
             transforms.ForEach(t => 
             { 
                 logger.LogInformation("Restoring report transformation '{transformation}'", t.GetType().Name); 
@@ -259,20 +265,20 @@ namespace DataModelLoader.Report
         {
             foreach (var kvp in model.Blobs)
             {
-                var path = Path.Combine(folderPath, "Blobs", kvp.Key);
+                var path = Path.Combine("Blobs", kvp.Key);
                 logger.LogInformation("Writing blob file '{filePath}'.", path);
-                FileTools.WriteToFile(path, kvp.Value);
+                fileSystem.Save(path, kvp.Value);
             }
 
             // todo: define or reuse constants for file names
-            FileTools.WriteToFile(Path.Combine(folderPath, ConnectionsFilePath), model.Connections?.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, ContentTypesFilePath), model.Content_Types.ToString());
-            FileTools.WriteToFile(Path.Combine(folderPath, DataModelSchemaFilePath), model.DataModelSchemaFile?.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, DiagramLayoutFilePath), model.DiagramLayout.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, MedataFilePath), model.Metadata.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, SettingsFilePath), model.Settings.ToString(Formatting.Indented));
-            FileTools.WriteToFile(Path.Combine(folderPath, VersionFilePath), model.Version);
-            FileTools.WriteToFile(Path.Combine(folderPath, ReportLinguisticSchemaFilePath), model.Report_LinguisticSchema?.ToString());
+            fileSystem.Save(ConnectionsFilePath, model.Connections?.ToString(Formatting.Indented));
+            fileSystem.Save(ContentTypesFilePath, model.Content_Types.ToString());
+            fileSystem.Save(DataModelSchemaFilePath, model.DataModelSchemaFile?.ToString(Formatting.Indented));
+            fileSystem.Save(DiagramLayoutFilePath, model.DiagramLayout.ToString(Formatting.Indented));
+            fileSystem.Save(MedataFilePath, model.Metadata.ToString(Formatting.Indented));
+            fileSystem.Save(SettingsFilePath, model.Settings.ToString(Formatting.Indented));
+            fileSystem.Save(VersionFilePath, model.Version);
+            fileSystem.Save(ReportLinguisticSchemaFilePath, model.Report_LinguisticSchema?.ToString());
 
             // we're mutating the JObject so working on a copy just to do things by the book. using the original
             // object would probably not cause any issues because nobody else is using it, but there's no guarantee
@@ -283,19 +289,19 @@ namespace DataModelLoader.Report
                 logger.LogInformation("Applying report transformation '{transformation}'", t.GetType().Name); 
                 t.Transform(layoutJObjClone);
             });
-            reportFolderMapper.Write(layoutJObjClone, Path.Combine(folderPath, ReportFolderPath));
+            reportFolderMapper.Write(layoutJObjClone, fileSystem.Sub(ReportFolderPath));
         }
 
         private JObject? ReadJsonFile(string path)
         {
-            if (File.Exists(path) == false)
+            if (fileSystem.FileExists(path) == false)
             {
                 logger.LogInformation("Attempted to read json file '{filePath}' but file does not exist.", path);
                 return null;
             }
 
             logger.LogInformation("Reading json file '{filePath}'", path);
-            var content = File.ReadAllText(path);
+            var content = fileSystem.ReadAsString(path);
             if (string.IsNullOrEmpty(content))
             {
                 logger.LogInformation("Attempted to read json file '{filePath}' but file is empty.", path);
@@ -306,14 +312,14 @@ namespace DataModelLoader.Report
 
         private XDocument? ReadXmlFile(string path)
         {
-            if (File.Exists(path) == false)
+            if (fileSystem.FileExists(path) == false)
             {
                 logger.LogInformation("Attempted to read xml file '{filePath}' but file does not exist.", path);
                 return null;
             }
 
             logger.LogInformation("Reading xml file '{filePath}'", path);
-            var content = File.ReadAllText(path);
+            var content = fileSystem.ReadAsString(path);
             if (string.IsNullOrEmpty(content))
             {
                 logger.LogInformation("Attempted to read json file '{filePath}' but file is empty.", path);

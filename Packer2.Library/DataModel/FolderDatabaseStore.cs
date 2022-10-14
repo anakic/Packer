@@ -1,6 +1,7 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using Packer2.FileSystem;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.DataModel
@@ -143,19 +144,24 @@ namespace Packer2.Library.DataModel
             }
         }
 
-        string folder;
+        private readonly IFileSystem fileSystem;
+        // todo: use logger
         private readonly ILogger<FolderDatabaseStore> logger;
 
-        public FolderDatabaseStore(string folder, ILogger<FolderDatabaseStore>? logger = null)
-            : base(folder)
+        public FolderDatabaseStore(string folderPath, ILogger<FolderDatabaseStore>? logger = null)
+            : this(new LocalFileSystem(folderPath), logger)
+        { }
+
+        public FolderDatabaseStore(IFileSystem fileSystem, ILogger<FolderDatabaseStore>? logger = null)
+            : base(fileSystem)
         {
-            this.folder = folder;
+            this.fileSystem = fileSystem;
             this.logger = logger ?? new DummyLogger<FolderDatabaseStore>();
         }
 
         public override Database Read()
         {
-            var jobject = map.Read(folder);
+            var jobject = map.Read(fileSystem);
             var jObjFile = new JObjFile(jobject);
             var inner = new BimDataModelStore(jObjFile);
             return inner.Read();
@@ -166,7 +172,7 @@ namespace Packer2.Library.DataModel
             var jObjFile = new JObjFile();
             var inner = new BimDataModelStore(jObjFile);
             inner.Save(model);
-            map.Write(jObjFile.JObject!, folder);
+            map.Write(jObjFile.JObject!, fileSystem);
         }
     }
 }

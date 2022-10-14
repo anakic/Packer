@@ -1,14 +1,14 @@
-﻿using Packer2.Library.Tools;
+﻿using Packer2.FileSystem;
 
 namespace Packer2.Library
 {
     public abstract class FolderModelStore<T> : IModelStore<T>
     {
-        private readonly string folder;
+        private readonly IFileSystem fileSystem;
 
-        public FolderModelStore(string folder)
+        public FolderModelStore(IFileSystem fileSystem)
         {
-            this.folder = folder;
+            this.fileSystem = fileSystem;
         }
 
         protected virtual bool IsProtectedFolder(string relativePath)
@@ -19,20 +19,17 @@ namespace Packer2.Library
         // todo: add logging
         private void ClearFolder()
         {
-            if (Directory.Exists(folder))
+            foreach (var childDir in fileSystem.GetFolders(""))
             {
-                foreach (var childDir in Directory.GetDirectories(folder, "*", SearchOption.TopDirectoryOnly))
-                {
-                    // do not remove the .git folder
-                    if (!IsProtectedFolder(PathTools.GetRelativePath(childDir, folder)))
-                        Directory.Delete(childDir, true);
-                }
+                // do not remove protected folders (i.e. the .git and .config folders)
+                if (!IsProtectedFolder(childDir))
+                    Directory.Delete(childDir, true);
+            }
 
-                foreach (var file in Directory.GetFiles(folder))
-                {
-                    if(!IsProtectedFile(PathTools.GetRelativePath(file, folder)))
-                        File.Delete(file);
-                }
+            foreach (var file in fileSystem.GetFiles(""))
+            {
+                if(!IsProtectedFile(file))
+                    fileSystem.DeleteFile(file);
             }
         }
 

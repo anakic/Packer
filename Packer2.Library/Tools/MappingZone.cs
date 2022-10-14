@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Packer2.FileSystem;
 
 namespace Packer2.Library.Tools
 {
@@ -39,7 +40,7 @@ namespace Packer2.Library.Tools
 
         protected abstract string ReadPayloadLocation(JToken elem);
 
-        public void Read(JToken obj, string baseFolder, string relativeFolder)
+        public void Read(JToken obj, IFileSystem fileSystem, string relativeFolder)
         {
             var elements = obj.SelectTokens(ElementsSelector).Where(FilterSelectedProcessedElements);
             foreach (var elem in elements.ToArray())
@@ -50,7 +51,7 @@ namespace Packer2.Library.Tools
                 var payloadLocation = ReadPayloadLocation(elem);
                 
                 // read 
-                var payload = File.ReadAllText(Path.Combine(baseFolder, relativeFolder, payloadLocation));
+                var payload = fileSystem.ReadAsString(Path.Combine(relativeFolder, payloadLocation));
 
                 // then apply the payload to the element (might replace the element, which is why it return an element)
                 element = ApplyElementPayload(elem, payload);
@@ -60,11 +61,11 @@ namespace Packer2.Library.Tools
 
                 // read child elements first
                 foreach (var childMap in ChildMappings)
-                    childMap.Read(element, baseFolder, subFolderForElement);
+                    childMap.Read(element, fileSystem, subFolderForElement);
             }
         }
 
-        public void Write(JToken obj, string baseFolder, string relativeFolder)
+        public void Write(JToken obj, IFileSystem fileSystem, string relativeFolder)
         {
             var elements = obj.SelectTokens(ElementsSelector).Where(FilterSelectedElements);
             foreach (var elem in elements.ToArray())
@@ -75,26 +76,18 @@ namespace Packer2.Library.Tools
                 
                 // process child mappings first (while everything is in the same file)
                 foreach (var childMap in ChildMappings)
-                    childMap.Write(elem, baseFolder, subFolderForElementRelativeToBase);
+                    childMap.Write(elem, fileSystem, subFolderForElementRelativeToBase);
 
                 // then extract the payload from the JToken
                 var payload = GetPayload(elem);
 
                 // store the payload into a file
                 var destinationFileNameRelativeToParent = Path.Combine(subFolderForElementRelativeToParent, $"{pathEscaper.EscapeName(GetFileName(elem))}.{GetFileExtension(elem)}" );
-                WriteToFile(Path.Combine(baseFolder, relativeFolder, destinationFileNameRelativeToParent), payload);
+                fileSystem.Save(Path.Combine(relativeFolder, destinationFileNameRelativeToParent), payload);
 
                 // register the location of the payload in the JToken
                 RegisterPayloadLocation(elem, destinationFileNameRelativeToParent);
             }
-        }
-
-        private void WriteToFile(string path, string text)
-        {
-            var dir = Path.GetDirectoryName(path)!;
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-            File.WriteAllText(path, text);
         }
     }
 }

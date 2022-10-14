@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Packer2.FileSystem;
 
 namespace Packer2.Library.Tools
 {
@@ -8,21 +9,18 @@ namespace Packer2.Library.Tools
 
         protected abstract IEnumerable<MappingZone> Mappings { get; }
 
-        protected string GetFilePath(string baseFolder) => Path.Combine(baseFolder, RootFileName);
-
-        public void Write(JObject obj, string baseFolder)
+        public void Write(JObject obj, IFileSystem fileSystem)
         {
             foreach (var mapping in Mappings)
-                mapping.Write(obj, baseFolder, string.Empty);
-            var rootFilePath = GetFilePath(baseFolder);
-            FileTools.WriteToFile(rootFilePath, obj);
+                mapping.Write(obj, fileSystem, string.Empty);
+            fileSystem.Save(RootFileName, obj.ToString(Newtonsoft.Json.Formatting.Indented));
         }
 
-        public JObject Read(string baseFolder)
+        public JObject Read(IFileSystem fileSystem)
         {
-            JObject jObj = JObject.Parse(File.ReadAllText(GetFilePath(baseFolder)));
+            JObject jObj = JObject.Parse(fileSystem.ReadAsString(RootFileName));
             foreach (var map in Mappings)
-                map.Read(jObj, baseFolder, string.Empty);
+                map.Read(jObj, fileSystem, string.Empty);
             return jObj;
         }
     }
