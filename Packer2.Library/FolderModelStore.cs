@@ -23,7 +23,7 @@ namespace Packer2.Library
             {
                 // do not remove protected folders (i.e. the .git and .config folders)
                 if (!IsProtectedFolder(childDir))
-                    Directory.Delete(childDir, true);
+                    fileSystem.DeleteFolder(childDir);
             }
 
             foreach (var file in fileSystem.GetFiles(""))
