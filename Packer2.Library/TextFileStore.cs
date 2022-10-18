@@ -11,6 +11,12 @@
 
         public string GetText() => File.ReadAllText(path);
 
-        public void SetText(string text) => File.WriteAllText(path, text);
+        public void SetText(string text)
+        {
+            var directory = Path.GetDirectoryName(path);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            File.WriteAllText(path, text);
+        }
     }
 }
