@@ -1,9 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AnalysisServices.Tabular;
 using Packer2.FileSystem;
-using Packer2.Library;
 using Packer2.Library.DataModel;
-using Packer2.Tests.Tools;
 using Xunit;
 
 namespace Packer2.Tests.DataModel
