@@ -11,15 +11,15 @@ namespace Packer2.Tests.Report
 {
     public class ReportParseTests
     {
-        [Fact]
-        public void TEMP()
-        {
-            var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
-            var reportModel = new PBIArchiveStore(wf3Pbit).Read();
-            var db = new BimDataModelStore(new JObjFile(reportModel.DataModelSchemaFile)).Read();
+        //[Fact]
+        //public void TEMP()
+        //{
+        //    var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
+        //    var reportModel = new PBIArchiveStore(wf3Pbit).Read();
+        //    var db = new BimDataModelStore(new JObjFile(reportModel.DataModelSchemaFile)).Read();
 
-            new ValidateModelReferencesTransform(db).Transform(reportModel);
-        }
+        //    new ValidateModelReferencesTransform(db).Transform(reportModel);
+        //}
 
         //[Fact]
         //public void ParsesReport()
