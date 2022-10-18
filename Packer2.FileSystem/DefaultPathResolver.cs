@@ -11,7 +11,15 @@
 
         public bool ArePathsEqual(string path1, string path2)
         {
-            return path1?.ToUpper() == path2?.ToUpper();
+            return NormalizePath(path1) == NormalizePath(path2);
+        }
+
+        private static string? NormalizePath(string path)
+        {
+            return path?
+                .ToUpper()
+                .TrimEnd('\\')
+                .Replace("\\.\\", "\\");
         }
 
         public string CombinePath(string path, string child)
