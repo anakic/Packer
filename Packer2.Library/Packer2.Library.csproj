@@ -25,4 +25,16 @@
     <ProjectReference Include="..\Packer2.FileSystem\Packer2.FileSystem.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Microsoft.InfoNav.Common">
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.InfoNav.Data.Contracts">
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Data.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.InfoNav.Explore.VisualContracts">
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Explore.VisualContracts.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

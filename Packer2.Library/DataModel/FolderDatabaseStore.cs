@@ -6,6 +6,26 @@ using Packer2.Library.Tools;
 
 namespace Packer2.Library.DataModel
 {
+    public class JObjFile : ITextStore
+    {
+        public JObject? JObject { get; private set; }
+
+        public JObjFile(JObject? jobj = null)
+        {
+            JObject = jobj;
+        }
+
+        public string GetText()
+        {
+            return JObject?.ToString() ?? "";
+        }
+
+        public void SetText(string text)
+        {
+            JObject = JObject.Parse(text);
+        }
+    }
+
     public class FolderDatabaseStore : FolderModelStore<Database>
     {
         class PartitionExpressionsMapping : JsonPropertyZone
@@ -123,26 +143,6 @@ namespace Packer2.Library.DataModel
         }
 
         BimMappedRepository map = new BimMappedRepository();
-
-        class JObjFile : ITextStore
-        {
-            public JObject? JObject { get; private set; }
-
-            public JObjFile(JObject? jobj = null)
-            {
-                JObject = jobj;
-            }
-
-            public string GetText()
-            {
-                return JObject?.ToString() ?? "";
-            }
-
-            public void SetText(string text)
-            {
-                JObject = JObject.Parse(text);
-            }
-        }
 
         private readonly IFileSystem fileSystem;
         // todo: use logger
