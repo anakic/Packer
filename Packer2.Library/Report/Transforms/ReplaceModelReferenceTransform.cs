@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DataModelLoader.Report;
+using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Packer2.Library.Tools;
 
@@ -61,10 +62,12 @@ namespace Packer2.Library.Report.Transforms
     public class ReplaceModelReferenceTransform : ModelReferenceTransformBase
     {
         ReplaceRefErrorsVisitor visitor;
+        private readonly ILogger<ReplaceModelReferenceTransform> logger;
 
         public ReplaceModelReferenceTransform(Renames renames, ILogger<ReplaceModelReferenceTransform>? logger = null) 
         {
-            visitor = new ReplaceRefErrorsVisitor(renames, logger ?? new DummyLogger<ReplaceModelReferenceTransform>());
+            this.logger = logger ?? new DummyLogger<ReplaceModelReferenceTransform>();
+            visitor = new ReplaceRefErrorsVisitor(renames, this.logger);
         }
 
         protected override void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
@@ -102,6 +105,14 @@ namespace Packer2.Library.Report.Transforms
                 t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(visitor));
                 t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(visitor));
             });
+        }
+
+        protected override void OnProcessingComplete(PowerBIReport model)
+        {
+            if (visitor.NumberOfReplacements == 0)
+                throw new ArgumentException("No references were found, nothing to replace");
+            else
+                logger.LogInformation($"A total of {visitor.NumberOfReplacements} replacements were made.");
         }
 
         class ReplaceRefErrorsVisitor : BaseQueryExpressionVisitor
