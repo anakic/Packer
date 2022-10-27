@@ -2,68 +2,89 @@
 using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
-using Microsoft.InfoNav.Explore.VisualContracts;
-using Newtonsoft.Json;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
 {
-    public class ValidateModelReferencesTransform : IReportTransform
+    public class ValidateModelReferencesTransform : ModelReferenceTransformBase
     {
+        private readonly DetectRefErrorsVisitor visitor;
         private readonly ILogger<ValidateModelReferencesTransform> logger;
-        private readonly Database database;
 
         // todo: replace with logger?
-        public ValidateModelReferencesTransform(Database database, ILogger<ValidateModelReferencesTransform> logger = null)
+        public ValidateModelReferencesTransform(Database database, ILogger<ValidateModelReferencesTransform>? logger = null)
         {
             this.logger = logger ?? new DummyLogger<ValidateModelReferencesTransform>();
-            this.database = database;
+            visitor = new DetectRefErrorsVisitor(database, this.logger);
         }
 
-        public PowerBIReport Transform(PowerBIReport model)
+        protected override void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
         {
-            int invalidRefsCount = 0;
+            // we only have aliases for queries and filters (they have a From clause that specifies them)
+            visitor.SourcesByAliasMap = null;
+            visitor.OuterPath = outerPath;
+            visitor.InnerPath = innerPath;
+            expObj.Expression.Accept(visitor);
+        }
 
-            foreach (var sectionJObj in model.Layout.SelectTokens(".sections[*]").ToArray())
+        protected override void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
+        {
+            visitor.OuterPath = outerPath;
+            visitor.InnerPath = innerPath;
+            visitor.SourcesByAliasMap = filterObj.From.ToDictionary(f => f.Name, f => f.Entity);
+            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(visitor));
+        }
+
+        protected override void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        {
+            var sourcesToIgnore = expObj.From.Where(f => f.Type != EntitySourceType.Table).Select(f => f.Name).ToHashSet();
+
+            visitor.OuterPath = outerPath;
+            visitor.InnerPath = innerPath;
+            visitor.SourcesByAliasMap = expObj.From.ToDictionary(f => f.Name, f => f.Entity);
+
+            expObj.GroupBy?.ForEach(w => w.Expression.Accept(visitor));
+            expObj.OrderBy?.ForEach(w => w.Expression.Expression.Accept(visitor));
+            expObj.Let?.ForEach(w => w.Expression.Accept(visitor));
+            expObj.Parameters?.ForEach(w => w.Expression.Accept(visitor));
+            expObj.Select?.ForEach(w => w.Expression.Accept(visitor));
+            expObj.Where?.ForEach(w => w.Condition.Expression.Accept(visitor));
+            expObj.Transform?.ForEach(t =>
             {
-                var section = $"{sectionJObj["displayName"]} <{sectionJObj["name"]}>";
-                foreach (var visualContainerJObj in sectionJObj.SelectTokens(".visualContainers[*]").ToArray())
-                {
-                    
-                    var visualContainerConfig = JsonConvert.DeserializeObject<VisualContainerConfig>(visualContainerJObj["config"].ToString())!;
-
-                    if (visualContainerConfig.SingleVisual?.PrototypeQuery == null)
-                        continue;
-
-                    var sourcesToIgnore = visualContainerConfig.SingleVisual.PrototypeQuery.From.Where(f => f.Type != EntitySourceType.Table).Select(f => f.Name).ToHashSet();
-                    var sourcesToCheck = visualContainerConfig.SingleVisual.PrototypeQuery.From.Where(f => f.Type == EntitySourceType.Table).ToDictionary(f => f.Name, f => f.Entity);
-
-                    var refErrorsDetectVisitor = new DetectRefErrorsVisitor(section, visualContainerConfig.Name, sourcesToIgnore, sourcesToCheck, database, logger);
-                    foreach (var s in visualContainerConfig.SingleVisual.PrototypeQuery.Select)
-                        s.Expression.Accept(refErrorsDetectVisitor);
-
-                    invalidRefsCount += refErrorsDetectVisitor.MissingSourceErrors.Count() + refErrorsDetectVisitor.MissingMeasureErrors.Count() + refErrorsDetectVisitor.MissingSourceErrors.Count();
-                }
-            }
-            if (invalidRefsCount > 0)
-                throw new Exception($"Found {invalidRefsCount} invalid data model references!");
-
-            return model;
+                t.Input.Parameters.ForEach(p => p.Expression.Accept(visitor));
+                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(visitor));
+                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(visitor));
+            });
         }
 
-        public record MissingSourceError(string sourceName, string sourceAlias);
-        public record MissingColumnError(string sourceName, string sourceAlias, string columnName);
-        public record MissingMeasureError(string sourceName, string sourceAlias, string columnName);
-
-        class DetectRefErrorsVisitor : QueryExpressionVisitor
+        protected override void OnProcessingComplete(PowerBIReport model)
         {
+            var totalErrors = visitor.MissingSourceErrors.Count() + 
+                visitor.MissingColumnsErrors.Count() + 
+                visitor.MissingMeasureErrors.Count();
+
+            if (totalErrors == 0)
+                logger.LogInformation("No validation errors detected");
+            else
+                throw new Exception($"A total of {totalErrors} validation errors have been detected.");
+        }
+
+        public record MissingSourceError(string sourceName);
+        public record MissingColumnError(string sourceName, string columnName);
+        public record MissingMeasureError(string sourceName, string columnName);
+
+        class DetectRefErrorsVisitor : BaseQueryExpressionVisitor
+        {
+            public string OuterPath { get; set; }
+            public string InnerPath { get; set; }
+
             List<MissingSourceError> missingSourceErrors = new List<MissingSourceError>();
             List<MissingColumnError> missingColumnsErrors = new List<MissingColumnError>();
             List<MissingMeasureError> missingMeasureErrors = new List<MissingMeasureError>();
-            private readonly string sectionName;
-            private readonly string visualName;
-            private readonly HashSet<string> sourcesToIgnore;
-            private readonly IDictionary<string, string> sourcesToCheck;
+
+            public HashSet<string>? SourcesToIgnore { get; set; } = new HashSet<string>();
+            public IDictionary<string, string>? SourcesByAliasMap { get; set; }
+
             private readonly Database db;
             private readonly ILogger traceRefErrorReporter;
 
@@ -71,34 +92,30 @@ namespace Packer2.Library.Report.Transforms
             public IEnumerable<MissingColumnError> MissingColumnsErrors { get => missingColumnsErrors; }
             public IEnumerable<MissingMeasureError> MissingMeasureErrors { get => missingMeasureErrors; }
 
-            private void RegisterMissingSource(string name, string alias)
+            private void RegisterMissingSource(string sourceName)
             {
-                var error = new MissingSourceError(name, alias);
+                var error = new MissingSourceError(sourceName);
                 missingSourceErrors.Add(error);
-                traceRefErrorReporter.LogError("Page '{page}' - visual '{visual}' references data source '{dataSourceName}' with alias '{dataSourceAlias}' which was not found in the database.", sectionName, visualName, name, alias);
+                traceRefErrorReporter.LogError("Invalid data source reference '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'.", sourceName, OuterPath, InnerPath);
             }
 
-            private void RegisterMissingColumn(string name, string alias, string columnName)
+            private void RegisterMissingColumn(string sourceName, string columnName)
             {
-                var error = new MissingColumnError(name, alias, columnName);
+                var error = new MissingColumnError(sourceName, columnName);
                 missingColumnsErrors.Add(error);
-                traceRefErrorReporter.LogError("Page '{page}' - visual '{visual}' references column '{columnName}' which was not found in data source '{dataSourceName}' with alias '{dataSourceAlias}'", sectionName, visualName, columnName, name, alias);
+                traceRefErrorReporter.LogError("Invalid column reference '{columnName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", columnName, sourceName, OuterPath, InnerPath);
             }
 
-            private void RegisterMissingMeasure(string name, string alias, string measureName)
+            private void RegisterMissingMeasure(string sourceName, string measureName)
             {
-                var error = new MissingMeasureError(name, alias, measureName);
+                var error = new MissingMeasureError(sourceName, measureName);
                 missingMeasureErrors.Add(error);
-                traceRefErrorReporter.LogError("Page '{page}' - visual '{visual}' references measure '{columnName}' which was not found in data source '{dataSourceName}' with alias '{dataSourceAlias}'", sectionName, visualName, measureName, name, alias);
+                traceRefErrorReporter.LogError("Invalid measure reference '{columnName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", measureName, sourceName, OuterPath, InnerPath);
             }
 
-            public DetectRefErrorsVisitor(string sectionName, string visualName, HashSet<string> sourcesToIgnore, IDictionary<string, string> sourcesToCheck, Database db, ILogger traceRefErrorReporter)
+            public DetectRefErrorsVisitor(Database db, ILogger traceRefErrorReporter)
             {
                 this.db = db;
-                this.sectionName = sectionName;
-                this.visualName = visualName;
-                this.sourcesToIgnore = sourcesToIgnore;
-                this.sourcesToCheck = sourcesToCheck;
                 this.traceRefErrorReporter = traceRefErrorReporter;
             }
 
@@ -112,33 +129,40 @@ namespace Packer2.Library.Report.Transforms
                 // todo: implement
             }
 
-            private void ProcessCollection<T>(string name, string sourceAlias, Func<Table, NamedMetadataObjectCollection<T, Table>> targetCollectionGetter, Action<string, string, string> reportInvalidReference)
+            private void ProcessCollection<T>(string name, string sourceName, Func<Table, NamedMetadataObjectCollection<T, Table>> targetCollectionGetter, Action<string, string> reportInvalidReference)
                 where T : NamedMetadataObject
             {
-                if (!sourcesToIgnore.Contains(sourceAlias))
+                if (!SourcesToIgnore.Contains(sourceName))
                 {
-                    var sourceName = sourcesToCheck[sourceAlias];
                     if (db.Model.Tables.Contains(sourceName))
                     {
                         var table = db.Model.Tables[sourceName];
                         var tagetCollection = targetCollectionGetter(table);
                         if (!tagetCollection.Contains(name))
-                        {
-                            reportInvalidReference(sourceName, sourceAlias, name);
-                        }
+                            reportInvalidReference(sourceName, name);
                     }
                     else
                     {
-                        RegisterMissingSource(sourceName, sourceAlias);
+                        RegisterMissingSource(sourceName);
                     }
                 }
+            }
+
+            protected override void Visit(QueryHierarchyExpression expression)
+            {
+                base.Visit(expression);
+            }
+
+            protected override void Visit(QueryHierarchyLevelExpression expression)
+            {
+                base.Visit(expression);
             }
 
             protected override void Visit(QueryColumnExpression expression)
             {
                 ProcessCollection(
                     expression.Property,
-                    expression.Expression.SourceRef.Source,
+                    expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source],
                     t => t.Columns,
                     RegisterMissingColumn);
             }
@@ -147,278 +171,9 @@ namespace Packer2.Library.Report.Transforms
             {
                 ProcessCollection(
                     expression.Property,
-                    expression.Expression.SourceRef.Source,
+                    expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source],
                     t => t.Measures,
                     RegisterMissingMeasure);
-            }
-
-            protected override void Visit(QueryHierarchyExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryHierarchyLevelExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryPropertyVariationSourceExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryAggregationExpression expression)
-            {
-            }
-
-            protected override void Visit(QueryDatePartExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryPercentileExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryFloorExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDiscretizeExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryMemberExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryNativeFormatExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryNativeMeasureExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryExistsExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryNotExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryAndExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryOrExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryComparisonExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryContainsExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryStartsWithExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryArithmeticExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryEndsWithExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryBetweenExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryInExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryScopedEvalExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryFilteredEvalExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QuerySparklineDataExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryBooleanConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDateConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDateTimeConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDateTimeSecondConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDecadeConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDecimalConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryIntegerConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryNullConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryStringConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryNumberConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryYearAndMonthConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryYearAndWeekConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryYearConstantExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryLiteralExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDefaultValueExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryAnyValueExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryNowExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDateAddExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryDateSpanExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryTransformOutputRoleRefExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryTransformTableRefExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QuerySubqueryExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryLetRefExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryRoleRefExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QuerySummaryValueRefExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryParameterRefExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryTypeOfExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryPrimitiveTypeExpression expression)
-            {
-
-            }
-
-            protected override void Visit(QueryTableTypeExpression expression)
-            {
-
             }
         }
     }
