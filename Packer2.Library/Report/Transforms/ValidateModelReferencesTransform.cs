@@ -34,12 +34,16 @@ namespace Packer2.Library.Report.Transforms
 
         public record MissingSourceError(string sourceName);
         public record MissingColumnError(string sourceName, string columnName);
+        public record MissingHierarchyError(string sourceName, string hierarchyName);
+        public record MissingHierarchyLevelError(string sourceName, string hierarchyName, string level);
         public record MissingMeasureError(string sourceName, string columnName);
 
         class DetectRefErrorsVisitor : BaseQueryExpressionVisitor
         {
             List<MissingSourceError> missingSourceErrors = new List<MissingSourceError>();
-            List<MissingColumnError> missingColumnsErrors = new List<MissingColumnError>();
+            List<MissingColumnError> missingColumnErrors = new List<MissingColumnError>();
+            List<MissingHierarchyError> missingHierarchyErrors = new List<MissingHierarchyError>();
+            List<MissingHierarchyLevelError> missingHierarchyLevelErrors = new List<MissingHierarchyLevelError>();
             List<MissingMeasureError> missingMeasureErrors = new List<MissingMeasureError>();
 
             public HashSet<string>? SourcesToIgnore { get; set; } = new HashSet<string>();
@@ -48,7 +52,7 @@ namespace Packer2.Library.Report.Transforms
             private readonly ILogger traceRefErrorReporter;
 
             public IEnumerable<MissingSourceError> MissingSourceErrors { get => missingSourceErrors; }
-            public IEnumerable<MissingColumnError> MissingColumnsErrors { get => missingColumnsErrors; }
+            public IEnumerable<MissingColumnError> MissingColumnsErrors { get => missingColumnErrors; }
             public IEnumerable<MissingMeasureError> MissingMeasureErrors { get => missingMeasureErrors; }
 
             private void RegisterMissingSource(string sourceName)
@@ -61,15 +65,29 @@ namespace Packer2.Library.Report.Transforms
             private void RegisterMissingColumn(string sourceName, string columnName)
             {
                 var error = new MissingColumnError(sourceName, columnName);
-                missingColumnsErrors.Add(error);
+                missingColumnErrors.Add(error);
                 traceRefErrorReporter.LogError("Invalid column reference '{columnName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", columnName, sourceName, OuterPath, InnerPath);
+            }
+
+            private void RegisterMissingHierarchy(string sourceName, string hierarchyName)
+            {
+                var error = new MissingHierarchyError(sourceName, hierarchyName);
+                missingHierarchyErrors.Add(error);
+                traceRefErrorReporter.LogError("Invalid hierarchy reference '{hierarchyName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", hierarchyName, sourceName, OuterPath, InnerPath);
+            }
+
+            private void RegisterMissingHierarchyLevel(string sourceName, string hierarchyName, string hierarchyLevel)
+            {
+                var error = new MissingHierarchyLevelError(sourceName, hierarchyName, hierarchyLevel);
+                missingHierarchyLevelErrors.Add(error);
+                traceRefErrorReporter.LogError("Invalid hierarchy level reference '{hierarchyName}' in hierarchy {hierarchyName}, data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", hierarchyLevel, hierarchyName, sourceName, OuterPath, InnerPath);
             }
 
             private void RegisterMissingMeasure(string sourceName, string measureName)
             {
                 var error = new MissingMeasureError(sourceName, measureName);
                 missingMeasureErrors.Add(error);
-                traceRefErrorReporter.LogError("Invalid measure reference '{columnName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", measureName, sourceName, OuterPath, InnerPath);
+                traceRefErrorReporter.LogError("Invalid measure reference '{measureName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", measureName, sourceName, OuterPath, InnerPath);
             }
 
             public DetectRefErrorsVisitor(Database db, ILogger traceRefErrorReporter)
@@ -88,7 +106,7 @@ namespace Packer2.Library.Report.Transforms
                 // todo: implement
             }
 
-            private void ProcessCollection<T>(string name, string sourceName, Func<Table, NamedMetadataObjectCollection<T, Table>> targetCollectionGetter, Action<string, string> reportInvalidReference)
+            private void ProcessCollection<T>(string name, string sourceName, Func<Table, NamedMetadataObjectCollection<T, Table>> targetCollectionGetter, Action<string, string> reportInvalidReference, Action<T>? handleFound = null)
                 where T : NamedMetadataObject
             {
                 if (!SourcesToIgnore.Contains(sourceName))
@@ -99,6 +117,8 @@ namespace Packer2.Library.Report.Transforms
                         var tagetCollection = targetCollectionGetter(table);
                         if (!tagetCollection.Contains(name))
                             reportInvalidReference(sourceName, name);
+                        else
+                            handleFound?.Invoke(tagetCollection[name]);
                     }
                     else
                     {
@@ -109,10 +129,22 @@ namespace Packer2.Library.Report.Transforms
 
             protected override void Visit(QueryHierarchyExpression expression)
             {
+                var hierarcyName = expression.Expression.Hierarchy.Hierarchy;
+                var entity = expression.Expression.Hierarchy.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.Hierarchy.Expression.SourceRef.Source];
+                ProcessCollection(hierarcyName, entity, t => t.Hierarchies, RegisterMissingHierarchy);
             }
 
             protected override void Visit(QueryHierarchyLevelExpression expression)
             {
+                var hierarcyName = expression.Expression.Hierarchy.Hierarchy;
+                var level = expression.Level;
+                var entity = expression.Expression.Hierarchy.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.Hierarchy.Expression.SourceRef.Source];
+
+                ProcessCollection(hierarcyName, entity, t => t.Hierarchies, RegisterMissingHierarchy, h => 
+                {
+                    if (!h.Levels.Contains(level))
+                        RegisterMissingHierarchyLevel(entity, hierarcyName, level);
+                });
             }
 
             protected override void Visit(QueryColumnExpression expression)
