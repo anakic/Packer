@@ -1,11 +1,9 @@
 ﻿using DataModelLoader.Report;
 using Microsoft.AnalysisServices.Tabular;
-using Microsoft.Extensions.Logging;
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Library.Report.Transforms;
 using System.Management.Automation;
-using static Packer2.Library.Report.Transforms.ValidateModelReferencesTransform;
 
 namespace Packer2.PS.Report
 {
@@ -33,6 +31,8 @@ namespace Packer2.PS.Report
             transform.Transform(Report);
 
             base.ProcessRecord();
+
+            WriteObject(Report);
         }
     }
 }
