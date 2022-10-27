@@ -1,16 +1,24 @@
 ﻿using DataModelLoader.Report;
-using FluentAssertions;
-using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Library.Report.Transforms;
-using System.Diagnostics;
 using Xunit;
-using static Packer2.Library.Report.Transforms.ValidateModelReferencesTransform;
 
 namespace Packer2.Tests.Report
 {
     public class ReportParseTests
     {
+        [Fact]
+        public void TEMP()
+        {
+            var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
+            var reportModel = new PBIArchiveStore(wf3Pbit).Read();
+            var db = new BimDataModelStore(new JObjFile(reportModel.DataModelSchemaFile)).Read();
+
+            var renames = new Renames();
+            renames.AddRename("dbth HospitalSite", "Name", "test_change");
+            new ReplaceModelReferenceTransform(renames).Transform(reportModel);
+        }
+
         //[Fact]
         //public void TEMP()
         //{
