@@ -1,5 +1,4 @@
-﻿using Microsoft.AnalysisServices;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Packer2.FileSystem;
@@ -239,7 +238,8 @@ namespace DataModelLoader.Report
             foreach (var file in fileSystem.GetFilesRecursive("Blobs"))
             {
                 logger.LogInformation("Reading blob file '{filePath}'.", file);
-                model.Blobs[file] = File.ReadAllBytes(file);
+                var blobFileName = fileSystem.PathResolver.GetRelativePath(file, "Blobs");
+                model.Blobs[blobFileName] = fileSystem.ReadAsBytes(file)!;
             }
 
             model.Connections = ReadJsonFile(ConnectionsFilePath);
@@ -248,7 +248,7 @@ namespace DataModelLoader.Report
             model.DiagramLayout = ReadJsonFile(DiagramLayoutFilePath);
             model.Metadata = ReadJsonFile(MedataFilePath);
             model.Settings = ReadJsonFile(SettingsFilePath);
-            model.Version = File.ReadAllText(VersionFilePath);
+            model.Version = ReadTextFile(VersionFilePath);
             model.Report_LinguisticSchema = ReadXmlFile(ReportLinguisticSchemaFilePath);
 
             var rpt = reportFolderMapper.Read(fileSystem.Sub(ReportFolderPath));
@@ -293,6 +293,19 @@ namespace DataModelLoader.Report
             reportFolderMapper.Write(layoutJObjClone, fileSystem.Sub(ReportFolderPath));
         }
 
+        private string? ReadTextFile(string path)
+        {
+            if (fileSystem.FileExists(path) == false)
+            {
+                logger.LogInformation("Attempted to read json file '{filePath}' but file does not exist.", path);
+                return null;
+            }
+
+            logger.LogInformation("Reading text file '{filePath}'", path);
+            return fileSystem.ReadAsString(path);
+        }
+
+        // todo: use ReadTextFile internally?
         private JObject? ReadJsonFile(string path)
         {
             if (fileSystem.FileExists(path) == false)
@@ -311,6 +324,7 @@ namespace DataModelLoader.Report
             return JObject.Parse(content);
         }
 
+        // todo: use ReadTextFile internally?
         private XDocument? ReadXmlFile(string path)
         {
             if (fileSystem.FileExists(path) == false)
