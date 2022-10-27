@@ -162,7 +162,8 @@ namespace DataModelLoader.Report
         {
             public void Restore(JObject obj)
             {
-                obj["config"] = ((JObject)obj["#config"]!).ToString(Formatting.None);
+                var expandedConfigObj = obj.SelectToken(".#config")!;
+                expandedConfigObj.Parent!.Replace(new JProperty("config", ((JObject)obj["#config"]!).ToString(Formatting.None)));
             }
 
             public void Transform(JObject obj)
