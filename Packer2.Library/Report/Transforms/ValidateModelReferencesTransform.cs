@@ -18,44 +18,7 @@ namespace Packer2.Library.Report.Transforms
             visitor = new DetectRefErrorsVisitor(database, this.logger);
         }
 
-        protected override void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
-        {
-            // we only have aliases for queries and filters (they have a From clause that specifies them)
-            visitor.SourcesByAliasMap = null;
-            visitor.OuterPath = outerPath;
-            visitor.InnerPath = innerPath;
-            expObj.Expression.Accept(visitor);
-        }
-
-        protected override void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
-        {
-            visitor.OuterPath = outerPath;
-            visitor.InnerPath = innerPath;
-            visitor.SourcesByAliasMap = filterObj.From.ToDictionary(f => f.Name, f => f.Entity);
-            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(visitor));
-        }
-
-        protected override void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
-        {
-            var sourcesToIgnore = expObj.From.Where(f => f.Type != EntitySourceType.Table).Select(f => f.Name).ToHashSet();
-
-            visitor.OuterPath = outerPath;
-            visitor.InnerPath = innerPath;
-            visitor.SourcesByAliasMap = expObj.From.ToDictionary(f => f.Name, f => f.Entity);
-
-            expObj.GroupBy?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.OrderBy?.ForEach(w => w.Expression.Expression.Accept(visitor));
-            expObj.Let?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.Parameters?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.Select?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.Where?.ForEach(w => w.Condition.Expression.Accept(visitor));
-            expObj.Transform?.ForEach(t =>
-            {
-                t.Input.Parameters.ForEach(p => p.Expression.Accept(visitor));
-                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(visitor));
-                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(visitor));
-            });
-        }
+        protected override BaseQueryExpressionVisitor Visitor => visitor;
 
         protected override void OnProcessingComplete(PowerBIReport model)
         {
@@ -75,15 +38,11 @@ namespace Packer2.Library.Report.Transforms
 
         class DetectRefErrorsVisitor : BaseQueryExpressionVisitor
         {
-            public string OuterPath { get; set; }
-            public string InnerPath { get; set; }
-
             List<MissingSourceError> missingSourceErrors = new List<MissingSourceError>();
             List<MissingColumnError> missingColumnsErrors = new List<MissingColumnError>();
             List<MissingMeasureError> missingMeasureErrors = new List<MissingMeasureError>();
 
             public HashSet<string>? SourcesToIgnore { get; set; } = new HashSet<string>();
-            public IDictionary<string, string>? SourcesByAliasMap { get; set; }
 
             private readonly Database db;
             private readonly ILogger traceRefErrorReporter;
@@ -150,12 +109,10 @@ namespace Packer2.Library.Report.Transforms
 
             protected override void Visit(QueryHierarchyExpression expression)
             {
-                base.Visit(expression);
             }
 
             protected override void Visit(QueryHierarchyLevelExpression expression)
             {
-                base.Visit(expression);
             }
 
             protected override void Visit(QueryColumnExpression expression)

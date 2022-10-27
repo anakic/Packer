@@ -96,10 +96,43 @@ namespace Packer2.Library.Report.Transforms
 
         protected virtual void OnProcessingComplete(PowerBIReport model) { }
 
-        protected abstract void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath);
+        protected abstract BaseQueryExpressionVisitor Visitor { get; }
 
-        protected abstract void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath);
+        protected void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
+        {
+            // we only have aliases for queries and filters (they have a From clause that specifies them)
+            Visitor.SourcesByAliasMap = null;
+            Visitor.OuterPath = outerPath;
+            Visitor.InnerPath = innerPath;
+            expObj.Expression.Accept(Visitor);
+        }
 
-        protected abstract void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath);
+        protected void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
+        {
+            Visitor.OuterPath = outerPath;
+            Visitor.InnerPath = innerPath;
+            Visitor.SourcesByAliasMap = filterObj.From.ToDictionary(f => f.Name, f => f.Entity);
+            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(Visitor));
+        }
+
+        protected void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        {
+            Visitor.OuterPath = outerPath;
+            Visitor.InnerPath = innerPath;
+            Visitor.SourcesByAliasMap = expObj.From.ToDictionary(f => f.Name, f => f.Entity);
+
+            expObj.GroupBy?.ForEach(w => w.Expression.Accept(Visitor));
+            expObj.OrderBy?.ForEach(w => w.Expression.Expression.Accept(Visitor));
+            expObj.Let?.ForEach(w => w.Expression.Accept(Visitor));
+            expObj.Parameters?.ForEach(w => w.Expression.Accept(Visitor));
+            expObj.Select?.ForEach(w => w.Expression.Accept(Visitor));
+            expObj.Where?.ForEach(w => w.Condition.Expression.Accept(Visitor));
+            expObj.Transform?.ForEach(t =>
+            {
+                t.Input.Parameters.ForEach(p => p.Expression.Accept(Visitor));
+                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(Visitor));
+                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(Visitor));
+            });
+        }
     }
 }

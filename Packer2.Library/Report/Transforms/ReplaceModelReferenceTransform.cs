@@ -70,43 +70,6 @@ namespace Packer2.Library.Report.Transforms
             visitor = new ReplaceRefErrorsVisitor(renames, this.logger);
         }
 
-        protected override void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
-        {
-            // we only have aliases for queries and filters (they have a From clause that specifies them)
-            visitor.SourcesByAliasMap = null;
-            visitor.OuterPath = outerPath;
-            visitor.InnerPath = innerPath;
-            expObj.Expression.Accept(visitor);
-        }
-
-        protected override void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
-        {
-            visitor.OuterPath = outerPath;
-            visitor.InnerPath = innerPath;
-            visitor.SourcesByAliasMap = filterObj.From.ToDictionary(f => f.Name, f => f.Entity);
-            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(visitor));
-        }
-
-        protected override void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
-        {
-            visitor.OuterPath = outerPath;
-            visitor.InnerPath = innerPath;
-            visitor.SourcesByAliasMap = expObj.From.ToDictionary(f => f.Name, f => f.Entity);
-
-            expObj.GroupBy?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.OrderBy?.ForEach(w => w.Expression.Expression.Accept(visitor));
-            expObj.Let?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.Parameters?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.Select?.ForEach(w => w.Expression.Accept(visitor));
-            expObj.Where?.ForEach(w => w.Condition.Expression.Accept(visitor));
-            expObj.Transform?.ForEach(t => 
-            {
-                t.Input.Parameters.ForEach(p => p.Expression.Accept(visitor));
-                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(visitor));
-                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(visitor));
-            });
-        }
-
         protected override void OnProcessingComplete(PowerBIReport model)
         {
             if (visitor.NumberOfReplacements == 0)
@@ -115,14 +78,11 @@ namespace Packer2.Library.Report.Transforms
                 logger.LogInformation($"A total of {visitor.NumberOfReplacements} replacements were made.");
         }
 
+        protected override BaseQueryExpressionVisitor Visitor => visitor;
+
         class ReplaceRefErrorsVisitor : BaseQueryExpressionVisitor
         {
             public int NumberOfReplacements { get; private set; } = 0;
-
-            public string? OuterPath { get; set; }
-            public string? InnerPath { get; set; }
-
-            public Dictionary<string, string> SourcesByAliasMap { get; set; }
 
             private readonly Renames renames;
             private readonly ILogger logger;
@@ -154,6 +114,14 @@ namespace Packer2.Library.Report.Transforms
                     logger.LogInformation("Replaced a reference to an object in table '{tableName}' from '{oldName}' to '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", sourceName, originalName, newName, OuterPath, InnerPath);
                     NumberOfReplacements++;
                 }
+            }
+
+            protected override void Visit(QueryHierarchyExpression expression)
+            {
+            }
+
+            protected override void Visit(QueryHierarchyLevelExpression expression)
+            {
             }
         }
     }
