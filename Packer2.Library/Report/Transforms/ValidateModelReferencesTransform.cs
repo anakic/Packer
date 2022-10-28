@@ -2,7 +2,10 @@
 using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
+using Microsoft.InfoNav.Data.Contracts.SemanticQuery.ExpressionBuilder;
+using Microsoft.InfoNav.Utils;
 using Packer2.Library.Tools;
+using System.Linq.Expressions;
 
 namespace Packer2.Library.Report.Transforms
 {
@@ -22,73 +25,21 @@ namespace Packer2.Library.Report.Transforms
 
         protected override void OnProcessingComplete(PowerBIReport model)
         {
-            var totalErrors = visitor.MissingSourceErrors.Count() + 
-                visitor.MissingColumnsErrors.Count() + 
-                visitor.MissingMeasureErrors.Count();
-
-            if (totalErrors == 0)
+            if (visitor.ErrorCount == 0)
                 logger.LogInformation("No validation errors detected");
             else
-                throw new Exception($"A total of {totalErrors} validation errors have been detected.");
+                throw new Exception($"### A total of {visitor.ErrorCount} validation errors have been detected. ###");
         }
 
-        public record MissingSourceError(string sourceName);
-        public record MissingColumnError(string sourceName, string columnName);
-        public record MissingHierarchyError(string sourceName, string hierarchyName);
-        public record MissingHierarchyLevelError(string sourceName, string hierarchyName, string level);
-        public record MissingMeasureError(string sourceName, string columnName);
 
         class DetectRefErrorsVisitor : BaseQueryExpressionVisitor
         {
-            List<MissingSourceError> missingSourceErrors = new List<MissingSourceError>();
-            List<MissingColumnError> missingColumnErrors = new List<MissingColumnError>();
-            List<MissingHierarchyError> missingHierarchyErrors = new List<MissingHierarchyError>();
-            List<MissingHierarchyLevelError> missingHierarchyLevelErrors = new List<MissingHierarchyLevelError>();
-            List<MissingMeasureError> missingMeasureErrors = new List<MissingMeasureError>();
-
             public HashSet<string>? SourcesToIgnore { get; set; } = new HashSet<string>();
 
             private readonly Database db;
             private readonly ILogger traceRefErrorReporter;
 
-            public IEnumerable<MissingSourceError> MissingSourceErrors { get => missingSourceErrors; }
-            public IEnumerable<MissingColumnError> MissingColumnsErrors { get => missingColumnErrors; }
-            public IEnumerable<MissingMeasureError> MissingMeasureErrors { get => missingMeasureErrors; }
-
-            private void RegisterMissingSource(string sourceName)
-            {
-                var error = new MissingSourceError(sourceName);
-                missingSourceErrors.Add(error);
-                traceRefErrorReporter.LogError("Invalid data source reference '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'.", sourceName, OuterPath, InnerPath);
-            }
-
-            private void RegisterMissingColumn(string sourceName, string columnName)
-            {
-                var error = new MissingColumnError(sourceName, columnName);
-                missingColumnErrors.Add(error);
-                traceRefErrorReporter.LogError("Invalid column reference '{columnName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", columnName, sourceName, OuterPath, InnerPath);
-            }
-
-            private void RegisterMissingHierarchy(string sourceName, string hierarchyName)
-            {
-                var error = new MissingHierarchyError(sourceName, hierarchyName);
-                missingHierarchyErrors.Add(error);
-                traceRefErrorReporter.LogError("Invalid hierarchy reference '{hierarchyName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", hierarchyName, sourceName, OuterPath, InnerPath);
-            }
-
-            private void RegisterMissingHierarchyLevel(string sourceName, string hierarchyName, string hierarchyLevel)
-            {
-                var error = new MissingHierarchyLevelError(sourceName, hierarchyName, hierarchyLevel);
-                missingHierarchyLevelErrors.Add(error);
-                traceRefErrorReporter.LogError("Invalid hierarchy level reference '{hierarchyName}' in hierarchy {hierarchyName}, data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", hierarchyLevel, hierarchyName, sourceName, OuterPath, InnerPath);
-            }
-
-            private void RegisterMissingMeasure(string sourceName, string measureName)
-            {
-                var error = new MissingMeasureError(sourceName, measureName);
-                missingMeasureErrors.Add(error);
-                traceRefErrorReporter.LogError("Invalid measure reference '{measureName}' in data source '{dataSourceName}' found at path '{outerPath}' => '{innerPath}'", measureName, sourceName, OuterPath, InnerPath);
-            }
+            public int ErrorCount { get; private set; } = 0;
 
             public DetectRefErrorsVisitor(Database db, ILogger traceRefErrorReporter)
             {
@@ -96,73 +47,411 @@ namespace Packer2.Library.Report.Transforms
                 this.traceRefErrorReporter = traceRefErrorReporter;
             }
 
-            protected override void Visit(QuerySourceRefExpression expression)
-            {
-                // todo: implement
-            }
-
-            protected override void Visit(QueryPropertyExpression expression)
-            {
-                // todo: implement
-            }
-
-            private void ProcessCollection<T>(string name, string sourceName, Func<Table, NamedMetadataObjectCollection<T, Table>> targetCollectionGetter, Action<string, string> reportInvalidReference, Action<T>? handleFound = null)
-                where T : NamedMetadataObject
-            {
-                if (!SourcesToIgnore.Contains(sourceName))
-                {
-                    if (db.Model.Tables.Contains(sourceName))
-                    {
-                        var table = db.Model.Tables[sourceName];
-                        var tagetCollection = targetCollectionGetter(table);
-                        if (!tagetCollection.Contains(name))
-                            reportInvalidReference(sourceName, name);
-                        else
-                            handleFound?.Invoke(tagetCollection[name]);
-                    }
-                    else
-                    {
-                        RegisterMissingSource(sourceName);
-                    }
-                }
-            }
-
             protected override void Visit(QueryHierarchyExpression expression)
             {
-                var hierarcyName = expression.Expression.Hierarchy.Hierarchy;
-                var entity = expression.Expression.Hierarchy.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.Hierarchy.Expression.SourceRef.Source];
-                ProcessCollection(hierarcyName, entity, t => t.Hierarchies, RegisterMissingHierarchy);
+                TryDo(() =>
+                {
+                    var visitor = new ResolveTabularExpressionTargetVisitor<Table, Model>(db.Model.Tables, SourcesByAliasMap);
+                    return (Hierarchy)expression.Accept(visitor);
+                });
             }
 
             protected override void Visit(QueryHierarchyLevelExpression expression)
             {
-                var hierarcyName = expression.Expression.Hierarchy.Hierarchy;
-                var level = expression.Level;
-                var entity = expression.Expression.Hierarchy.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.Hierarchy.Expression.SourceRef.Source];
-
-                ProcessCollection(hierarcyName, entity, t => t.Hierarchies, RegisterMissingHierarchy, h => 
+                TryDo(() =>
                 {
-                    if (!h.Levels.Contains(level))
-                        RegisterMissingHierarchyLevel(entity, hierarcyName, level);
+                    var visitor = new ResolveTabularExpressionTargetVisitor<Table, Model>(db.Model.Tables, SourcesByAliasMap);
+                    return (Level)expression.Accept(visitor);
                 });
             }
 
             protected override void Visit(QueryColumnExpression expression)
             {
-                ProcessCollection(
-                    expression.Property,
-                    expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source],
-                    t => t.Columns,
-                    RegisterMissingColumn);
+                TryDo(() =>
+                {
+                    var visitor = new ResolveTabularExpressionTargetVisitor<Table, Model>(db.Model.Tables, SourcesByAliasMap);
+                    return (Column)expression.Accept(visitor);
+                });
             }
 
             protected override void Visit(QueryMeasureExpression expression)
             {
-                ProcessCollection(
-                    expression.Property,
-                    expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source],
-                    t => t.Measures,
-                    RegisterMissingMeasure);
+                TryDo(() =>
+                {
+                    var visitor = new ResolveTabularExpressionTargetVisitor<Table, Model>(db.Model.Tables, SourcesByAliasMap);
+                    return (Measure)expression.Accept(visitor);
+                });
+            }
+
+            private void TryDo(Func<MetadataObject> function)
+            {
+                try
+                {
+                    var result = function();
+                    if (result == null)
+                        throw new ResolutionException("Resolved object was null, but was expecting an instance... This should never happen. Investigate Packer2 code at this location.");
+                }
+                catch (Exception ex)
+                {
+                    traceRefErrorReporter.LogError("{errorMessage}. Location: '{outerPath}' => '{innerPath}'", ex.Message, OuterPath, InnerPath);
+                    ErrorCount++;
+                }
+            }
+        }
+
+        public class ResolutionException : Exception
+        {
+            public ResolutionException(string errorMessage)
+                : base(errorMessage)
+            {
+
+            }
+        }
+
+        class ResolveTabularExpressionTargetVisitor<T, K> : QueryExpressionVisitor<NamedMetadataObject> where T : NamedMetadataObject where K : MetadataObject
+        {
+            private readonly NamedMetadataObjectCollection<T, K> parent;
+            private readonly Dictionary<string, string> sourcesMap;
+
+            public ResolveTabularExpressionTargetVisitor(NamedMetadataObjectCollection<T, K> parent, Dictionary<string, string> sourcesMap)
+            {
+                this.parent = parent;
+                this.sourcesMap = sourcesMap;
+            }
+
+            protected override NamedMetadataObject Visit(QuerySourceRefExpression expression)
+            {
+                string? entity = expression.Entity;
+                if (entity == null)
+                {
+                    if (expression.Source != null)
+                    {
+                        if (sourcesMap.TryGetValue(expression.Source, out entity) == false)
+                            throw new ResolutionException($"Invalid source alias {expression.Source}!");
+                    }
+                    else
+                    {
+                        throw new ResolutionException("Invalid sourceRef expression!");
+                    }
+                }
+
+                if (parent.Contains(entity))
+                    return parent[entity];
+                else
+                    throw new ResolutionException($"Table {entity} not found");
+            }
+
+            protected override NamedMetadataObject Visit(QueryPropertyExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryColumnExpression expression)
+            {
+                var table = (Table)Visit(expression.Expression.SourceRef);
+                if (table.Columns.Contains(expression.Property))
+                    return table.Columns[expression.Property];
+                else
+                    throw new ResolutionException($"Column {expression.Property} not found in table {table.Name}");
+            }
+
+            protected override NamedMetadataObject Visit(QueryMeasureExpression expression)
+            {
+                var table = (Table)Visit(expression.Expression.SourceRef);
+                if (table.Measures.Contains(expression.Property))
+                    return table.Measures[expression.Property];
+                else
+                    throw new ResolutionException($"Measure {expression.Property} not found in table {table.Name}");
+            }
+
+            protected override NamedMetadataObject Visit(QueryHierarchyExpression expression)
+            {
+                var hierarchyOwner = expression.Expression.Expression.Accept(this);
+                if (hierarchyOwner is Variation v)
+                {
+                    if (v.DefaultHierarchy.Name != expression.Hierarchy)
+                        throw new ResolutionException($"Invalid hierarchy in variation {v.Name} in column {v.Column.Name} of table {v.Column.Table.Name}. Expecting name {v.DefaultColumn.Name} but found {expression.Hierarchy}.");
+                    else
+                        return v.DefaultHierarchy;
+                }
+                else if (hierarchyOwner is Table t)
+                {
+                    var table = (Table)hierarchyOwner;
+                    if (table.Hierarchies.Contains(expression.Hierarchy))
+                        return table.Hierarchies[expression.Hierarchy];
+                    else
+                        throw new ResolutionException($"Hierarchy {expression.Hierarchy} not found in table {table.Name}");
+                }
+                else
+                    throw new NotImplementedException("Unexpected hierarchy owner type. Inspect packer2 code and update as necessary.");
+            }
+
+
+            protected override NamedMetadataObject Visit(QueryHierarchyLevelExpression expression)
+            {
+                var hierarchy = (Hierarchy)expression.Expression.Expression.Accept(this);
+                return hierarchy.Levels[expression.Level];
+            }
+
+            protected override NamedMetadataObject Visit(QueryPropertyVariationSourceExpression expression)
+            {
+                var table = (Table)expression.Expression.Expression.Accept(this);
+                return table.Columns[expression.Property].Variations[expression.Name];
+            }
+
+            protected override NamedMetadataObject Visit(QueryAggregationExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDatePartExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryPercentileExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryFloorExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDiscretizeExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryMemberExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryNativeFormatExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryNativeMeasureExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryExistsExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryNotExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryAndExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryOrExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryComparisonExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryContainsExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryStartsWithExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryArithmeticExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryEndsWithExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryBetweenExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryInExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryScopedEvalExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryFilteredEvalExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QuerySparklineDataExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryLiteralExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDefaultValueExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryAnyValueExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryBooleanConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDateConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDateTimeConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDateTimeSecondConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDecadeConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDecimalConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryIntegerConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryNullConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryStringConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryNumberConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryYearAndMonthConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryYearAndWeekConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryYearConstantExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryNowExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDateAddExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryDateSpanExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryTransformOutputRoleRefExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryTransformTableRefExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QuerySubqueryExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryLetRefExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryRoleRefExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QuerySummaryValueRefExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryParameterRefExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryTypeOfExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryPrimitiveTypeExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override NamedMetadataObject Visit(QueryTableTypeExpression expression)
+            {
+                throw new NotImplementedException();
             }
         }
     }
