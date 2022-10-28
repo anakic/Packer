@@ -127,7 +127,7 @@ namespace Packer2.Library.Report.Transforms
                     if (expression.Source != null)
                     {
                         if (sourcesMap.TryGetValue(expression.Source, out entity) == false)
-                            throw new ResolutionException($"Invalid source alias {expression.Source}!");
+                            throw new ResolutionException($"Invalid source alias '{expression.Source}'!");
                     }
                     else
                     {
@@ -138,7 +138,7 @@ namespace Packer2.Library.Report.Transforms
                 if (parent.Contains(entity))
                     return parent[entity];
                 else
-                    throw new ResolutionException($"Table {entity} not found");
+                    throw new ResolutionException($"Table '{entity}' not found");
             }
 
             protected override NamedMetadataObject Visit(QueryPropertyExpression expression)
@@ -152,7 +152,7 @@ namespace Packer2.Library.Report.Transforms
                 if (table.Columns.Contains(expression.Property))
                     return table.Columns[expression.Property];
                 else
-                    throw new ResolutionException($"Column {expression.Property} not found in table {table.Name}");
+                    throw new ResolutionException($"Column '{expression.Property}' not found in table '{table.Name}'");
             }
 
             protected override NamedMetadataObject Visit(QueryMeasureExpression expression)
@@ -161,7 +161,7 @@ namespace Packer2.Library.Report.Transforms
                 if (table.Measures.Contains(expression.Property))
                     return table.Measures[expression.Property];
                 else
-                    throw new ResolutionException($"Measure {expression.Property} not found in table {table.Name}");
+                    throw new ResolutionException($"Measure '{expression.Property}' not found in table '{table.Name}'");
             }
 
             protected override NamedMetadataObject Visit(QueryHierarchyExpression expression)
@@ -170,7 +170,7 @@ namespace Packer2.Library.Report.Transforms
                 if (hierarchyOwner is Variation v)
                 {
                     if (v.DefaultHierarchy.Name != expression.Hierarchy)
-                        throw new ResolutionException($"Invalid hierarchy in variation {v.Name} in column {v.Column.Name} of table {v.Column.Table.Name}. Expecting name {v.DefaultColumn.Name} but found {expression.Hierarchy}.");
+                        throw new ResolutionException($"Invalid hierarchy in variation '{v.Name}' in column '{v.Column.Name}' of table '{v.Column.Table.Name}'. Expecting name '{v.DefaultColumn.Name}' but found '{expression.Hierarchy}'.");
                     else
                         return v.DefaultHierarchy;
                 }
@@ -180,7 +180,7 @@ namespace Packer2.Library.Report.Transforms
                     if (table.Hierarchies.Contains(expression.Hierarchy))
                         return table.Hierarchies[expression.Hierarchy];
                     else
-                        throw new ResolutionException($"Hierarchy {expression.Hierarchy} not found in table {table.Name}");
+                        throw new ResolutionException($"Hierarchy '{expression.Hierarchy}' not found in table '{table.Name}'");
                 }
                 else
                     throw new NotImplementedException("Unexpected hierarchy owner type. Inspect packer2 code and update as necessary.");
