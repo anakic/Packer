@@ -118,10 +118,20 @@ namespace Packer2.Library.Report.Transforms
 
             protected override void Visit(QueryHierarchyExpression expression)
             {
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+
+                if (renames.TryGetRenames(sourceName, expression.Hierarchy, out var newName))
+                {
+                    var originalName = expression.Hierarchy;
+                    expression.Hierarchy = newName;
+                    logger.LogInformation("Replaced a reference to an object in table '{tableName}' from '{oldName}' to '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", sourceName, originalName, newName, OuterPath, InnerPath);
+                    NumberOfReplacements++;
+                }
             }
 
             protected override void Visit(QueryHierarchyLevelExpression expression)
             {
+                Visit(expression.Expression.Hierarchy);
             }
         }
     }
