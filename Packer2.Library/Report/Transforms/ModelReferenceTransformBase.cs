@@ -115,7 +115,7 @@ namespace Packer2.Library.Report.Transforms
             filterObj.Where.ForEach(w => w.Condition.Expression.Accept(Visitor));
         }
 
-        protected void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        protected virtual void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
         {
             Visitor.OuterPath = outerPath;
             Visitor.InnerPath = innerPath;

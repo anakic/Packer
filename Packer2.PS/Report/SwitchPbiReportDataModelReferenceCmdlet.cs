@@ -14,9 +14,9 @@ namespace Packer2.PS.Report
         [Alias("t")]
         public string TableName { get; set; }
 
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = false)]
         [Alias("on")]
-        public string OriginalName { get; set; }
+        public string ObjectName { get; set; }
         
         [Parameter(Mandatory = true)]
         [Alias("nn")]
@@ -25,7 +25,11 @@ namespace Packer2.PS.Report
         protected override void ProcessRecord()
         {
             var renames = new Renames();
-            renames.AddRename(TableName, OriginalName, NewName);
+            if (ObjectName != null)
+                renames.AddRename(TableName, ObjectName, NewName);
+            else
+                renames.AddTableRename(TableName, NewName);
+
             var transform = new ReplaceModelReferenceTransform(renames, CreateLogger<ReplaceModelReferenceTransform>());
             transform.Transform(Report);
 

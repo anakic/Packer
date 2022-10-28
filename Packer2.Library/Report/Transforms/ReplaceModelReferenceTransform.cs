@@ -29,7 +29,13 @@ namespace Packer2.Library.Report.Transforms
             }
         }
 
-        Dictionary<string, TableObjectRenames> tableRenamesDict = new Dictionary<string, TableObjectRenames>();
+        Dictionary<string, TableObjectRenames> tableObjectsRenamesDict = new Dictionary<string, TableObjectRenames>();
+
+        Dictionary<string, string> tableRenamesDict = new Dictionary<string, string>();
+        public void AddTableRename(string tableName, string newTableName)
+        {
+            tableRenamesDict[tableName] = newTableName;
+        }
 
         public void AddRenames(string tableName, Dictionary<string, string> objectRenames)
         {
@@ -39,15 +45,20 @@ namespace Packer2.Library.Report.Transforms
 
         public void AddRename(string tableName, string oldObjectName, string newObjectName)
         {
-            if (!tableRenamesDict.TryGetValue(tableName, out var renames))
-                renames = tableRenamesDict[tableName] = new TableObjectRenames();
+            if (!tableObjectsRenamesDict.TryGetValue(tableName, out var renames))
+                renames = tableObjectsRenamesDict[tableName] = new TableObjectRenames();
             renames.Add(oldObjectName, newObjectName);
         }
 
-        public bool TryGetRenames(string tableName, string objectName, out string? newName)
+        public bool TryGetTableRename(string tableName, out string? newName)
+        {
+            return tableRenamesDict.TryGetValue(tableName, out newName);
+        }
+
+        public bool TryGetTableObjectRename(string tableName, string objectName, out string? newName)
         {
             if (
-                tableRenamesDict.TryGetValue(tableName, out var tableObjectRenames_inner)
+                tableObjectsRenamesDict.TryGetValue(tableName, out var tableObjectRenames_inner)
                 && tableObjectRenames_inner.TryGetNewName(objectName, out newName)
             )
                 return true;
@@ -62,10 +73,12 @@ namespace Packer2.Library.Report.Transforms
     public class ReplaceModelReferenceTransform : ModelReferenceTransformBase
     {
         ReplaceRefErrorsVisitor visitor;
+        private readonly Renames renames;
         private readonly ILogger<ReplaceModelReferenceTransform> logger;
 
-        public ReplaceModelReferenceTransform(Renames renames, ILogger<ReplaceModelReferenceTransform>? logger = null) 
+        public ReplaceModelReferenceTransform(Renames renames, ILogger<ReplaceModelReferenceTransform>? logger = null)
         {
+            this.renames = renames;
             this.logger = logger ?? new DummyLogger<ReplaceModelReferenceTransform>();
             visitor = new ReplaceRefErrorsVisitor(renames, this.logger);
         }
@@ -78,11 +91,26 @@ namespace Packer2.Library.Report.Transforms
                 logger.LogInformation($"A total of {visitor.NumberOfReplacements} replacements were made.");
         }
 
+        protected override void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        {
+            base.ProcessQuery(expObj, outerPath, innerPath);
+            foreach (var f in expObj.From)
+            {
+                if (f.Entity != null && renames.TryGetTableRename(f.Entity, out var newName))
+                {
+                    var oldName = f.Entity;
+                    f.Entity = newName;
+                    logger.LogInformation("Replaced a reference to table '{tableName}' with new name '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", oldName, newName, outerPath, innerPath);
+                    visitor.NumberOfReplacements++;
+                }
+            }
+        }
+
         protected override BaseQueryExpressionVisitor Visitor => visitor;
 
         class ReplaceRefErrorsVisitor : BaseQueryExpressionVisitor
         {
-            public int NumberOfReplacements { get; private set; } = 0;
+            public int NumberOfReplacements { get; set; } = 0;
 
             private readonly Renames renames;
             private readonly ILogger logger;
@@ -103,11 +131,24 @@ namespace Packer2.Library.Report.Transforms
                 Process(expression);
             }
 
+            protected override void Visit(QuerySourceRefExpression expression)
+            {
+                if (expression.Entity != null && renames.TryGetTableRename(expression.Entity, out var newName))
+                {
+                    var oldName = expression.Entity;
+                    expression.Entity = newName;
+                    logger.LogInformation("Replaced a reference to table '{tableName}' with new name '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", oldName, newName, OuterPath, InnerPath);
+                    NumberOfReplacements++;
+                }
+            }
+
             private void Process(QueryPropertyExpression expression)
             {
+                expression.Expression.Expression.Accept(this);
+
                 var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
-                
-                if (renames.TryGetRenames(sourceName, expression.Property, out var newName))
+
+                if (renames.TryGetTableObjectRename(sourceName, expression.Property, out var newName))
                 {
                     var originalName = expression.Property;
                     expression.Property = newName;
@@ -120,7 +161,7 @@ namespace Packer2.Library.Report.Transforms
             {
                 var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
 
-                if (renames.TryGetRenames(sourceName, expression.Hierarchy, out var newName))
+                if (renames.TryGetTableObjectRename(sourceName, expression.Hierarchy, out var newName))
                 {
                     var originalName = expression.Hierarchy;
                     expression.Hierarchy = newName;
@@ -132,6 +173,7 @@ namespace Packer2.Library.Report.Transforms
             protected override void Visit(QueryHierarchyLevelExpression expression)
             {
                 Visit(expression.Expression.Hierarchy);
+                // we don't rename levels (should we?)
             }
         }
     }
