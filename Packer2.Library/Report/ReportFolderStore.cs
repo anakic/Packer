@@ -153,9 +153,8 @@ namespace DataModelLoader.Report
                     var value = toToken.Value<int>();
                     container.SelectToken(property)!.Parent!.Remove();
 
-                    var configObj = JObject.Parse(container["config"]!.ToString());
+                    var configObj = (JObject)container["#config"]!;
                     configObj.SelectToken($".layouts[0].position.{property}")!.Parent!.Remove();
-                    container["config"] = configObj.ToString(Formatting.None);
                     var visualName = configObj["name"]!.Value<string>()!;
                     visualsOrder[visualName] = value;
                 }
@@ -181,27 +180,39 @@ namespace DataModelLoader.Report
                     var value = 100 * order++;
                     var visualToken = dict[visualName!];
                     visualToken.Add(new JProperty(property, value));
-                    var configObj = JObject.Parse(visualToken["config"]!.ToString());
+                    var configObj = (JObject)visualToken["#config"]!;
                     (configObj.SelectToken($".layouts[0].position") as JObject)!.Add(new JProperty(property, value));
-                    visualToken["config"] = configObj.ToString(Formatting.None);
                 }
                 ((JProperty)arrToken.Parent!).Remove();
             }
         }
 
-        class ConfigStuffTransform : IJObjTransform
+        class UnstuffTransform : IJObjTransform
         {
             public void Restore(JObject obj)
             {
-                var expandedConfigObj = obj.SelectToken(".#config")!;
-                expandedConfigObj.Parent!.Replace(new JProperty("config", ((JObject)obj["#config"]!).ToString(Formatting.None)));
+                foreach(var configJObj in obj.SelectTokens("..#config"))
+                    configJObj.Parent!.Replace(new JProperty("config", (configJObj.ToString(Formatting.None)));
+
+                foreach (var filtersJArr in obj.SelectTokens("..#filters"))
+                    filtersJArr.Parent!.Replace(new JProperty("filters", filtersJArr.ToString(Formatting.None)));
             }
 
             public void Transform(JObject obj)
             {
-                var configObj = obj.SelectToken(".config")!;
-                var configObjParsed = JObject.Parse(configObj.Value<string>()!);
-                configObj.Parent!.Replace(new JProperty("#config", configObjParsed));
+                var tokens = obj.SelectTokens("..config").Where(t => t?.Type == JTokenType.String).ToArray();
+                foreach (var tok in tokens)
+                {
+                    var jObj = JObject.Parse(tok.Value<string>()!);
+                    tok.Parent!.Replace(new JProperty("#config", jObj));
+                }
+
+                var filtersTokens = obj.SelectTokens("..filters").Where(t => t?.Type == JTokenType.String).ToArray();
+                foreach (var tok in filtersTokens)
+                {
+                    var jArr = JArray.Parse(tok.Value<string>()!).OfType<JObject>().ToArray();
+                    tok.Parent!.Replace(new JProperty("#filters", jArr));
+                }
             }
         }
 
@@ -253,7 +264,7 @@ namespace DataModelLoader.Report
         {
             transforms = new List<IJObjTransform>
             {
-                new ConfigStuffTransform(),
+                new UnstuffTransform(),
                 new ConsolidateOrderingTransform(), 
                 new StripVisualStatePropertiesTransform() 
             };
