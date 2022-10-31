@@ -30,18 +30,23 @@ namespace DataModelLoader.Report
 
         class PagesZone : JsonElementZone
         {
+            IEnumerable<MappingZone> childMappings;
+            public PagesZone()
+            {
+                childMappings = new List<MappingZone>() { new VisualZone() };
+            }
+
             protected override string ContainingFolder => "Pages";
 
             protected override string ElementsSelector => ".sections[*]";
 
-            protected override IEnumerable<MappingZone> ChildMappings => Array.Empty<MappingZone>();
+            protected override IEnumerable<MappingZone> ChildMappings => childMappings;
 
-            protected override string GetFileName(JToken elem) => (string)elem["displayName"]!;
+            protected override string GetFileName(JToken elem) => "page";
 
             protected override string GetFileExtension(JToken elem) => "json";
 
-            // pages not expanded further (no child mappings so no need for subfolder, at least for now)
-            protected override string GetSubfolderForElement(JToken elem) => String.Empty;
+            protected override string GetSubfolderForElement(JToken elem) => (string)elem["displayName"]!;
         }
 
         class BookmarkZone : JsonElementZone
@@ -78,6 +83,33 @@ namespace DataModelLoader.Report
 
             protected override string GetSubfolderForElement(JToken elem)
                 => elem.Parent.Parent.Parent["displayName"].ToString();
+        }
+
+        class VisualZone : JsonElementZone
+        {
+            protected override string ContainingFolder => string.Empty;
+
+            protected override string ElementsSelector => ".visualContainers[*].#config";
+
+            protected override IEnumerable<MappingZone> ChildMappings => Array.Empty<MappingZone>();
+
+            protected override string GetFileExtension(JToken elem) => "json";
+
+            protected override string GetFileName(JToken elem) 
+            {
+                if (elem["singleVisualGroup"] != null)
+                    return elem.SelectToken("singleVisualGroup.displayName")!.ToString();
+                else
+                    return elem.SelectToken("name")!.ToString();
+            }
+
+            protected override string GetSubfolderForElement(JToken elem)
+            {
+                if (elem["singleVisualGroup"] != null)
+                    return "VisualGroups";
+                else
+                    return elem.SelectToken("singleVisual.visualType")!.ToString();
+            }
         }
         #endregion
 
