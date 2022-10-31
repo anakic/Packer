@@ -36,7 +36,7 @@ namespace DataModelLoader.Report
 
             protected override IEnumerable<MappingZone> ChildMappings => Array.Empty<MappingZone>();
 
-            protected override string GetFileName(JToken elem) => (string)elem["name"]!;
+            protected override string GetFileName(JToken elem) => (string)elem["displayName"]!;
 
             protected override string GetFileExtension(JToken elem) => "json";
 
@@ -59,7 +59,7 @@ namespace DataModelLoader.Report
 
             protected override string GetFileExtension(JToken elem) => "json";
 
-            protected override string GetFileName(JToken elem) => (string)elem["name"]!;
+            protected override string GetFileName(JToken elem) => (string)elem["displayName"]!;
 
             protected override string GetSubfolderForElement(JToken elem) => String.Empty;
         }
@@ -74,7 +74,7 @@ namespace DataModelLoader.Report
 
             protected override string GetFileExtension(JToken elem) => "json";
 
-            protected override string GetFileName(JToken elem) => (string)elem["name"]!;
+            protected override string GetFileName(JToken elem) => (string)elem["displayName"]!;
 
             protected override string GetSubfolderForElement(JToken elem)
                 => elem.Parent.Parent.Parent["displayName"].ToString();
