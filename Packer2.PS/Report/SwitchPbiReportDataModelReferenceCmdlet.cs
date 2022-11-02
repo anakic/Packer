@@ -4,6 +4,24 @@ using System.Management.Automation;
 
 namespace Packer2.PS.Report
 {
+    [Cmdlet(VerbsData.Compress, "PbiReportDataModelExpressions")]
+    public class CompressPbiReportDataModelExpressionsCmdlet : StoreCmdletBase
+    {
+        [Parameter(ValueFromPipeline = true)]
+        public PowerBIReport Report { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            var transform = new PrettifyModelExpressionsTransform();
+            transform.Transform(Report);
+
+            base.ProcessRecord();
+
+            WriteObject(Report);
+        }
+    }
+
+
     [Cmdlet(VerbsCommon.Switch, "PbiReportDataModelReference")]
     public class SwitchPbiReportDataModelReferenceCmdlet : StoreCmdletBase
     {

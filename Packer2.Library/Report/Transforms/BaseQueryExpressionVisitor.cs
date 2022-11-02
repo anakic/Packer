@@ -2,7 +2,7 @@
 
 namespace Packer2.Library.Report.Transforms
 {
-    public abstract class BaseQueryExpressionVisitor : QueryExpressionVisitor
+    public class BaseQueryExpressionVisitor : QueryExpressionVisitor
     {
         public Dictionary<string, string> SourcesByAliasMap { get; internal set; }
         public string InnerPath { get; internal set; }
@@ -275,6 +275,27 @@ namespace Packer2.Library.Report.Transforms
         protected override void Visit(QueryTableTypeExpression expression)
         {
 
+        }
+
+        protected override void Visit(QueryNativeVisualCalculationExpression expression)
+        {
+            
+        }
+
+        protected override void Visit(QueryColumnExpression expression)
+        {
+        }
+
+        protected override void Visit(QueryMeasureExpression expression)
+        {
+        }
+
+        protected override void Visit(QueryHierarchyExpression expression)
+        {
+        }
+
+        protected override void Visit(QueryHierarchyLevelExpression expression)
+        {
         }
     }
 }

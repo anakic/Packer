@@ -50,17 +50,36 @@ namespace Packer2.Library.Report.Transforms
 
                             ProcessExpression(expObj, token.Path, expToken.Path);
 
-                            // write back the updated object
-                            expToken.Replace(JObject.FromObject(expObj));
+                            WriteExpression(expToken, expObj);
                         }
+
+                        // todo: support orderby
+                        // Microsoft.InfoNav.Data.Contracts.Internal.DataShapeBindingOrderBy
+
+                        // todo: support activeProjections, e.g.
+                        /*
+                         "activeProjections": {
+                "Rows": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Care Changes"
+                        }
+                      },
+                      "Property": "Resultant Simplified Service Type Crisis"
+                    }
+                  }
+                ]
+              }
+                         */
 
                         var queryDefSelectors = new[] { "..prototypeQuery" };
                         foreach (var expToken in queryDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
                             var queryObj = expToken.ToObject<QueryDefinition>()!;
                             ProcessQuery(queryObj, token.Path, expToken.Path);
-                            // write back the updated object
-                            expToken.Replace(JObject.FromObject(queryObj));
+                            WriteQuery(expToken, queryObj);
                         }
 
                         var filterDefSelectors = new[] { "..filter" };
@@ -74,8 +93,7 @@ namespace Packer2.Library.Report.Transforms
                             var filterObj = expToken.ToObject<FilterDefinition>()!;
                             ProcessFilter(filterObj, token.Path, expToken.Path);
 
-                            // write back the updated object
-                            expToken.Replace(JObject.FromObject(filterObj));
+                            WriteFilter(expToken, filterObj);
                         }
                     }
 
@@ -94,8 +112,29 @@ namespace Packer2.Library.Report.Transforms
             return model;
         }
 
+        protected virtual void WriteFilter(JToken expToken, FilterDefinition filterObj)
+        {
+            // write back the updated object
+            expToken.Replace(JObject.FromObject(filterObj));
+        }
+
+        protected virtual void WriteQuery(JToken expToken, QueryDefinition queryObj)
+        {
+            // write back the updated object
+            expToken.Replace(JObject.FromObject(queryObj));
+        }
+
+        protected virtual void WriteExpression(JToken expToken, QueryExpressionContainer expObj)
+        {
+            // write back the updated object
+            expToken.Replace(JObject.FromObject(expObj));
+        }
+
         protected virtual void OnProcessingComplete(PowerBIReport model) { }
 
+        // todo: should not force deriving from BaseQueryExpressionVisitor, we could make BaseQueryExpressionVisitor
+        // a decorator around the user's visitor object. The properties of BaseQueryExpressionVisitor are only used
+        // by this class internally, they are not by client code.
         protected abstract BaseQueryExpressionVisitor Visitor { get; }
 
         protected void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
