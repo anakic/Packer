@@ -192,7 +192,7 @@ namespace DataModelLoader.Report
             public void Restore(JObject obj)
             {
                 foreach(var configJObj in obj.SelectTokens("..#config"))
-                    configJObj.Parent!.Replace(new JProperty("config", (configJObj.ToString(Formatting.None)));
+                    configJObj.Parent!.Replace(new JProperty("config", configJObj.ToString(Formatting.None)));
 
                 foreach (var filtersJArr in obj.SelectTokens("..#filters"))
                     filtersJArr.Parent!.Replace(new JProperty("filters", filtersJArr.ToString(Formatting.None)));
