@@ -97,11 +97,6 @@ namespace Packer2.Library.Report.Transforms
                     ErrorCount++;
                 }
             }
-
-            protected override void Visit(QueryNativeVisualCalculationExpression expression)
-            {
-                throw new NotImplementedException();
-            }
         }
 
         public class ResolutionException : Exception
@@ -455,11 +450,6 @@ namespace Packer2.Library.Report.Transforms
             }
 
             protected override NamedMetadataObject Visit(QueryTableTypeExpression expression)
-            {
-                throw new NotImplementedException();
-            }
-
-            protected override NamedMetadataObject Visit(QueryNativeVisualCalculationExpression expression)
             {
                 throw new NotImplementedException();
             }

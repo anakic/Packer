@@ -276,12 +276,6 @@ namespace Packer2.Library.Report.Transforms
         {
 
         }
-
-        protected override void Visit(QueryNativeVisualCalculationExpression expression)
-        {
-            
-        }
-
         protected override void Visit(QueryColumnExpression expression)
         {
         }
