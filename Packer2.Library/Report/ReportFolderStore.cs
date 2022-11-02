@@ -95,10 +95,10 @@ namespace DataModelLoader.Report
 
             protected override string GetFileExtension(JToken elem) => "json";
 
-            protected override string GetFileName(JToken elem) 
+            protected override string GetFileName(JToken elem)
             {
                 if (elem["singleVisualGroup"] != null)
-                    return elem.SelectToken("singleVisualGroup.displayName")!.ToString();
+                    return $"{elem.SelectToken("singleVisualGroup.displayName")!.ToString()} ({elem.SelectToken("name")!.ToString()})";
                 else
                     return elem.SelectToken("name")!.ToString();
             }
@@ -119,6 +119,82 @@ namespace DataModelLoader.Report
         {
             void Transform(JObject obj);
             void Restore(JObject obj);
+        }
+
+        class SimplifyBookmarks : IJObjTransform
+        {
+            public void Restore(JObject obj)
+            {
+                // restore nothing - that useless fluff is toast!
+            }
+
+            public void Transform(JObject obj)
+            {
+                List<JObject> bookmarkJobjs = new List<JObject>();
+                foreach (var jo in obj.SelectTokens(".#config.bookmarks[*]").OfType<JObject>())
+                {
+                    var children = jo["children"] as JArray;
+                    if (children == null)
+                        bookmarkJobjs.Add(jo);
+                    else
+                        bookmarkJobjs.AddRange(children.OfType<JObject>());
+                }
+
+                foreach (var bookmarkJObj in bookmarkJobjs)
+                {
+                    var applyOnlyToTargetVisuals = bookmarkJObj.SelectToken("options.applyOnlyToTargetVisuals")?.Value<bool>() ?? false;
+
+                    var targetVisualsArr = (JArray)bookmarkJObj.SelectToken("options.targetVisualNames")!;
+                    var targetVisualNames = targetVisualsArr.ToObject<string[]>()!.ToHashSet();
+                    var targetVisualNamesFound = new HashSet<string>();
+                    var containers1 = ((JObject)bookmarkJObj.SelectToken("explorationState.sections..visualContainers")!).Properties();
+                    var containers2 = (bookmarkJObj.SelectTokens("explorationState.sections..visualContainerGroups..children")!).SelectMany(t => ((JObject)t).Properties());
+
+                    foreach (JProperty c in containers1.Union(containers2).ToList())
+                    {
+                        bool removed = false;
+
+                        // remove the visual's node if not in targetVisuals and applyOnlyToTargetVisuals=true
+                        if (applyOnlyToTargetVisuals && !targetVisualNames.Contains(c.Name))
+                        {
+                            c.Remove();
+                            removed = true;
+                        }
+
+                        if (!removed)
+                        {
+                            // remove the visual's node if no useful data inside it
+                            var singleVisualNode = (JObject)c.Value["singleVisual"]!;
+                            if (singleVisualNode != null)
+                            {
+                                if (singleVisualNode.Properties().Count(p => new[] { "visualType", "objects" }.Contains(p.Name) == false) == 0)
+                                {
+                                    var objectsSubNode = (JObject)singleVisualNode["objects"]!;
+                                    if (objectsSubNode == null || objectsSubNode.Properties().Count() == 0)
+                                    {
+                                        c.Remove();
+                                        removed = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!removed)
+                            targetVisualNamesFound.Add(c.Name);
+                    }
+
+                    targetVisualsArr.Replace(new JArray(targetVisualNamesFound));
+
+                    var suppressData = bookmarkJObj.SelectToken("options.suppressData")?.Value<bool>() ?? false;
+                    if (suppressData)
+                    {
+                        var nodesToRemove1 = bookmarkJObj.SelectTokens("explorationState..filters").ToList();
+                        var nodesToRemove2 = bookmarkJObj.SelectTokens("explorationState..visualContainers..singleVisual.activeProjections").ToList();
+                        var nodesToRemove3 = bookmarkJObj.SelectTokens("explorationState..visualContainers..singleVisual.orderBy").ToList();
+                        nodesToRemove1.Union(nodesToRemove2).Union(nodesToRemove3).ToList().ForEach(x => x.Parent.Remove());
+                    }
+                }
+            }
         }
 
         class ConsolidateOrderingTransform : IJObjTransform
@@ -167,12 +243,8 @@ namespace DataModelLoader.Report
                 var arrToken = (pageFileJObj.SelectToken($"#{property}") as JArray)!;
                 var tabOrderArr = arrToken.Values<string>()!.ToArray();
 
-                var visualConfigs = pageFileJObj
-                    .SelectTokens("visualContainers[*]")!
-                    .ToDictionary(tok => tok!, tok => JObject.Parse(tok["config"]!.ToString()));
-
-                var dict = visualConfigs
-                    .ToDictionary(kvp => kvp.Value["name"]!.ToString(), kvp => (JObject)kvp.Key);
+                var dict = pageFileJObj.SelectTokens("visualContainers[*]")!
+                    .ToDictionary(vc => vc.SelectToken("#config.name")!.ToString(), kvp => (JObject)kvp);
 
                 int order = 1;
                 foreach (var visualName in tabOrderArr)
@@ -191,10 +263,10 @@ namespace DataModelLoader.Report
         {
             public void Restore(JObject obj)
             {
-                foreach(var configJObj in obj.SelectTokens("..#config"))
+                foreach (var configJObj in obj.SelectTokens("..#config").ToArray())
                     configJObj.Parent!.Replace(new JProperty("config", configJObj.ToString(Formatting.None)));
 
-                foreach (var filtersJArr in obj.SelectTokens("..#filters"))
+                foreach (var filtersJArr in obj.SelectTokens("..#filters").ToArray())
                     filtersJArr.Parent!.Replace(new JProperty("filters", filtersJArr.ToString(Formatting.None)));
             }
 
@@ -236,7 +308,7 @@ namespace DataModelLoader.Report
                 }
             }
         }
-        
+
         #endregion
 
         private const string ConnectionsFilePath = "Connections.json";
@@ -265,8 +337,9 @@ namespace DataModelLoader.Report
             transforms = new List<IJObjTransform>
             {
                 new UnstuffTransform(),
-                new ConsolidateOrderingTransform(), 
-                new StripVisualStatePropertiesTransform() 
+                new ConsolidateOrderingTransform(),
+                new StripVisualStatePropertiesTransform(),
+                new SimplifyBookmarks()
             };
 
             this.fileSystem = fileSystem;
@@ -276,7 +349,7 @@ namespace DataModelLoader.Report
         public override PowerBIReport Read()
         {
             var model = new PowerBIReport();
-            
+
             // todo: introduce constant for "Blobs"
             foreach (var file in fileSystem.GetFilesRecursive("Blobs"))
             {
@@ -295,10 +368,10 @@ namespace DataModelLoader.Report
             model.Report_LinguisticSchema = ReadXmlFile(ReportLinguisticSchemaFilePath);
 
             var rpt = reportFolderMapper.Read(fileSystem.Sub(ReportFolderPath));
-            transforms.ForEach(t => 
-            { 
-                logger.LogInformation("Restoring report transformation '{transformation}'", t.GetType().Name); 
-                t.Restore(rpt); 
+            transforms.Reverse<IJObjTransform>().ToList().ForEach(t =>
+            {
+                logger.LogInformation("Restoring report transformation '{transformation}'", t.GetType().Name);
+                t.Restore(rpt);
             });
             model.Layout = rpt;
 
@@ -330,7 +403,7 @@ namespace DataModelLoader.Report
             var layoutJObjClone = (JObject)model.Layout.DeepClone();
             transforms.ForEach(t =>
             {
-                logger.LogInformation("Applying report transformation '{transformation}'", t.GetType().Name); 
+                logger.LogInformation("Applying report transformation '{transformation}'", t.GetType().Name);
                 t.Transform(layoutJObjClone);
             });
             reportFolderMapper.Write(layoutJObjClone, fileSystem.Sub(ReportFolderPath));

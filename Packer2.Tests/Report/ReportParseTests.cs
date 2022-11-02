@@ -12,12 +12,25 @@ namespace Packer2.Tests.Report
         {
             var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
             var reportModel = new PBIArchiveStore(wf3Pbit).Read();
-            var db = new BimDataModelStore(new JObjFile(reportModel.DataModelSchemaFile)).Read();
 
-            var renames = new Renames();
-            renames.AddRename("dbth HospitalSite", "Name", "test_change");
-            new ReplaceModelReferenceTransform(renames).Transform(reportModel);
+            reportModel = new PrettifyModelExpressionsTransform().Transform(reportModel);
+
+            var folderStore = new ReportFolderStore(@"c:\test\xx");
+            folderStore.Save(reportModel);
+
+            // TEMP2();
         }
+
+        [Fact]
+        public void TEMP2()
+        {
+            var folderStore = new ReportFolderStore(@"c:\test\xx");
+            var rptModel = folderStore.Read();
+
+            var pbixStore = new PBIArchiveStore(@"c:\test\xx.pbit");
+            pbixStore.Save(rptModel);
+        }
+
 
         //[Fact]
         //public void TEMP()
