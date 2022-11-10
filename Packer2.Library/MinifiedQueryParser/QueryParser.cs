@@ -54,6 +54,32 @@ namespace Packer2.Library.MinifiedQueryParser
             return queryDefinition;
         }
 
+        public FilterDefinition ParseFilter(string input)
+        {
+            var parser = CreateParser(input);
+            var tree = parser.query();
+
+            var queryDefinition = new QueryConstructorVisitor().Visit(tree);
+
+
+            if (queryDefinition.Select?.Count > 0 && queryDefinition.Parameters?.Count > 0 || queryDefinition.Transform?.Count > 0 || queryDefinition.GroupBy?.Count > 0 || queryDefinition.Let?.Count > 0 || queryDefinition.OrderBy?.Count > 0 || queryDefinition.Skip != null || queryDefinition.Top != null)
+                throw new FormatException("Was expecting filter but got query");
+
+            var filter = new FilterDefinition()
+            {
+                From = queryDefinition.From,
+                Where = queryDefinition.Where
+            };
+
+            var errorContext = new ErrorTrackingContext(logger);
+            var validator = new QueryDefinitionValidator(new QueryExpressionValidator(errorContext));
+            validator.Visit(errorContext, filter);
+            if (errorContext.HasError)
+                throw new FormatException("Parsing filter failed");
+
+            return filter;
+        }
+
         public QueryExpression ParseExpression(string input)
         {
             var parser = CreateParser(input);
