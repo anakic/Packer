@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.9.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Packer2.FileSystem\Packer2.FileSystem.csproj" />
+    <ProjectReference Include="..\Packer2.Library\Packer2.Library.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.InfoNav.Data.Contracts">
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Data.Contracts.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -2,7 +2,7 @@
 
 namespace Packer2.Library.Tools
 {
-    class DummyLogger<T> : ILogger<T>
+    public class DummyLogger<T> : ILogger<T>
     {
         public IDisposable BeginScope<TState>(TState state)
         {

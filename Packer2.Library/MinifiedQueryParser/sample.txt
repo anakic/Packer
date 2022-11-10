@@ -1,0 +1,4 @@
+from d in Dates,
+d1 in [dbth Spell]
+orderby d.Date_Invalid ascending
+select d.Date_Invalid, d1.SpellsInPeriod, d1.IsFromED

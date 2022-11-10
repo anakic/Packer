@@ -1,0 +1,10 @@
+{
+    "antlr4.generation": {
+        "outputDir": "output",
+        "mode": "external",
+        "package": "Packer2",
+        "language": "CSharp",
+        "listeners": false,
+        "visitors": true
+    }
+}

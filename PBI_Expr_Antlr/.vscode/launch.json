@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "name": "Debug ANTLR4 grammar",
+            "type": "antlr-debug",
+            "request": "launch",
+            "input": "sample.txt",
+            "grammar": "pbiqParser.g4",
+            "startRule": "query",
+            "printParseTree": true,
+            "visualParseTree": true
+        }
+    ]
+}
