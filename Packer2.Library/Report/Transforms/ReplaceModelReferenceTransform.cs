@@ -91,9 +91,9 @@ namespace Packer2.Library.Report.Transforms
                 logger.LogInformation($"A total of {visitor.NumberOfReplacements} replacements were made.");
         }
 
-        protected override void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        protected override void VisitQuery(QueryDefinition expObj, string outerPath, string innerPath)
         {
-            base.ProcessQuery(expObj, outerPath, innerPath);
+            base.VisitQuery(expObj, outerPath, innerPath);
             foreach (var f in expObj.From)
             {
                 if (f.Entity != null && renames.TryGetTableRename(f.Entity, out var newName))

@@ -42,14 +42,9 @@ namespace Packer2.Library.Report.Transforms
                         var expressionSelectors = new[] { "..expr", "..expression", "..expressions[*]", "..fieldExpr", "..identityKeys[*]", "..identityValues[*]", "..scopeId" };
                         foreach (var expToken in expressionSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            // one of the above selectors returns some objects that aren't really an expressionContainer, skip those
-                            var expObj = expToken.ToObject<QueryExpressionContainer>()!;
-                            // todo: use has property "Expression" as selector filter
-                            if (expObj.Expression == null)
-                                continue;
+                            var expObj = ReadExpression(expToken);
 
-                            ProcessExpression(expObj, token.Path, expToken.Path);
-
+                            VisitExpression(expObj, token.Path, expToken.Path);
                             WriteExpression(expToken, expObj);
                         }
 
@@ -77,22 +72,16 @@ namespace Packer2.Library.Report.Transforms
                         var queryDefSelectors = new[] { "..prototypeQuery" };
                         foreach (var expToken in queryDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            var queryObj = expToken.ToObject<QueryDefinition>()!;
-                            ProcessQuery(queryObj, token.Path, expToken.Path);
+                            var queryObj = ReadQuery(expToken);
+                            VisitQuery(queryObj, token.Path, expToken.Path);
                             WriteQuery(expToken, queryObj);
                         }
 
                         var filterDefSelectors = new[] { "..filter" };
                         foreach (var expToken in filterDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            // this is the outer filter node, we want the inner one
-                            // todo: use has property "From" as selector filter
-                            if (expToken["filter"] != null)
-                                continue;
-
-                            var filterObj = expToken.ToObject<FilterDefinition>()!;
-                            ProcessFilter(filterObj, token.Path, expToken.Path);
-
+                            var filterObj = ReadFilter(expToken);
+                            VisitFilter(filterObj, token.Path, expToken.Path);
                             WriteFilter(expToken, filterObj);
                         }
                     }
@@ -110,6 +99,21 @@ namespace Packer2.Library.Report.Transforms
             OnProcessingComplete(model);
 
             return model;
+        }
+
+        protected virtual FilterDefinition ReadFilter(JToken expToken)
+        {
+            return expToken.ToObject<FilterDefinition>()!;
+        }
+
+        protected virtual QueryDefinition ReadQuery(JToken expToken)
+        {
+            return expToken.ToObject<QueryDefinition>()!;
+        }
+
+        protected virtual QueryExpressionContainer ReadExpression(JToken expToken)
+        {
+            return expToken.ToObject<QueryExpressionContainer>()!;
         }
 
         protected virtual void WriteFilter(JToken expToken, FilterDefinition filterObj)
@@ -137,7 +141,7 @@ namespace Packer2.Library.Report.Transforms
         // by this class internally, they are not by client code.
         protected abstract BaseQueryExpressionVisitor Visitor { get; }
 
-        protected void ProcessExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
+        protected void VisitExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
         {
             // we only have aliases for queries and filters (they have a From clause that specifies them)
             Visitor.SourcesByAliasMap = null;
@@ -146,7 +150,7 @@ namespace Packer2.Library.Report.Transforms
             expObj.Expression.Accept(Visitor);
         }
 
-        protected void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
+        protected void VisitFilter(FilterDefinition filterObj, string outerPath, string innerPath)
         {
             Visitor.OuterPath = outerPath;
             Visitor.InnerPath = innerPath;
@@ -154,7 +158,7 @@ namespace Packer2.Library.Report.Transforms
             filterObj.Where.ForEach(w => w.Condition.Expression.Accept(Visitor));
         }
 
-        protected virtual void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        protected virtual void VisitQuery(QueryDefinition expObj, string outerPath, string innerPath)
         {
             Visitor.OuterPath = outerPath;
             Visitor.InnerPath = innerPath;
