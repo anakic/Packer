@@ -4,9 +4,7 @@ options {
 	tokenVocab = pbiqLexer;
 }
 
-query:
-	/*parameters*/ /*let*/ from where? /*transform?*/ orderby? select? /*visualshape*/ groupby? skip
-		? top? EOF;
+query: /*parameters*/ /*let*/ from where? /*transform?*/ orderby? select? /*visualshape*/ groupby? skip? top? EOF;
 
 from: FROM fromElement (COMMA fromElement)*;
 fromElement: alias IN (entity | expressionContainer);
@@ -51,6 +49,7 @@ nonPropertyExpression:
 	| datetimeExpr
 	| sourceRefExpr
 	| datetimeSecExpr
+	| LPAREN nonPropertyExpression RPAREN
 	| dateExpr;
 
 nonFilterExpression:
@@ -66,34 +65,40 @@ nonFilterExpression:
 	| datetimeSecExpr
 	| dateExpr
 	| sourceRefExpr
+	| LPAREN nonFilterExpression RPAREN
 	| propertyExpression;
 
 filterExpression:
 	| andExpr
 	| orExpr
-	| notExpr
-	| betweenExpr
+	| nonLeftRecursiveFilterExpression
+	;
+
+nonLeftRecursiveFilterExpression: 
+	notExpr
+	| betweenExpr 
 	| boolExp
 	| inExpr
 	| comparisonExpr
+	| LPAREN filterExpression RPAREN
 	| containsExpr;
 
 sourceRefExpr: IDENTIFIER;
 aggregationExpr: IDENTIFIER LPAREN expression RPAREN;
 anyValueExpr: ANYVALUE WITH DEFAULTVALUEOVERRIDESANCESTORS;
-andExpr: LPAREN left AND right RPAREN;
-betweenExpr: nonFilterExpression BETWEEN ubound AND lbound;
+andExpr: left AND right;
+orExpr: left OR right;
+betweenExpr: nonFilterExpression BETWEEN first AND second;
 nullEpr: NULL;
 intExpr: INTEGER;
 decimalExpr: DECIMAL;
 datetimeExpr: DATETIME;
 dateExpr: DATE;
 datetimeSecExpr: DATETIMESECOND;
-containsExpr: left CONTAINS right;
+containsExpr: first CONTAINS second;
 stringExpr: STRING_LITERAL;
 boolExp: TRUE | FALSE;
-orExpr: LPAREN left OR right RPAREN;
-comparisonExpr: left operator right;
+comparisonExpr: first operator second;
 propertyExpression: nonPropertyExpression DOT IDENTIFIER;
 notExpr: NOT LPAREN expression RPAREN;
 literalExpr: STRING_LITERAL;
@@ -111,8 +116,8 @@ orderByClause: ORDERBY expression;
 tableName: IDENTIFIER;
 
 equalityKind: IDENTIFIER;
-left: nonFilterExpression;
-right: nonFilterExpression;
-ubound: nonFilterExpression;
-lbound: nonFilterExpression;
+left: nonLeftRecursiveFilterExpression;
+right: filterExpression;
+first: nonFilterExpression;
+second: nonFilterExpression;
 operator: GT | LT | EQ | GTE | LTE;

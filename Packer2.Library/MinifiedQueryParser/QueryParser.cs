@@ -1,5 +1,6 @@
 ﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Tree;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 
@@ -235,15 +236,15 @@ namespace Packer2.Library.MinifiedQueryParser
                 return new QueryBetweenExpression()
                 {
                     Expression = Visit(context.nonFilterExpression()),
-                    LowerBound = Visit(context.lbound()),
-                    UpperBound = Visit(context.ubound())
+                    LowerBound = Visit(context.first()),
+                    UpperBound = Visit(context.second())
                 };
             }
 
             public override QueryExpression VisitComparisonExpr([NotNull] pbiqParser.ComparisonExprContext context)
             {
-                var left = Visit(context.left());
-                var right = Visit(context.right());
+                var left = Visit(context.first());
+                var right = Visit(context.second());
 
                 return new QueryComparisonExpression()
                 {
@@ -271,8 +272,8 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 return new QueryContainsExpression()
                 {
-                    Left = Visit(context.left()),
-                    Right = Visit(context.right())
+                    Left = Visit(context.first()),
+                    Right = Visit(context.second())
                 };
             }
 
