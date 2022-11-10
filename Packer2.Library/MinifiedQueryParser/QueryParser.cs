@@ -89,9 +89,9 @@ namespace Packer2.Library.MinifiedQueryParser
 
             var errorContext = new ErrorTrackingContext(logger);
             var validator = new QueryExpressionValidator(errorContext);
-            validator.VisitExpression(expression);
+            validator.ValidateStandaloneExpression(expression);
             if (errorContext.HasError)
-                throw new FormatException("Parsing query failed");
+                throw new FormatException("Parsing expression failed");
 
             return expression;
         }
