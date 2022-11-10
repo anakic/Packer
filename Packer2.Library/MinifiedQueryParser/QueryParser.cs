@@ -123,7 +123,7 @@ namespace Packer2.Library.MinifiedQueryParser
                 var sourceNames = def.From?.Select(f => f.Name).ToHashSet();
 
                 if (context.where() != null)
-                    def.Where = context.where().queryFilter().Select(qf => new QueryFilter() { Condition = ParseExprContainer(context, sourceNames) }).ToList();
+                    def.Where = context.where().queryFilter().Select(qf => new QueryFilter() { Condition = ParseExprContainer(qf, sourceNames) }).ToList();
 
                 if (context.select() != null)
                     def.Select = context.select().expression().Select(exp => ParseExprContainer(exp, sourceNames)).ToList();
@@ -143,9 +143,12 @@ namespace Packer2.Library.MinifiedQueryParser
                 return def;
             }
 
-            private QueryExpressionContainer ParseExprContainer(ParserRuleContext context, HashSet<string>? sourceNames)
+            private QueryExpressionContainer ParseExprContainer(IParseTree context, HashSet<string>? sourceNames)
             {
-                return new QueryExpressionContainer(new QueryExpressionVisitor(sourceNames).Visit(context));
+                var expression = new QueryExpressionVisitor(sourceNames).Visit(context);
+                if (expression == null)
+                    throw new NotImplementedException("Parsing failed, probably need to implement method on visitor");
+                return new QueryExpressionContainer(expression);
             }
 
             private QuerySortDirection ParseDirection(string v)
