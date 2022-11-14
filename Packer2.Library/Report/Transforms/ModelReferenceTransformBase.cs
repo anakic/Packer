@@ -42,10 +42,11 @@ namespace Packer2.Library.Report.Transforms
                         var expressionSelectors = new[] { "..expr", "..expression", "..expressions[*]", "..fieldExpr", "..identityKeys[*]", "..identityValues[*]", "..scopeId" };
                         foreach (var expToken in expressionSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            var expObj = ReadExpression(expToken);
-
-                            VisitExpression(expObj, token.Path, expToken.Path);
-                            WriteExpression(expToken, expObj);
+                            if (TryReadExpression(expToken, out var expObj))
+                            {
+                                VisitExpression(expObj!, token.Path, expToken.Path);
+                                WriteExpression(expToken, expObj!);
+                            }
                         }
 
                         // todo: support orderby
@@ -72,17 +73,21 @@ namespace Packer2.Library.Report.Transforms
                         var queryDefSelectors = new[] { "..prototypeQuery" };
                         foreach (var expToken in queryDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            var queryObj = ReadQuery(expToken);
-                            VisitQuery(queryObj, token.Path, expToken.Path);
-                            WriteQuery(expToken, queryObj);
+                            if (TryReadQuery(expToken, out var queryObj))
+                            {
+                                VisitQuery(queryObj!, token.Path, expToken.Path);
+                                WriteQuery(expToken, queryObj!);
+                            }
                         }
 
                         var filterDefSelectors = new[] { "..filter" };
                         foreach (var expToken in filterDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            var filterObj = ReadFilter(expToken);
-                            VisitFilter(filterObj, token.Path, expToken.Path);
-                            WriteFilter(expToken, filterObj);
+                            if (TryReadFilter(expToken, out var filterObj))
+                            {
+                                VisitFilter(filterObj!, token.Path, expToken.Path);
+                                WriteFilter(expToken, filterObj!);
+                            }
                         }
                     }
 
@@ -101,19 +106,22 @@ namespace Packer2.Library.Report.Transforms
             return model;
         }
 
-        protected virtual FilterDefinition ReadFilter(JToken expToken)
+        protected virtual bool TryReadFilter(JToken expToken, out FilterDefinition? filter)
         {
-            return expToken.ToObject<FilterDefinition>()!;
+            filter = expToken.ToObject<FilterDefinition>()!;
+            return true;
         }
 
-        protected virtual QueryDefinition ReadQuery(JToken expToken)
+        protected virtual bool TryReadQuery(JToken expToken, out QueryDefinition? queryDefinition)
         {
-            return expToken.ToObject<QueryDefinition>()!;
+            queryDefinition = expToken.ToObject<QueryDefinition>()!;
+            return true;
         }
 
-        protected virtual QueryExpressionContainer ReadExpression(JToken expToken)
+        protected virtual bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)
         {
-            return expToken.ToObject<QueryExpressionContainer>()!;
+            expressionContainer = expToken.ToObject<QueryExpressionContainer>()!;
+            return true;
         }
 
         protected virtual void WriteFilter(JToken expToken, FilterDefinition filterObj)

@@ -7,8 +7,8 @@
             "request": "launch",
             "input": "sample.txt",
             "grammar": "pbiqParser.g4",
-            "startRule": "query",
-            "printParseTree": true,
+            "startRule": "arithmenticExpr",
+            //"printParseTree": true,
             "visualParseTree": true
         }
     ]

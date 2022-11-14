@@ -1,2 +1,1 @@
-from d in [dbth WardStay]
-where (true or d.Start = null)
+( true / false )

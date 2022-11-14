@@ -3,40 +3,92 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
+using System.ComponentModel.DataAnnotations;
 
 namespace Packer2.Library.MinifiedQueryParser
 {
     public class QueryParser
     {
         private readonly ILogger logger;
+        private readonly ParserResultValidator validator;
 
-        class ErrorTrackingContext : IErrorContext
+        class ParserResultValidator
         {
-            private bool _hasError;
             private readonly ILogger logger;
 
-            public bool HasError => _hasError;
-
-            public ErrorTrackingContext(ILogger logger)
+            public ParserResultValidator(ILogger logger)
             {
                 this.logger = logger;
             }
 
-            public void RegisterError(string messageTemplate, params object[] args)
+            public void ValidateExpression(QueryExpression expression, bool standalone)
             {
-                logger.LogError(messageTemplate, args);
-                _hasError = true;
+                var errorContext = new ErrorTrackingContext(logger);
+                var expressionValidator = new QueryExpressionValidator(errorContext);
+                
+                if (standalone)
+                    expressionValidator.ValidateStandaloneExpression(expression);
+                else
+                    expressionValidator.ValidateExpression(expression);
+
+                if (errorContext.HasError)
+                    throw new FormatException($"Expression validation failed: {expression.ToString()}");
             }
 
-            public void RegisterWarning(string messageTemplate, params object[] args)
+            public void ValidateQuery(QueryDefinition definition)
             {
-                logger.LogWarning(messageTemplate, args);
+                var errorContext = new ErrorTrackingContext(logger);
+                var expressionValidator = new QueryExpressionValidator(errorContext);
+                var queryValidator = new QueryDefinitionValidator(expressionValidator);
+
+                queryValidator.Visit(errorContext, definition);
+                
+                if (errorContext.HasError)
+                    throw new FormatException("Parsing query failed");
+
+            }
+
+            public void ValidateFilter(FilterDefinition filter)
+            {
+                var errorContext = new ErrorTrackingContext(logger);
+                var expressionValidator = new QueryExpressionValidator(errorContext);
+                var queryValidator = new QueryDefinitionValidator(expressionValidator);
+
+                queryValidator.Visit(errorContext, filter);
+
+                if (errorContext.HasError)
+                    throw new FormatException("Parsing query failed");
+            }
+
+            class ErrorTrackingContext : IErrorContext
+            {
+                private bool _hasError;
+                private readonly ILogger logger;
+
+                public bool HasError => _hasError;
+
+                public ErrorTrackingContext(ILogger logger)
+                {
+                    this.logger = logger;
+                }
+
+                public void RegisterError(string messageTemplate, params object[] args)
+                {
+                    logger.LogError(messageTemplate, args);
+                    _hasError = true;
+                }
+
+                public void RegisterWarning(string messageTemplate, params object[] args)
+                {
+                    logger.LogWarning(messageTemplate, args);
+                }
             }
         }
 
         public QueryParser(ILogger logger)
         {
             this.logger = logger;
+            validator = new ParserResultValidator(logger);
         }
 
         public QueryDefinition ParseQuery(string input)
@@ -44,14 +96,9 @@ namespace Packer2.Library.MinifiedQueryParser
             var parser = CreateParser(input);
             var tree = parser.query();
 
-            var queryDefinition = new QueryConstructorVisitor().Visit(tree);
-
-            var errorContext = new ErrorTrackingContext(logger);
-            var validator = new QueryDefinitionValidator(new QueryExpressionValidator(errorContext));
-            validator.Visit(errorContext, queryDefinition);
-            if (errorContext.HasError)
-                throw new FormatException("Parsing query failed");
-
+            var queryDefinition = new QueryConstructorVisitor(validator).Visit(tree);
+            validator.ValidateQuery(queryDefinition);
+            
             return queryDefinition;
         }
 
@@ -59,9 +106,7 @@ namespace Packer2.Library.MinifiedQueryParser
         {
             var parser = CreateParser(input);
             var tree = parser.query();
-
-            var queryDefinition = new QueryConstructorVisitor().Visit(tree);
-
+            var queryDefinition = new QueryConstructorVisitor(validator).Visit(tree);
 
             if (queryDefinition.Select?.Count > 0 && queryDefinition.Parameters?.Count > 0 || queryDefinition.Transform?.Count > 0 || queryDefinition.GroupBy?.Count > 0 || queryDefinition.Let?.Count > 0 || queryDefinition.OrderBy?.Count > 0 || queryDefinition.Skip != null || queryDefinition.Top != null)
                 throw new FormatException("Was expecting filter but got query");
@@ -72,11 +117,10 @@ namespace Packer2.Library.MinifiedQueryParser
                 Where = queryDefinition.Where
             };
 
-            var errorContext = new ErrorTrackingContext(logger);
-            var validator = new QueryDefinitionValidator(new QueryExpressionValidator(errorContext));
-            validator.Visit(errorContext, filter);
-            if (errorContext.HasError)
-                throw new FormatException("Parsing filter failed");
+            validator.ValidateFilter(filter);
+
+            if(input != filter.ToString())
+                throw new FormatException($"Parsing filter did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{filter}'!");
 
             return filter;
         }
@@ -86,13 +130,10 @@ namespace Packer2.Library.MinifiedQueryParser
             var parser = CreateParser(input);
             var tree = parser.expressionContainer();
 
-            var expression = new QueryExpressionVisitor().Visit(tree);
+            var expression = new QueryExpressionVisitor(validator, true).VisitValidated(tree);
 
-            var errorContext = new ErrorTrackingContext(logger);
-            var validator = new QueryExpressionValidator(errorContext);
-            validator.ValidateStandaloneExpression(expression);
-            if (errorContext.HasError)
-                throw new FormatException("Parsing expression failed");
+            if (input != expression.ToString())
+                throw new FormatException($"Parsing expression did not throw an exception but the constructed expression does not match the input string. Input string was '{input}', while the minimized constructed expression was '{expression}'!");
 
             return expression;
         }
@@ -105,6 +146,13 @@ namespace Packer2.Library.MinifiedQueryParser
 
         class QueryConstructorVisitor : pbiqParserBaseVisitor<QueryDefinition>
         {
+            private readonly ParserResultValidator validator;
+
+            public QueryConstructorVisitor(ParserResultValidator validator)
+            {
+                this.validator = validator;
+            }
+
             public override QueryDefinition VisitQuery([NotNull] pbiqParser.QueryContext context)
             {
                 var def = new QueryDefinition();
@@ -113,7 +161,7 @@ namespace Packer2.Library.MinifiedQueryParser
                     {
                         var source = new EntitySource();
                         source.Name = fe.alias().GetText();
-                        source.Entity = fe.entity().entity_name().GetText();
+                        source.Entity = UnescapeIdentifier(fe.entity().entity_name().GetText());
 
                         if (fe.expressionContainer() != null)
                             throw new NotImplementedException("to-do");
@@ -146,10 +194,9 @@ namespace Packer2.Library.MinifiedQueryParser
 
             private QueryExpressionContainer ParseExprContainer(IParseTree context, HashSet<string>? sourceNames)
             {
-                var expression = new QueryExpressionVisitor(sourceNames).Visit(context);
-                if (expression == null)
-                    throw new NotImplementedException("Parsing failed, probably need to implement method on visitor");
-                return new QueryExpressionContainer(expression);
+                var expression = new QueryExpressionVisitor(validator, false, sourceNames).VisitValidated(context);
+                var container = new QueryExpressionContainer(expression);
+                return container;
             }
 
             private QuerySortDirection ParseDirection(string v)
@@ -169,22 +216,85 @@ namespace Packer2.Library.MinifiedQueryParser
         class QueryExpressionVisitor : pbiqParserBaseVisitor<QueryExpression>
         {
             private readonly HashSet<string> sourceNames;
+            private ParserResultValidator validator;
+            private readonly bool standalone;
 
-            public QueryExpressionVisitor(HashSet<string>? sourceNames = null)
+            public QueryExpression VisitValidated(IParseTree tree)
             {
+                var res = Visit(tree);
+                if (res == null)
+                    throw new Exception("Failed to resolve query");
+
+                validator.ValidateExpression(res, standalone);
+
+                return res;
+            }
+
+            public QueryExpressionVisitor(ParserResultValidator validator, bool standalone, HashSet<string>? sourceNames = null)
+            {
+                this.validator = validator;
+                this.standalone = standalone;
                 this.sourceNames = sourceNames ?? new HashSet<string>();
             }
 
             public override QueryExpression VisitAndExpr([NotNull] pbiqParser.AndExprContext context)
             {
-                return new QueryAndExpression() { Left = Visit(context.left()), Right = Visit(context.right()) };
+                return new QueryAndExpression() { Left = VisitValidated(context.left()), Right = VisitValidated(context.right()) };
+            }
+
+            public override QueryExpression VisitHierarchyExpr([NotNull] pbiqParser.HierarchyExprContext context)
+            {
+                var hierarchy = UnescapeIdentifier(context.IDENTIFIER().GetText());
+                // todo: context.entity should be context.expression() but currently not doing that to avid indirect left recursion in the grammar. Once that's fixed, this should be expression.
+                var expression = VisitValidated(context.sourceRefExpr());
+
+                return new QueryHierarchyExpression()
+                {
+                    Hierarchy = hierarchy,
+                    Expression = expression
+                };
+            }
+
+            public override QueryExpression VisitAggregationExpr([NotNull] pbiqParser.AggregationExprContext context)
+            {
+                var expression = VisitValidated(context.expression());
+                var function = ParseFunction(context.IDENTIFIER().GetText());
+                return new QueryAggregationExpression()
+                {
+                    Expression = expression,
+                    Function = function
+                };
+            }
+
+            private QueryAggregateFunction ParseFunction(string v)
+            {
+                return (QueryAggregateFunction)Enum.Parse(typeof(QueryAggregateFunction), v, true);
+            }
+
+            public override QueryExpression VisitSubQueryExpr([NotNull] pbiqParser.SubQueryExprContext context)
+            {
+                var queryDefVisitor = new QueryConstructorVisitor(validator);
+                var query = queryDefVisitor.Visit(context.query());
+
+                return new QuerySubqueryExpression() { Query = query };
+            }
+
+            public override QueryExpression VisitHierarchyLevelExpr([NotNull] pbiqParser.HierarchyLevelExprContext context)
+            {
+                var expression = VisitValidated(context.hierarchyExpr());
+                var level = UnescapeIdentifier(context.IDENTIFIER().GetText());
+                return new QueryHierarchyLevelExpression()
+                {
+                    Expression = expression,
+                    Level = level
+                };
             }
 
             public override QueryExpression VisitInExpr([NotNull] pbiqParser.InExprContext context)
             {
                 var expression = new QueryInExpression();
                 if (context.tableName() != null)
-                    expression.Table = new QueryExpressionContainer(Visit(context.tableName()));
+                    expression.Table = new QueryExpressionContainer(VisitValidated(context.tableName()));
                 else
                 {
                     if (context.inExprValues().equalityKind() != null)
@@ -193,10 +303,10 @@ namespace Packer2.Library.MinifiedQueryParser
                     expression.Values = context.inExprValues()
                         .expressionOrExpressionList()
                         .Select(el =>
-                            el.expression().Select(exp => new QueryExpressionContainer(Visit(exp))).ToList()
+                            el.expression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList()
                         ).ToList();
                 }
-                expression.Expressions = context.nonFilterExpression().Select(exp => new QueryExpressionContainer(Visit(exp))).ToList();
+                expression.Expressions = context.nonFilterExpression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList();
                 return expression;
             }
 
@@ -204,7 +314,7 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 // todo: what is the schema? the schema is not saved to the minified query.
                 var expression = new QuerySourceRefExpression();
-                var name = context.IDENTIFIER().GetText();
+                var name = UnescapeIdentifier(context.IDENTIFIER().GetText());
                 if (sourceNames.Contains(name))
                     expression.Source = name;
                 else
@@ -215,36 +325,77 @@ namespace Packer2.Library.MinifiedQueryParser
                 return expression;
             }
 
+            public override QueryExpression VisitIntExpr([NotNull] pbiqParser.IntExprContext context)
+            {
+                var text = context.INTEGER().GetText();
+                if(text.Last() != 'L')
+                    throw new FormatException("Invalid input");
+
+                return new QueryIntegerConstantExpression() { Value = Int64.Parse(text.Substring(0, text.Length - 1)) };
+            }
+
             public override QueryExpression VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context)
             {
+                var expression = VisitValidated(context.nonPropertyExpression());
+                var property = UnescapeIdentifier(context.IDENTIFIER().GetText());
+
+                // ovdje sam stao: cex.SourceRef je null, sto rezultira greskom u validaciji
+                // - ne znam da li tu gresku samo treba ignorirati, usporediti generirani json nakon de-minimizacije i json seriajalizacije sa originalnim pa ako je, valjda onda treba ignorirati ovu gresku ili je tretirati kao warning
+                // - nadalje, treba vidjeti kako razlikovati property od kolone i measure-a (i da li je ovo uopce bitno? da li ce sve raditi i ako je property?) ako treba, trebamo moci citati iz modela pa vidjeti jel measure ili prop (ili cu morati i minifikaciju raditi sam...ugh)
+                // - zatim srediti validaciju, i errorctx i dva validatora sibam okolo, treba mi jedna klasa koja ce exposati validacijske metode i samo nju treba proslijedjivati
+                var cex = new QueryExpressionContainer(expression);
+
+                if (expression is QuerySubqueryExpression)
+                {
+                    
+                }
+
                 // todo: must use measure or column instead, determnine based on data model!
-                return new QueryPropertyExpression() { Expression = Visit(context.nonPropertyExpression()), Property = context.IDENTIFIER().GetText() };
+                return new QueryPropertyExpression()
+                {
+                    Expression = expression,
+                    Property = property
+                };
             }
 
             public override QueryExpression VisitLiteralExpr([NotNull] pbiqParser.LiteralExprContext context)
             {
-                return new QueryLiteralExpression() { Value = context.STRING_LITERAL().GetText() };
+                return new QueryLiteralExpression() { Value = context.GetText() };
             }
 
             public override QueryExpression VisitNotExpr([NotNull] pbiqParser.NotExprContext context)
             {
-                return new QueryNotExpression() { Expression = Visit(context.expression()) };
+                return new QueryNotExpression() { Expression = VisitValidated(context.expression()) };
             }
 
             public override QueryExpression VisitBetweenExpr([NotNull] pbiqParser.BetweenExprContext context)
             {
                 return new QueryBetweenExpression()
                 {
-                    Expression = Visit(context.nonFilterExpression()),
-                    LowerBound = Visit(context.first()),
-                    UpperBound = Visit(context.second())
+                    Expression = VisitValidated(context.nonFilterExpression()),
+                    LowerBound = VisitValidated(context.first()),
+                    UpperBound = VisitValidated(context.second())
                 };
+            }
+
+            public override QueryExpression VisitDateSpanExpr([NotNull] pbiqParser.DateSpanExprContext context)
+            {
+                return new QueryDateSpanExpression()
+                {
+                    TimeUnit = ParseTimeUnit(context.timeUnit().GetText()),
+                    Expression = VisitValidated(context.expression())
+                };
+            }
+
+            private TimeUnit ParseTimeUnit(string v)
+            {
+                return (TimeUnit)Enum.Parse(typeof(TimeUnit), v, true);
             }
 
             public override QueryExpression VisitComparisonExpr([NotNull] pbiqParser.ComparisonExprContext context)
             {
-                var left = Visit(context.first());
-                var right = Visit(context.second());
+                var left = VisitValidated(context.first());
+                var right = VisitValidated(context.second());
 
                 return new QueryComparisonExpression()
                 {
@@ -272,17 +423,50 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 return new QueryContainsExpression()
                 {
-                    Left = Visit(context.first()),
-                    Right = Visit(context.second())
+                    Left = VisitValidated(context.first()),
+                    Right = VisitValidated(context.second())
                 };
+            }
+
+            public override QueryExpression VisitNonLeftRecursiveFilterExpression([NotNull] pbiqParser.NonLeftRecursiveFilterExpressionContext context)
+            {
+                var res = base.VisitNonLeftRecursiveFilterExpression(context);
+
+                if(res == null)
+                {
+                    QueryExpression val = DefaultResult;
+                    int childCount = context.ChildCount;
+                    for (int i = 0; i < childCount; i++)
+                    {
+                        if (!ShouldVisitNextChild(context, val))
+                        {
+                            break;
+                        }
+
+                        QueryExpression nextResult = VisitValidated(context.GetChild(i));
+                        val = AggregateResult(val, nextResult);
+                    }
+
+                    return val;
+                }
+
+                return res;
+            }
+
+            protected override QueryExpression AggregateResult(QueryExpression aggregate, QueryExpression nextResult)
+            {
+                if (aggregate != null && nextResult != null)
+                    throw new Exception();
+
+                return aggregate ?? nextResult;
             }
 
             public override QueryExpression VisitOrExpr([NotNull] pbiqParser.OrExprContext context)
             {
                 return new QueryOrExpression()
                 {
-                    Left = Visit(context.left()),
-                    Right = Visit(context.right())
+                    Left = VisitValidated(context.left()),
+                    Right = VisitValidated(context.right())
                 };
             }
 
@@ -299,5 +483,20 @@ namespace Packer2.Library.MinifiedQueryParser
                 return new QueryNullConstantExpression();
             }
         }
+
+        static string UnescapeIdentifier(string identifier)
+        {
+            identifier = identifier.Trim();
+            if (identifier.StartsWith("["))
+            {
+                if (identifier.EndsWith("]") == false)
+                    throw new FormatException("Invalid identifier");
+
+                identifier = identifier.Substring(1, identifier.Length - 2);
+                identifier = identifier.Replace("]]", "]");
+            }
+            return identifier;
+        }
+
     }
 }

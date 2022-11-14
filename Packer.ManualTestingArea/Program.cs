@@ -1,18 +1,34 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Antlr4.Runtime;
+using DataModelLoader.Report;
+using Microsoft.Extensions.Logging;
 using Packer2.Library.MinifiedQueryParser;
+using Packer2.Library.Report.Transforms;
 using Packer2.Library.Tools;
 
-string input = @"from d in Dates,
-d1 in [dbth Spell]
-orderby d.Date_Invalid ascending
-select d.Date_Invalid, d1.SpellsInPeriod, d1.IsFromED";
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder
+        .AddFilter("Microsoft", LogLevel.Debug)
+        .AddFilter("System", LogLevel.Debug)
+        .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
+        .AddConsole();
+});
 
-var parser = new QueryParser(new DummyLogger<QueryParser>());
-var res = parser.ParseQuery(input);
+string str = @"{from d in Ward
+orderby d.TypeKind ascending
+select d.TypeKind }.TypeKind";
 
-var x = Newtonsoft.Json.JsonConvert.SerializeObject(res, Newtonsoft.Json.Formatting.Indented);
+var str2 = "from d in Dates\r\nselect d.hierarchy([Date Hierarchy]).level(Year), d.hierarchy([Date Hierarchy]).level(Month), d.hierarchy([Date Hierarchy]).level(Date)";
 
-Console.Write(res.ToString());
+var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
+var q = p1.ParseQuery(str2);
+
+
+var rfs = new ReportFolderStore(@"c:\test\aa");
+var report = rfs.Read();
+report = new RestoreModelExpressionsTransform(loggerFactory.CreateLogger<RestoreModelExpressionsTransform>()).Transform(report);
+// rfs.Save(report);
+
 Console.ReadLine();
 
