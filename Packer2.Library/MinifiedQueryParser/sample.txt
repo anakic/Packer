@@ -1,1 +1,1 @@
-d.[Ward Type] in ('Invalid Service', 'Multiple services',null)
+-100D

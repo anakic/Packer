@@ -32,7 +32,7 @@ CONTAINS: [Cc] [Oo] [Nn] [Tt] [Aa] [Ii] [Nn] [Ss];
 HIERARCHY: [Hh] [Ii] [Ee] [Rr] [Aa] [Rr] [Cc] [Hh] [Yy];
 LEVEL: [Ll] [Ee] [Vv] [Ee] [Ll];
 AS_: [Aa] [Ss];
-INTEGER: [0-9]+;
+INTEGER: '-'? [0-9]+;
 INTEGER_LITERAL: INTEGER [Ll];
 DOUBLE_LITERAL: INTEGER ('.' [0-9]*)? [Dd];
 DECIMAL_LITERAL: INTEGER ('.' [0-9]*)? [Mm];
