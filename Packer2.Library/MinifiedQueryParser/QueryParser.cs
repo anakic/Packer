@@ -272,6 +272,17 @@ namespace Packer2.Library.MinifiedQueryParser
                 }
             }
 
+            public override QueryExpression VisitScopedEvalExpr([NotNull] pbiqParser.ScopedEvalExprContext context)
+            {
+                var expression = VisitValidated(context.expression()[0]);
+                var scopes = context.expression().Skip(1).Select(ctx => (QueryExpressionContainer)VisitValidated(ctx)).ToList();
+                return new QueryScopedEvalExpression()
+                {
+                    Expression = expression,
+                    Scope = scopes
+                };
+            }
+
             public override QueryExpression VisitHierarchyExpr([NotNull] pbiqParser.HierarchyExprContext context)
             {
                 var hierarchy = UnescapeIdentifier(context.IDENTIFIER().GetText());
