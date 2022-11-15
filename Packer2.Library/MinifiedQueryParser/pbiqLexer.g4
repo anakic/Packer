@@ -51,7 +51,7 @@ GTE: '>=';
 LT: '<';
 LTE: '<=';
 EQ: '=';
-STRING_LITERAL: ('\'' .*? | '\'\'')+ '\'';
+STRING_LITERAL: '\'' (~[']|'\'' '\'')* '\'';
 IDENTIFIER : ([A-Za-z0-9_]+) | ('[' .+? ']');
 BINARY_ARITHMETIC_OPERATOR: '+' | '-' | '*' | '/';
 

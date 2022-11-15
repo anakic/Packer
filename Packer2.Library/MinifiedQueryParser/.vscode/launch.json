@@ -7,7 +7,7 @@
             "request": "launch",
             "input": "sample.txt",
             "grammar": "pbiqParser.g4",
-            "startRule": "arithmenticExpr",
+            "startRule": "expression",
             //"printParseTree": true,
             "visualParseTree": true
         }
