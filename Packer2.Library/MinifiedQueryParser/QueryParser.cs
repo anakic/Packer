@@ -172,7 +172,7 @@ namespace Packer2.Library.MinifiedQueryParser
                 var sourceNames = def.From?.Select(f => f.Name).ToHashSet();
 
                 if (context.where() != null)
-                    def.Where = context.where().queryFilter().Select(qf => new QueryFilter() { Condition = ParseExprContainer(qf, sourceNames) }).ToList();
+                    def.Where = context.where().queryFilterElement().Select(qf => new QueryFilter() { Condition = ParseExprContainer(qf, sourceNames) }).ToList();
 
                 if (context.select() != null)
                     def.Select = context.select().expression().Select(exp => ParseExprContainer(exp, sourceNames)).ToList();
@@ -334,9 +334,9 @@ namespace Packer2.Library.MinifiedQueryParser
                 return new QueryIntegerConstantExpression() { Value = Int64.Parse(text.Substring(0, text.Length - 1)) };
             }
 
-            public override QueryExpression VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context)
+            public override QueryExpression VisitPropertyExpression_seg([NotNull] pbiqParser.PropertyExpression_segContext context)
             {
-                var expression = VisitValidated(context.nonPropertyExpression());
+                var expression = VisitValidated((context.Parent as pbiqParser.NonFilterExpressionContext).nonFilterExpression());
                 var property = UnescapeIdentifier(context.IDENTIFIER().GetText());
 
                 // ovdje sam stao: cex.SourceRef je null, sto rezultira greskom u validaciji
@@ -455,10 +455,7 @@ namespace Packer2.Library.MinifiedQueryParser
 
             protected override QueryExpression AggregateResult(QueryExpression aggregate, QueryExpression nextResult)
             {
-                if (aggregate != null && nextResult != null)
-                    throw new Exception();
-
-                return aggregate ?? nextResult;
+                return nextResult ?? aggregate;
             }
 
             public override QueryExpression VisitOrExpr([NotNull] pbiqParser.OrExprContext context)

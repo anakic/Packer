@@ -1,1 +1,4 @@
-( true / false )
+min({
+    from d in [dbth Ward]
+    orderby d.TypeKind ascending
+    select d.TypeKind }.[dbth Ward.TypeKind])

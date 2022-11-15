@@ -10,53 +10,33 @@ query: /*parameters*/ /*let*/ from where? /*transform?*/ orderby? select? /*visu
 
 from: FROM fromElement (COMMA fromElement)*;
 fromElement: alias IN (entity | expressionContainer);
-where: WHERE queryFilter (COMMA queryFilter)*;
+expressionContainer: expression (AS alias)? (WITH NATIVEREFERENCENAME)?;
 
-queryFilter:
+where: WHERE queryFilterElement (COMMA queryFilterElement)*;
+queryFilterElement:
 	/* missing "Target" segment*/ filterExpression /*missing annotations and filter restatement*/;
-alias: IDENTIFIER;
-entity: (schema DOT)? entity_name;
-entity_name: IDENTIFIER;
-schema: IDENTIFIER;
 
-expressionContainer:
-	expression (AS alias)? (WITH NATIVEREFERENCENAME)?;
+alias: IDENTIFIER;
+
+entity: (schema DOT)? entity_name;
+schema: IDENTIFIER;
+entity_name: IDENTIFIER;
 
 // transform: TRANSFORM VIA STRING_LITERAL AS alias WITH --todo;
 orderby: ORDERBY orderbySection (COMMA orderbySection)*;
+orderbySection: expression direction;
+direction: ASCENDING | DESCENDING;
+
 groupby: ORDERBY expression (COMMA expression)*;
+
 skip: SKIP_ INTEGER;
 top: TOP INTEGER;
 
-
-orderbySection: expression direction;
-direction: ASCENDING | DESCENDING;
-algorithm: IDENTIFIER;
-
 select: SELECT expression (COMMA expression)*;
 
-expression: filterExpression | nonFilterExpression;
+/* Expressions */
 
-// todo: use direct left recursion where necessary
-nonPropertyExpression:
-	aggregationExpr
-	| arithmenticExpr
-	| anyValueExpr
-	| literalExpr
-	| nullEpr
-	| intExpr
-	| decimalExpr
-	| stringExpr
-	| datetimeExpr
-	| datetimeSecExpr
-	| dateSpanExpr
-	| scopedEvalExpr
-	| dateExpr
-	| sourceRefExpr
-	| hierarchyExpr
-	| hierarchyLevelExpr
-	| LPAREN nonFilterExpression RPAREN
-	;
+expression: filterExpression | nonFilterExpression;
 
 nonFilterExpression:
 	aggregationExpr
@@ -73,10 +53,11 @@ nonFilterExpression:
 	| scopedEvalExpr
 	| dateExpr
 	| sourceRefExpr
+	| subQueryExpr
 	| hierarchyExpr
 	| hierarchyLevelExpr
 	| LPAREN nonFilterExpression RPAREN
-	| propertyExpression
+	| nonFilterExpression propertyExpression_seg
 	;
 
 filterExpression:
@@ -116,7 +97,7 @@ containsExpr: first CONTAINS second;
 stringExpr: STRING_LITERAL;
 boolExp: TRUE | FALSE;
 comparisonExpr: first operator second;
-propertyExpression: nonPropertyExpression DOT IDENTIFIER;
+propertyExpression_seg: DOT IDENTIFIER;
 notExpr: NOT LPAREN expression RPAREN; 
 scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN RPAREN (expression (COMMA expression)+)? RPAREN;
 

@@ -108,6 +108,12 @@ namespace Packer2.Library.Report.Transforms
 
         protected virtual bool TryReadFilter(JToken expToken, out FilterDefinition? filter)
         {
+            if (expToken["From"] == null)
+            {
+                filter = null;
+                return false;
+            }
+
             filter = expToken.ToObject<FilterDefinition>()!;
             return true;
         }
@@ -121,7 +127,7 @@ namespace Packer2.Library.Report.Transforms
         protected virtual bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)
         {
             expressionContainer = expToken.ToObject<QueryExpressionContainer>()!;
-            return true;
+            return (expressionContainer.Expression != null);
         }
 
         protected virtual void WriteFilter(JToken expToken, FilterDefinition filterObj)

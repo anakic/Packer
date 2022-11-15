@@ -19,16 +19,15 @@ string str = @"{from d in Ward
 orderby d.TypeKind ascending
 select d.TypeKind }.TypeKind";
 
-var str2 = "from d in Dates\r\nselect d.hierarchy([Date Hierarchy]).level(Year), d.hierarchy([Date Hierarchy]).level(Month), d.hierarchy([Date Hierarchy]).level(Date)";
+var str2 = @"from d in [dbth AdmissionMethod]
+      where not(d.Description in ('Elective Admission : Booked', 'Elective Admission : Planned', 'Elective Admission : Waiting list', 'Maternity Admission: Admitted ante partum', 'Maternity Admission: Admitted post partum', 'Other Admission: Baby born outside the Health Care Provider except when born at home as intended', 'Other Admission: The birth of a baby in this Health Care Provider', 'Other Admission: Transfer of any admitted PATIENT from other Hospital Provider other than in an emergency'))";
 
-var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
-var q = p1.ParseQuery(str2);
+//var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
+//var q = p1.ParseFilter(str2);
 
 
-var rfs = new ReportFolderStore(@"c:\test\aa");
+var rfs = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit");
 var report = rfs.Read();
-report = new RestoreModelExpressionsTransform(loggerFactory.CreateLogger<RestoreModelExpressionsTransform>()).Transform(report);
+report = new TestMinificationTransform(loggerFactory.CreateLogger<RestoreModelExpressionsTransform>()).Transform(report);
 // rfs.Save(report);
-
-Console.ReadLine();
 

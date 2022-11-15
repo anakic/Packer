@@ -57,17 +57,23 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFromElement([NotNull] pbiqParser.FromElementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.expressionContainer"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitExpressionContainer([NotNull] pbiqParser.ExpressionContainerContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.where"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitWhere([NotNull] pbiqParser.WhereContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.queryFilter"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.queryFilterElement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitQueryFilter([NotNull] pbiqParser.QueryFilterContext context);
+	Result VisitQueryFilterElement([NotNull] pbiqParser.QueryFilterElementContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.alias"/>.
 	/// </summary>
@@ -81,29 +87,35 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitEntity([NotNull] pbiqParser.EntityContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.entity_name"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitEntity_name([NotNull] pbiqParser.Entity_nameContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.schema"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitSchema([NotNull] pbiqParser.SchemaContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.expressionContainer"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.entity_name"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitExpressionContainer([NotNull] pbiqParser.ExpressionContainerContext context);
+	Result VisitEntity_name([NotNull] pbiqParser.Entity_nameContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.orderby"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitOrderby([NotNull] pbiqParser.OrderbyContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.orderbySection"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitOrderbySection([NotNull] pbiqParser.OrderbySectionContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.direction"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDirection([NotNull] pbiqParser.DirectionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.groupby"/>.
 	/// </summary>
@@ -123,24 +135,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTop([NotNull] pbiqParser.TopContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.orderbySection"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitOrderbySection([NotNull] pbiqParser.OrderbySectionContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.direction"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDirection([NotNull] pbiqParser.DirectionContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.algorithm"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAlgorithm([NotNull] pbiqParser.AlgorithmContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.select"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -152,12 +146,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitExpression([NotNull] pbiqParser.ExpressionContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.nonPropertyExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitNonPropertyExpression([NotNull] pbiqParser.NonPropertyExpressionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.nonFilterExpression"/>.
 	/// </summary>
@@ -297,11 +285,11 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitComparisonExpr([NotNull] pbiqParser.ComparisonExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.propertyExpression"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.propertyExpression_seg"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context);
+	Result VisitPropertyExpression_seg([NotNull] pbiqParser.PropertyExpression_segContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.notExpr"/>.
 	/// </summary>
