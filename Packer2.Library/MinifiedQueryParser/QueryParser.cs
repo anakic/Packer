@@ -242,6 +242,36 @@ namespace Packer2.Library.MinifiedQueryParser
                 return new QueryAndExpression() { Left = VisitValidated(context.left()), Right = VisitValidated(context.right()) };
             }
 
+            public override QueryExpression VisitArithmenticExpr([NotNull] pbiqParser.ArithmenticExprContext context)
+            {
+                var left = context.expression()[0];
+                var right = context.expression()[1];
+                var opeartor = ParseOperator(context.BINARY_ARITHMETIC_OPERATOR().GetText());
+                return new QueryArithmeticExpression()
+                {
+                    Left = VisitValidated(left),
+                    Right = VisitValidated(right),
+                    Operator = opeartor
+                };
+            }
+
+            private QueryArithmeticOperatorKind ParseOperator(string v)
+            {
+                switch (v)
+                {
+                    case "-":
+                        return QueryArithmeticOperatorKind.Subtract;
+                    case "+":
+                        return QueryArithmeticOperatorKind.Add;
+                    case "*":
+                        return QueryArithmeticOperatorKind.Multiply;
+                    case "/":
+                        return QueryArithmeticOperatorKind.Divide;
+                    default:
+                        throw new ArgumentException("Invalid operator");
+                }
+            }
+
             public override QueryExpression VisitHierarchyExpr([NotNull] pbiqParser.HierarchyExprContext context)
             {
                 var hierarchy = UnescapeIdentifier(context.IDENTIFIER().GetText());

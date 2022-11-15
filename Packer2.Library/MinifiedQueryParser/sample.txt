@@ -1,1 +1,4 @@
-(d.Year, d.Month) in ((2021L, 'July'), (2021L, 'August'))
+(
+    [dbth WardStay].[Active Spells (In Period)] / 
+    ScopedEval([dbth WardStay].[Active Spells (In Period)], Scope())
+)

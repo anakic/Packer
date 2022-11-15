@@ -2992,13 +2992,13 @@ public partial class pbiqParser : Parser {
 
 	public partial class ArithmenticExprContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(pbiqParser.LPAREN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public LeftContext left() {
-			return GetRuleContext<LeftContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext[] expression() {
+			return GetRuleContexts<ExpressionContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression(int i) {
+			return GetRuleContext<ExpressionContext>(i);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BINARY_ARITHMETIC_OPERATOR() { return GetToken(pbiqParser.BINARY_ARITHMETIC_OPERATOR, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public RightContext right() {
-			return GetRuleContext<RightContext>(0);
-		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(pbiqParser.RPAREN, 0); }
 		public ArithmenticExprContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -3023,11 +3023,11 @@ public partial class pbiqParser : Parser {
 			State = 422;
 			Match(LPAREN);
 			State = 423;
-			left();
+			expression();
 			State = 424;
 			Match(BINARY_ARITHMETIC_OPERATOR);
 			State = 425;
-			right();
+			expression();
 			State = 426;
 			Match(RPAREN);
 			}
@@ -3760,9 +3760,9 @@ public partial class pbiqParser : Parser {
 		'\x1A5', '\a', '.', '\x2', '\x2', '\x1A5', '\x1A7', '\x3', '\x2', '\x2', 
 		'\x2', '\x1A6', '\x19B', '\x3', '\x2', '\x2', '\x2', '\x1A6', '\x19C', 
 		'\x3', '\x2', '\x2', '\x2', '\x1A7', '\x63', '\x3', '\x2', '\x2', '\x2', 
-		'\x1A8', '\x1A9', '\a', '-', '\x2', '\x2', '\x1A9', '\x1AA', '\x5', 'n', 
-		'\x38', '\x2', '\x1AA', '\x1AB', '\a', '\x39', '\x2', '\x2', '\x1AB', 
-		'\x1AC', '\x5', 'p', '\x39', '\x2', '\x1AC', '\x1AD', '\a', '.', '\x2', 
+		'\x1A8', '\x1A9', '\a', '-', '\x2', '\x2', '\x1A9', '\x1AA', '\x5', '&', 
+		'\x14', '\x2', '\x1AA', '\x1AB', '\a', '\x39', '\x2', '\x2', '\x1AB', 
+		'\x1AC', '\x5', '&', '\x14', '\x2', '\x1AC', '\x1AD', '\a', '.', '\x2', 
 		'\x2', '\x1AD', '\x65', '\x3', '\x2', '\x2', '\x2', '\x1AE', '\x1AF', 
 		'\a', '\r', '\x2', '\x2', '\x1AF', '\x1B0', '\x5', '&', '\x14', '\x2', 
 		'\x1B0', 'g', '\x3', '\x2', '\x2', '\x2', '\x1B1', '\x1B2', '\a', '\x38', 

@@ -109,7 +109,7 @@ inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionLis
 expressionOrExpressionList
 	: expression | LPAREN expression (COMMA expression)+ RPAREN;
 arithmenticExpr:
-	LPAREN left BINARY_ARITHMETIC_OPERATOR right RPAREN;
+	LPAREN expression BINARY_ARITHMETIC_OPERATOR expression RPAREN;
 
 orderByClause: ORDERBY expression;
 
