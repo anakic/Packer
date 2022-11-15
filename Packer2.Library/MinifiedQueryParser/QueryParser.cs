@@ -12,7 +12,7 @@ namespace Packer2.Library.MinifiedQueryParser
         private readonly ILogger logger;
         private readonly ParserResultValidator validator;
 
-        class ParserResultValidator
+        public class ParserResultValidator
         {
             private readonly ILogger logger;
 
@@ -24,8 +24,8 @@ namespace Packer2.Library.MinifiedQueryParser
             public void ValidateExpression(QueryExpression expression, bool standalone)
             {
                 var errorContext = new ErrorTrackingContext(logger);
-                var expressionValidator = new QueryExpressionValidator(errorContext);
-                
+                var expressionValidator = new FixedQueryExpressionValidator(errorContext);
+
                 if (standalone)
                     expressionValidator.ValidateStandaloneExpression(expression);
                 else
@@ -38,7 +38,7 @@ namespace Packer2.Library.MinifiedQueryParser
             public void ValidateQuery(QueryDefinition definition)
             {
                 var errorContext = new ErrorTrackingContext(logger);
-                var expressionValidator = new QueryExpressionValidator(errorContext);
+                var expressionValidator = new FixedQueryExpressionValidator(errorContext);
                 var queryValidator = new QueryDefinitionValidator(expressionValidator);
 
                 queryValidator.Visit(errorContext, definition);
@@ -51,7 +51,7 @@ namespace Packer2.Library.MinifiedQueryParser
             public void ValidateFilter(FilterDefinition filter)
             {
                 var errorContext = new ErrorTrackingContext(logger);
-                var expressionValidator = new QueryExpressionValidator(errorContext);
+                var expressionValidator = new FixedQueryExpressionValidator(errorContext);
                 var queryValidator = new QueryDefinitionValidator(expressionValidator);
 
                 queryValidator.Visit(errorContext, filter);
@@ -81,6 +81,35 @@ namespace Packer2.Library.MinifiedQueryParser
                 public void RegisterWarning(string messageTemplate, params object[] args)
                 {
                     logger.LogWarning(messageTemplate, args);
+                }
+            }
+
+            class FixedQueryExpressionValidator : QueryExpressionValidator
+            {
+                public FixedQueryExpressionValidator(IErrorContext errorContext)
+                    : base(errorContext)
+                {
+                }
+
+                protected override void Visit(QueryPropertyExpression expression)
+                {
+                    if (expression.Expression.Subquery != null)
+                    {
+                        // The validator seems to be firing a false positive when the expression inside a property referes to a subquery.
+                        // Might be good to check if this is still the case in future updates to PowerBI
+
+                        // example query that manifests this bug:
+                        /*
+                         * min({
+        from d in [dbth Ward]
+        orderby d.TypeKind ascending
+        select d.TypeKind }.[dbth Ward.TypeKind])
+                         */
+                        return;
+                    }
+
+
+                    base.Visit(expression);
                 }
             }
         }
@@ -286,7 +315,6 @@ namespace Packer2.Library.MinifiedQueryParser
             public override QueryExpression VisitHierarchyExpr([NotNull] pbiqParser.HierarchyExprContext context)
             {
                 var hierarchy = UnescapeIdentifier(context.IDENTIFIER().GetText());
-                // todo: context.entity should be context.expression() but currently not doing that to avid indirect left recursion in the grammar. Once that's fixed, this should be expression.
                 var expression = VisitValidated(context.sourceRefExpr());
 
                 return new QueryHierarchyExpression()
