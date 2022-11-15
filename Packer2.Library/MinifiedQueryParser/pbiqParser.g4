@@ -103,7 +103,7 @@ scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN RPAREN (expressi
 
 literalExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL;
 inExpr:
-	(nonFilterExpression | nonFilterExpression (COMMA nonFilterExpression RPAREN)) 
+	(nonFilterExpression | LPAREN nonFilterExpression (COMMA nonFilterExpression RPAREN)) 
 	IN (tableName | inExprValues);
 inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING equalityKind)?;
 expressionOrExpressionList

@@ -1,4 +1,1 @@
-min({
-    from d in [dbth Ward]
-    orderby d.TypeKind ascending
-    select d.TypeKind }.[dbth Ward.TypeKind])
+(d.Year, d.Month) in ((2021L, 'July'), (2021L, 'August'))

@@ -19,8 +19,8 @@ string str = @"{from d in Ward
 orderby d.TypeKind ascending
 select d.TypeKind }.TypeKind";
 
-var str2 = @"from d in [dbth AdmissionMethod]
-      where not(d.Description in ('Elective Admission : Booked', 'Elective Admission : Planned', 'Elective Admission : Waiting list', 'Maternity Admission: Admitted ante partum', 'Maternity Admission: Admitted post partum', 'Other Admission: Baby born outside the Health Care Provider except when born at home as intended', 'Other Admission: The birth of a baby in this Health Care Provider', 'Other Admission: Transfer of any admitted PATIENT from other Hospital Provider other than in an emergency'))";
+//var str2 = @"from d in Dates
+//where (d.Year, d.Month) in ((2021L, 'July'), (2021L, 'August'))";
 
 //var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
 //var q = p1.ParseFilter(str2);
