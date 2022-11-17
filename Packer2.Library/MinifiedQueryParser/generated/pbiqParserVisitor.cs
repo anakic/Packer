@@ -57,11 +57,29 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFromElement([NotNull] pbiqParser.FromElementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.entity_name"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitEntity_name([NotNull] pbiqParser.Entity_nameContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.schema"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchema([NotNull] pbiqParser.SchemaContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.expressionContainer"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitExpressionContainer([NotNull] pbiqParser.ExpressionContainerContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.alias"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAlias([NotNull] pbiqParser.AliasContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.where"/>.
 	/// </summary>
@@ -74,30 +92,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitQueryFilterElement([NotNull] pbiqParser.QueryFilterElementContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.alias"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAlias([NotNull] pbiqParser.AliasContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.entity"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitEntity([NotNull] pbiqParser.EntityContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.schema"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitSchema([NotNull] pbiqParser.SchemaContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.entity_name"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitEntity_name([NotNull] pbiqParser.Entity_nameContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.orderby"/>.
 	/// </summary>
@@ -147,23 +141,41 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitExpression([NotNull] pbiqParser.ExpressionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.nonFilterExpression"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.containsExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitNonFilterExpression([NotNull] pbiqParser.NonFilterExpressionContext context);
+	Result VisitContainsExpr([NotNull] pbiqParser.ContainsExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.filterExpression"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.betweenExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitFilterExpression([NotNull] pbiqParser.FilterExpressionContext context);
+	Result VisitBetweenExpr([NotNull] pbiqParser.BetweenExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.nonLeftRecursiveFilterExpression"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.inExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitNonLeftRecursiveFilterExpression([NotNull] pbiqParser.NonLeftRecursiveFilterExpressionContext context);
+	Result VisitInExpr([NotNull] pbiqParser.InExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.compareExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCompareExpr([NotNull] pbiqParser.CompareExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.primary_expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPrimary_expression([NotNull] pbiqParser.Primary_expressionContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.propertyExpression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.subQueryExpr"/>.
 	/// </summary>
@@ -189,24 +201,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitAnyValueExpr([NotNull] pbiqParser.AnyValueExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.andExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAndExpr([NotNull] pbiqParser.AndExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.orExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitOrExpr([NotNull] pbiqParser.OrExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.betweenExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitBetweenExpr([NotNull] pbiqParser.BetweenExprContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.nullEpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -218,12 +212,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitIntExpr([NotNull] pbiqParser.IntExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.decimalExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDecimalExpr([NotNull] pbiqParser.DecimalExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.datetimeExpr"/>.
 	/// </summary>
@@ -261,35 +249,11 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitDateSpanExpr([NotNull] pbiqParser.DateSpanExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.containsExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitContainsExpr([NotNull] pbiqParser.ContainsExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.stringExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitStringExpr([NotNull] pbiqParser.StringExprContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.boolExp"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitBoolExp([NotNull] pbiqParser.BoolExpContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.comparisonExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitComparisonExpr([NotNull] pbiqParser.ComparisonExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.propertyExpression_seg"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitPropertyExpression_seg([NotNull] pbiqParser.PropertyExpression_segContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.notExpr"/>.
 	/// </summary>
@@ -303,23 +267,29 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitScopedEvalExpr([NotNull] pbiqParser.ScopedEvalExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.literalExpr"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.encodedLiteralExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitLiteralExpr([NotNull] pbiqParser.LiteralExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.inExpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInExpr([NotNull] pbiqParser.InExprContext context);
+	Result VisitEncodedLiteralExpr([NotNull] pbiqParser.EncodedLiteralExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.inExprValues"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitInExprValues([NotNull] pbiqParser.InExprValuesContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.inExprEqualityKind"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInExprEqualityKind([NotNull] pbiqParser.InExprEqualityKindContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.roleRefExpression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitRoleRefExpression([NotNull] pbiqParser.RoleRefExpressionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.expressionOrExpressionList"/>.
 	/// </summary>
@@ -333,29 +303,29 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitArithmenticExpr([NotNull] pbiqParser.ArithmenticExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.orderByClause"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.logicalExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitOrderByClause([NotNull] pbiqParser.OrderByClauseContext context);
+	Result VisitLogicalExpr([NotNull] pbiqParser.LogicalExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.binary_arithmetic_operator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBinary_arithmetic_operator([NotNull] pbiqParser.Binary_arithmetic_operatorContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.binary_logic_operator"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBinary_logic_operator([NotNull] pbiqParser.Binary_logic_operatorContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.timeUnit"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitTimeUnit([NotNull] pbiqParser.TimeUnitContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.tableName"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitTableName([NotNull] pbiqParser.TableNameContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.equalityKind"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitEqualityKind([NotNull] pbiqParser.EqualityKindContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.left"/>.
 	/// </summary>
@@ -369,22 +339,16 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitRight([NotNull] pbiqParser.RightContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.first"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.comparisonOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitFirst([NotNull] pbiqParser.FirstContext context);
+	Result VisitComparisonOperator([NotNull] pbiqParser.ComparisonOperatorContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.second"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.identifier"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitSecond([NotNull] pbiqParser.SecondContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.operator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitOperator([NotNull] pbiqParser.OperatorContext context);
+	Result VisitIdentifier([NotNull] pbiqParser.IdentifierContext context);
 }
 } // namespace Packer2

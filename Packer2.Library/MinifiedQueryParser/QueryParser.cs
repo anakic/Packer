@@ -4,6 +4,7 @@ using Antlr4.Runtime.Tree;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 
 namespace Packer2.Library.MinifiedQueryParser
 {
@@ -149,7 +150,7 @@ namespace Packer2.Library.MinifiedQueryParser
             validator.ValidateFilter(filter);
 
             if(input != filter.ToString())
-                throw new FormatException($"Parsing filter did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{filter}'!");
+                 throw new FormatException($"Parsing filter did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{filter}'!");
 
             return filter;
         }
@@ -190,10 +191,16 @@ namespace Packer2.Library.MinifiedQueryParser
                     {
                         var source = new EntitySource();
                         source.Name = fe.alias().GetText();
-                        source.Entity = UnescapeIdentifier(fe.entity().entity_name().GetText());
 
-                        if (fe.expressionContainer() != null)
-                            throw new NotImplementedException("to-do");
+                        if(fe.entity_name() != null)
+                            source.Entity = UnescapeIdentifier(fe.entity_name().GetText());
+
+                        else
+                        {
+                            var subQuery = ParseExprContainer(fe.subQueryExpr(), new HashSet<string>());
+                            source.Expression = subQuery;
+                            source.Type = EntitySourceType.Expression;
+                        }
 
                         return source;
                     }).ToList();
@@ -217,6 +224,8 @@ namespace Packer2.Library.MinifiedQueryParser
 
                 if (context.top() != null)
                     def.Top = int.Parse(context.top().INTEGER().GetText());
+
+                var asJson = Newtonsoft.Json.JsonConvert.SerializeObject(def, Newtonsoft.Json.Formatting.Indented);
 
                 return def;
             }
@@ -266,16 +275,16 @@ namespace Packer2.Library.MinifiedQueryParser
                 this.sourceNames = sourceNames ?? new HashSet<string>();
             }
 
-            public override QueryExpression VisitAndExpr([NotNull] pbiqParser.AndExprContext context)
+            public override QueryExpression VisitRoleRefExpression([NotNull] pbiqParser.RoleRefExpressionContext context)
             {
-                return new QueryAndExpression() { Left = VisitValidated(context.left()), Right = VisitValidated(context.right()) };
+                return new QueryRoleRefExpression() { Role = context.QUOTED_IDENTIFIER().GetText().TrimStart('[').TrimEnd(']') };
             }
 
             public override QueryExpression VisitArithmenticExpr([NotNull] pbiqParser.ArithmenticExprContext context)
             {
-                var left = context.expression()[0];
-                var right = context.expression()[1];
-                var opeartor = ParseOperator(context.BINARY_ARITHMETIC_OPERATOR().GetText());
+                var left = context.left();
+                var right = context.right();
+                var opeartor = ParseOperator(context.binary_arithmetic_operator().GetText());
                 return new QueryArithmeticExpression()
                 {
                     Left = VisitValidated(left),
@@ -314,7 +323,7 @@ namespace Packer2.Library.MinifiedQueryParser
 
             public override QueryExpression VisitHierarchyExpr([NotNull] pbiqParser.HierarchyExprContext context)
             {
-                var hierarchy = UnescapeIdentifier(context.IDENTIFIER().GetText());
+                var hierarchy = UnescapeIdentifier(context.identifier().GetText());
                 var expression = VisitValidated(context.sourceRefExpr());
 
                 return new QueryHierarchyExpression()
@@ -327,7 +336,7 @@ namespace Packer2.Library.MinifiedQueryParser
             public override QueryExpression VisitAggregationExpr([NotNull] pbiqParser.AggregationExprContext context)
             {
                 var expression = VisitValidated(context.expression());
-                var function = ParseFunction(context.IDENTIFIER().GetText());
+                var function = ParseFunction(context.identifier().GetText());
                 return new QueryAggregationExpression()
                 {
                     Expression = expression,
@@ -351,7 +360,7 @@ namespace Packer2.Library.MinifiedQueryParser
             public override QueryExpression VisitHierarchyLevelExpr([NotNull] pbiqParser.HierarchyLevelExprContext context)
             {
                 var expression = VisitValidated(context.hierarchyExpr());
-                var level = UnescapeIdentifier(context.IDENTIFIER().GetText());
+                var level = UnescapeIdentifier(context.identifier().GetText());
                 return new QueryHierarchyLevelExpression()
                 {
                     Expression = expression,
@@ -362,20 +371,22 @@ namespace Packer2.Library.MinifiedQueryParser
             public override QueryExpression VisitInExpr([NotNull] pbiqParser.InExprContext context)
             {
                 var expression = new QueryInExpression();
-                if (context.tableName() != null)
-                    expression.Table = new QueryExpressionContainer(VisitValidated(context.tableName()));
+                if (context.sourceRefExpr() != null)
+                    expression.Table = new QueryExpressionContainer(VisitValidated(context.sourceRefExpr()));
                 else
                 {
-                    if (context.inExprValues().equalityKind() != null)
-                        expression.EqualityKind = context.inExprValues().equalityKind().IDENTIFIER().GetText().ToLower() == "identity" ? QueryEqualitySemanticsKind.Identity : QueryEqualitySemanticsKind.Equality;
+                    if (context.inExprValues().inExprEqualityKind() != null)
+                        expression.EqualityKind = context.inExprValues().inExprEqualityKind().identifier().GetText().ToLower() == "identity" ? QueryEqualitySemanticsKind.Identity : QueryEqualitySemanticsKind.Equality;
 
                     expression.Values = context.inExprValues()
                         .expressionOrExpressionList()
-                        .Select(el =>
-                            el.expression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList()
-                        ).ToList();
+                        .Select(el => el.expression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList()).ToList();
                 }
-                expression.Expressions = context.nonFilterExpression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList();
+
+                if(context.primary_expression() != null)
+                    expression.Expressions = new List<QueryExpressionContainer>() { VisitValidated(context.primary_expression()) };
+                else
+                    expression.Expressions = context.expression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList();
                 return expression;
             }
 
@@ -383,7 +394,7 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 // todo: what is the schema? the schema is not saved to the minified query.
                 var expression = new QuerySourceRefExpression();
-                var name = UnescapeIdentifier(context.IDENTIFIER().GetText());
+                var name = UnescapeIdentifier(context.identifier().GetText());
                 if (sourceNames.Contains(name))
                     expression.Source = name;
                 else
@@ -403,21 +414,10 @@ namespace Packer2.Library.MinifiedQueryParser
                 return new QueryIntegerConstantExpression() { Value = Int64.Parse(text.Substring(0, text.Length - 1)) };
             }
 
-            public override QueryExpression VisitPropertyExpression_seg([NotNull] pbiqParser.PropertyExpression_segContext context)
+            public override QueryExpression VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context)
             {
-                var expression = VisitValidated((context.Parent as pbiqParser.NonFilterExpressionContext).nonFilterExpression());
-                var property = UnescapeIdentifier(context.IDENTIFIER().GetText());
-
-                // ovdje sam stao: cex.SourceRef je null, sto rezultira greskom u validaciji
-                // - ne znam da li tu gresku samo treba ignorirati, usporediti generirani json nakon de-minimizacije i json seriajalizacije sa originalnim pa ako je, valjda onda treba ignorirati ovu gresku ili je tretirati kao warning
-                // - nadalje, treba vidjeti kako razlikovati property od kolone i measure-a (i da li je ovo uopce bitno? da li ce sve raditi i ako je property?) ako treba, trebamo moci citati iz modela pa vidjeti jel measure ili prop (ili cu morati i minifikaciju raditi sam...ugh)
-                // - zatim srediti validaciju, i errorctx i dva validatora sibam okolo, treba mi jedna klasa koja ce exposati validacijske metode i samo nju treba proslijedjivati
-                var cex = new QueryExpressionContainer(expression);
-
-                if (expression is QuerySubqueryExpression)
-                {
-                    
-                }
+                var expression = VisitValidated((ParserRuleContext)context.sourceRefExpr() ?? context.subQueryExpr());
+                var property = UnescapeIdentifier(context.identifier().GetText());
 
                 // todo: must use measure or column instead, determnine based on data model!
                 return new QueryPropertyExpression()
@@ -427,7 +427,8 @@ namespace Packer2.Library.MinifiedQueryParser
                 };
             }
 
-            public override QueryExpression VisitLiteralExpr([NotNull] pbiqParser.LiteralExprContext context)
+
+            public override QueryExpression VisitEncodedLiteralExpr([NotNull] pbiqParser.EncodedLiteralExprContext context)
             {
                 return new QueryLiteralExpression() { Value = context.GetText() };
             }
@@ -441,9 +442,9 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 return new QueryBetweenExpression()
                 {
-                    Expression = VisitValidated(context.nonFilterExpression()),
-                    LowerBound = VisitValidated(context.first()),
-                    UpperBound = VisitValidated(context.second())
+                    Expression = VisitValidated(context.primary_expression()),
+                    LowerBound = VisitValidated(context.left()),
+                    UpperBound = VisitValidated(context.right())
                 };
             }
 
@@ -461,20 +462,20 @@ namespace Packer2.Library.MinifiedQueryParser
                 return (TimeUnit)Enum.Parse(typeof(TimeUnit), v, true);
             }
 
-            public override QueryExpression VisitComparisonExpr([NotNull] pbiqParser.ComparisonExprContext context)
+            public override QueryExpression VisitCompareExpr([NotNull] pbiqParser.CompareExprContext context)
             {
-                var left = VisitValidated(context.first());
-                var right = VisitValidated(context.second());
+                var left = VisitValidated(context.primary_expression());
+                var right = VisitValidated(context.right());
 
                 return new QueryComparisonExpression()
                 {
                     Left = left,
                     Right = right,
-                    ComparisonKind = GetComparisonKind(context.@operator())
+                    ComparisonKind = GetComparisonKind(context.comparisonOperator())
                 };
             }
 
-            private QueryComparisonKind GetComparisonKind(pbiqParser.OperatorContext operatorContext)
+            private QueryComparisonKind GetComparisonKind(pbiqParser.ComparisonOperatorContext operatorContext)
             {
                 if (operatorContext.GT() != null)
                     return QueryComparisonKind.GreaterThan;
@@ -492,34 +493,9 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 return new QueryContainsExpression()
                 {
-                    Left = VisitValidated(context.first()),
-                    Right = VisitValidated(context.second())
+                    Left = VisitValidated(context.primary_expression()),
+                    Right = VisitValidated(context.right())
                 };
-            }
-
-            public override QueryExpression VisitNonLeftRecursiveFilterExpression([NotNull] pbiqParser.NonLeftRecursiveFilterExpressionContext context)
-            {
-                var res = base.VisitNonLeftRecursiveFilterExpression(context);
-
-                if(res == null)
-                {
-                    QueryExpression val = DefaultResult;
-                    int childCount = context.ChildCount;
-                    for (int i = 0; i < childCount; i++)
-                    {
-                        if (!ShouldVisitNextChild(context, val))
-                        {
-                            break;
-                        }
-
-                        QueryExpression nextResult = VisitValidated(context.GetChild(i));
-                        val = AggregateResult(val, nextResult);
-                    }
-
-                    return val;
-                }
-
-                return res;
             }
 
             protected override QueryExpression AggregateResult(QueryExpression aggregate, QueryExpression nextResult)
@@ -527,13 +503,17 @@ namespace Packer2.Library.MinifiedQueryParser
                 return nextResult ?? aggregate;
             }
 
-            public override QueryExpression VisitOrExpr([NotNull] pbiqParser.OrExprContext context)
+            public override QueryExpression VisitLogicalExpr([NotNull] pbiqParser.LogicalExprContext context)
             {
-                return new QueryOrExpression()
-                {
-                    Left = VisitValidated(context.left()),
-                    Right = VisitValidated(context.right())
-                };
+                var left = VisitValidated(context.left());
+                var right = VisitValidated(context.right());
+                
+                if (context.binary_logic_operator().GetText().ToLower() == "and")
+                    return new QueryAndExpression() { Left = left, Right = right };
+                else if (context.binary_logic_operator().GetText().ToLower() == "or")
+                    return new QueryOrExpression() { Left = left, Right = right };
+                else
+                    throw new FormatException("Invalid logical operator");
             }
 
             public override QueryExpression VisitBoolExp([NotNull] pbiqParser.BoolExpContext context)
@@ -563,6 +543,5 @@ namespace Packer2.Library.MinifiedQueryParser
             }
             return identifier;
         }
-
     }
 }

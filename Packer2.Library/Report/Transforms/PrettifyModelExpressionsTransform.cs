@@ -26,14 +26,7 @@ namespace Packer2.Library.Report.Transforms
             if (base.TryReadExpression(expToken, out qec))
             {
                 var input = qec.ToString();
-                var success = DoTryParse(new JValue(qec.ToString()), s => parser.ParseExpression(s), out expressionContainer);
-                if (!success)
-                    logger.LogError($"Failed to parse minified query: {input}");
-                else if (input != expressionContainer.ToString())
-                    logger.LogError("Unminified filter does not correspond to minified version");
-                else
-                    logger.LogInformation("Succesfully minified and unminified expression: " + input);
-                return success;
+                return DoTryParse(new JValue(input), s => parser.ParseExpression(s), out expressionContainer);
             }
             else
             {
@@ -48,14 +41,7 @@ namespace Packer2.Library.Report.Transforms
             if (base.TryReadFilter(expToken, out qec))
             {
                 var input = qec.ToString();
-                var success = DoTryParse(new JValue(input), s => parser.ParseFilter(s), out filter);
-                if (!success)
-                    logger.LogError($"Failed to parse minified filter: {input}");
-                else if (input != filter.ToString())
-                    logger.LogError("Unminified filter does not correspond to minified version");
-                else
-                    logger.LogInformation("Succesfully minified and unminified query: " + input);
-                return success;
+                return DoTryParse(new JValue(input), s => parser.ParseFilter(s), out filter);
             }
             else
             {
@@ -70,16 +56,7 @@ namespace Packer2.Library.Report.Transforms
             if (base.TryReadQuery(expToken, out qd))
             {
                 var input = qd.ToString();
-
-                var success = DoTryParse(new JValue(qd.ToString()), s => parser.ParseQuery(s), out query);
-
-                if (!success)
-                    throw new Exception($"Failed to parse minified query: {input}");
-                else if (input != query.ToString())
-                    throw new Exception("Unminified query does not correspond to minified version");
-                else
-                    logger.LogInformation("Succesfully minified and unminified query: " + input);
-                return success;
+                return DoTryParse(new JValue(qd.ToString()), s => parser.ParseQuery(s), out query);
             }
             else
             {
@@ -104,16 +81,17 @@ namespace Packer2.Library.Report.Transforms
 
                     var test = res.ToString();
                     if (test != input)
-                        throw new FormatException("Parse did not throw an exception but the result was incorrect.");
+                    {
+                        logger.LogError("Parse did not throw an exception but the result was incorrect.");
+                        return false;
+                    }
 
-                    // logger.LogInformation("Succesfully parsed: " + input);
-
+                    //logger.LogInformation("Successfully parsed: " + input);
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($">>> Failed to parse: {input}: {ex}");
                 logger.LogError($"Failed to parse: {input}: {ex}");
                 res = default;
                 return false;

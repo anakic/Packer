@@ -1,28 +1,23 @@
 parser grammar pbiqParser;
 
-options {
-	tokenVocab = pbiqLexer;
-}
+options { tokenVocab = pbiqLexer; }
 
 root: query EOF;
 
 query: /*parameters*/ /*let*/ from where? /*transform?*/ orderby? select? /*visualshape*/ groupby? skip? top?;
 
 from: FROM fromElement (COMMA fromElement)*;
-fromElement: alias IN (entity | expressionContainer);
+fromElement: alias IN (entity_name | subQueryExpr);
+entity_name: (schema DOT)? identifier;
+schema: identifier;
 expressionContainer: expression (AS alias)? (WITH NATIVEREFERENCENAME)?;
+alias: identifier;
 
 where: WHERE queryFilterElement (COMMA queryFilterElement)*;
-queryFilterElement:
-	/* missing "Target" segment*/ filterExpression /*missing annotations and filter restatement*/;
-
-alias: IDENTIFIER;
-
-entity: (schema DOT)? entity_name;
-schema: IDENTIFIER;
-entity_name: IDENTIFIER;
+queryFilterElement: /*target*/ expression /*annotations, filter, restatement*/;
 
 // transform: TRANSFORM VIA STRING_LITERAL AS alias WITH --todo;
+
 orderby: ORDERBY orderbySection (COMMA orderbySection)*;
 orderbySection: expression direction;
 direction: ASCENDING | DESCENDING;
@@ -36,89 +31,79 @@ select: SELECT expression (COMMA expression)*;
 
 /* Expressions */
 
-expression: filterExpression | nonFilterExpression;
+expression
+	: primary_expression
+	| containsExpr
+	| betweenExpr
+	| inExpr
+	| compareExpr
+	;
 
-nonFilterExpression:
-	aggregationExpr
-	| arithmenticExpr
+containsExpr: primary_expression CONTAINS right;
+betweenExpr: primary_expression BETWEEN left AND right;
+inExpr: primary_expression IN (sourceRefExpr | inExprValues) | LPAREN expression (COMMA expression) RPAREN IN (sourceRefExpr | inExprValues);
+compareExpr: primary_expression comparisonOperator right;
+
+primary_expression: 
+	LPAREN expression RPAREN
+	| aggregationExpr
 	| anyValueExpr
-	| literalExpr
-	| nullEpr
-	| intExpr
-	| decimalExpr
-	| stringExpr
+	| arithmenticExpr
+	| boolExp
+	| dateExpr
 	| datetimeExpr
 	| datetimeSecExpr
 	| dateSpanExpr
-	| scopedEvalExpr
-	| dateExpr
-	| sourceRefExpr
-	| subQueryExpr
+	| encodedLiteralExpr
 	| hierarchyExpr
 	| hierarchyLevelExpr
-	| LPAREN nonFilterExpression RPAREN
-	| nonFilterExpression propertyExpression_seg
+	| intExpr
+	| logicalExpr
+	| notExpr
+	| nullEpr
+	| roleRefExpression
+	| propertyExpression
+	| scopedEvalExpr
+	| sourceRefExpr
+	| subQueryExpr
 	;
 
-filterExpression:
-	| andExpr
-	| orExpr
-	| nonLeftRecursiveFilterExpression
-	;
-
-nonLeftRecursiveFilterExpression: 
-	notExpr
-	| betweenExpr 
-	| boolExp
-	| inExpr
-	| comparisonExpr
-	| containsExpr
-	| LPAREN filterExpression RPAREN
-	;
+propertyExpression: (sourceRefExpr | subQueryExpr) DOT identifier;
 
 subQueryExpr: LCURLY query RCURLY;
-sourceRefExpr: IDENTIFIER;
-aggregationExpr: IDENTIFIER LPAREN expression RPAREN;
+sourceRefExpr: identifier;
+aggregationExpr: identifier LPAREN expression RPAREN;
 anyValueExpr: ANYVALUE WITH DEFAULTVALUEOVERRIDESANCESTORS;
-andExpr: left AND right;
-orExpr: left OR right;
-betweenExpr: nonFilterExpression BETWEEN first AND second;
 nullEpr: NULL;
 intExpr: INTEGER;
-decimalExpr: DECIMAL_LITERAL;
 datetimeExpr: DATETIME;
 dateExpr: DATE;
 /*tmp: should be expression instead of sourceRefExpr but avoiding indirect left recursion*/
-hierarchyExpr: sourceRefExpr DOT HIERARCHY LPAREN IDENTIFIER RPAREN;
-hierarchyLevelExpr: hierarchyExpr DOT LEVEL LPAREN IDENTIFIER RPAREN;
+hierarchyExpr: sourceRefExpr DOT HIERARCHY LPAREN identifier RPAREN;
+hierarchyLevelExpr: hierarchyExpr DOT LEVEL LPAREN identifier RPAREN;
 datetimeSecExpr: DATETIMESECOND;
 dateSpanExpr: DATESPAN LPAREN timeUnit COMMA expression RPAREN;
-containsExpr: first CONTAINS second;
-stringExpr: STRING_LITERAL;
 boolExp: TRUE | FALSE;
-comparisonExpr: first operator second;
-propertyExpression_seg: DOT IDENTIFIER;
 notExpr: NOT LPAREN expression RPAREN; 
-scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN RPAREN (expression (COMMA expression)+)? RPAREN;
+scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN (expression (COMMA expression)*)? RPAREN;
+encodedLiteralExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL;
+inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING inExprEqualityKind)?;
+inExprEqualityKind: identifier;
+roleRefExpression: ROLEREF QUOTED_IDENTIFIER;
+expressionOrExpressionList: expression | LPAREN expression (COMMA expression)+ RPAREN;
+arithmenticExpr: LPAREN left binary_arithmetic_operator right RPAREN;
+logicalExpr: LPAREN left binary_logic_operator right RPAREN;
 
-literalExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL;
-inExpr:
-	(nonFilterExpression | LPAREN nonFilterExpression (COMMA nonFilterExpression RPAREN)) 
-	IN (tableName | inExprValues);
-inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING equalityKind)?;
-expressionOrExpressionList
-	: expression | LPAREN expression (COMMA expression)+ RPAREN;
-arithmenticExpr:
-	LPAREN expression BINARY_ARITHMETIC_OPERATOR expression RPAREN;
-
-orderByClause: ORDERBY expression;
+binary_arithmetic_operator: PLUS | MINUS | DIV | MULT;
+binary_logic_operator: AND | OR;
 
 timeUnit: IDENTIFIER;
-tableName: IDENTIFIER;
+left: expression;
+right: expression;
+comparisonOperator: GT | LT | EQ | GTE | LTE;
 
-equalityKind: IDENTIFIER;
-left: nonLeftRecursiveFilterExpression;
-right: filterExpression;
-first: nonFilterExpression;
-second: nonFilterExpression;
-operator: GT | LT | EQ | GTE | LTE;
+identifier
+	: IDENTIFIER 
+	| QUOTED_IDENTIFIER 
+	| LEVEL
+	/* todo: all keywords can show up as identifiers as well unfortunately so add them here */;

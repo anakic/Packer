@@ -41,6 +41,7 @@ DATETIMESECOND: DATE 'T' [0-9] [0-9] ':' [0-9] [0-9] ':' [0-9] [0-9];
 DATETIME: DATETIMESECOND '.' [0-9] [0-9] [0-9] [0-9] [0-9] [0-9] [0-9];
 BASE64BYTES_LITERAL:[Bb] [Aa] [Ss] [Ee] '6' '4' '\'' STRING_LITERAL '\'';
 DATEIME_LITERAL: [Dd] [Aa] [Tt] [Ee] [Tt] [Ii] [Mm] [Ee] '\'' DATETIMESECOND '\'';
+ROLEREF: [Rr] [Oo] [Ll] [Ee] [Rr] [Ee] [Ff];
 LPAREN: '(';
 RPAREN: ')';
 LCURLY: '{';
@@ -52,8 +53,12 @@ LT: '<';
 LTE: '<=';
 EQ: '=';
 STRING_LITERAL: '\'' (~[']|'\'' '\'')* '\'';
-IDENTIFIER : ([A-Za-z0-9_]+) | ('[' .+? ']');
-BINARY_ARITHMETIC_OPERATOR: '+' | '-' | '*' | '/';
+IDENTIFIER : ([A-Za-z0-9_]+);
+QUOTED_IDENTIFIER: ('[' ~[\]]+? ']');
+PLUS: '+';
+MINUS: '-';
+MULT: '*';
+DIV: '/';
 
 WS: [ \r\n\t] -> channel(HIDDEN);
 
