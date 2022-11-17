@@ -2,7 +2,6 @@
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
 using Packer2.Library.MinifiedQueryParser;
-using System.Diagnostics;
 
 namespace Packer2.Library.Report.Transforms
 {
@@ -171,7 +170,6 @@ namespace Packer2.Library.Report.Transforms
             }
             catch(Exception ex)
             {
-                Trace.WriteLine($">>> Failed to parse: {input}: {ex}");
                 logger.LogError($"Failed to parse: {input}: {ex}");
                 res = default;
                 return false;

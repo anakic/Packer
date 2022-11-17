@@ -92,6 +92,11 @@ namespace Packer2.Library.MinifiedQueryParser
                 {
                 }
 
+                protected override void Visit(QueryScopedEvalExpression expression)
+                {
+                    // base class firing false positive here as well (column & hierarchy is null)
+                }
+
                 protected override void Visit(QueryPropertyExpression expression)
                 {
                     if (expression.Expression.Subquery != null)
@@ -124,7 +129,7 @@ namespace Packer2.Library.MinifiedQueryParser
         public QueryDefinition ParseQuery(string input)
         {
             var parser = CreateParser(input);
-            var tree = parser.query();
+            var tree = parser.root();
 
             var queryDefinition = new QueryConstructorVisitor(validator).Visit(tree);
             validator.ValidateQuery(queryDefinition);
@@ -135,7 +140,7 @@ namespace Packer2.Library.MinifiedQueryParser
         public FilterDefinition ParseFilter(string input)
         {
             var parser = CreateParser(input);
-            var tree = parser.query();
+            var tree = parser.root();
             var queryDefinition = new QueryConstructorVisitor(validator).Visit(tree);
 
             if (queryDefinition.Select?.Count > 0 && queryDefinition.Parameters?.Count > 0 || queryDefinition.Transform?.Count > 0 || queryDefinition.GroupBy?.Count > 0 || queryDefinition.Let?.Count > 0 || queryDefinition.OrderBy?.Count > 0 || queryDefinition.Skip != null || queryDefinition.Top != null)
@@ -178,9 +183,60 @@ namespace Packer2.Library.MinifiedQueryParser
         {
             private readonly ParserResultValidator validator;
 
+            private string ReadStringLiteral(ITerminalNode node)
+            {
+                if (node == null)
+                    return null;
+
+                var text = node.GetText();
+                return text.Substring(1, text.Length - 2);
+            }
+
+            public QueryTransform ParseTransform(pbiqParser.TransformContext context, HashSet<string> sourceNames)
+            {
+                QueryTransformInput input = new QueryTransformInput();
+                QueryTransformOutput output = new QueryTransformOutput();
+
+                if (context.parameters() != null)
+                    input.Parameters = context.parameters().parameter().Select(pc => ParseExprContainer(pc, sourceNames, UnescapeIdentifier(pc.alias().GetText()))).ToList();
+
+                if (context.inputTable() != null)
+                {
+                    input.Table = new QueryTransformTable()
+                    {
+                        Name = context.inputTable().alias().GetText(),
+                        Columns = context.inputTable().tableColumn().Select(tc => new QueryTransformTableColumn() { Role = ReadStringLiteral(tc.STRING_LITERAL()), Expression = ParseExprContainer(tc.expression(), sourceNames, UnescapeIdentifier(tc.alias().GetText())) }).ToList()
+                    };
+                    sourceNames.Add(input.Table.Name);
+                }
+
+                if (context.outputTable() != null)
+                {
+                    output.Table = new QueryTransformTable()
+                    {
+                        Name = context.outputTable().alias().GetText(),
+                        Columns = context.outputTable().tableColumn().Select(tc => new QueryTransformTableColumn() { Role = ReadStringLiteral(tc.STRING_LITERAL()), Expression = ParseExprContainer(tc.expression(), sourceNames, UnescapeIdentifier(tc.alias().GetText())) }).ToList()
+                    };
+                    sourceNames.Add(output.Table.Name);
+                }
+
+                return new QueryTransform()
+                {
+                    Name = UnescapeIdentifier(context.identifier().GetText()),
+                    Input = input,
+                    Output = output,
+                    Algorithm = ReadStringLiteral(context.algorithm().STRING_LITERAL())
+                };
+            }
+
             public QueryConstructorVisitor(ParserResultValidator validator)
             {
                 this.validator = validator;
+            }
+
+            public override QueryDefinition VisitRoot([NotNull] pbiqParser.RootContext context)
+            {
+                return VisitQuery(context.query());
             }
 
             public override QueryDefinition VisitQuery([NotNull] pbiqParser.QueryContext context)
@@ -197,7 +253,7 @@ namespace Packer2.Library.MinifiedQueryParser
 
                         else
                         {
-                            var subQuery = ParseExprContainer(fe.subQueryExpr(), new HashSet<string>());
+                            var subQuery = ParseExprContainer(fe.subQueryExpr());
                             source.Expression = subQuery;
                             source.Type = EntitySourceType.Expression;
                         }
@@ -209,6 +265,11 @@ namespace Packer2.Library.MinifiedQueryParser
 
                 if (context.where() != null)
                     def.Where = context.where().queryFilterElement().Select(qf => new QueryFilter() { Condition = ParseExprContainer(qf, sourceNames) }).ToList();
+
+                if (context.transform()?.Count() > 0)
+                {
+                    def.Transform = context.transform().Select(t => ParseTransform(t, sourceNames)).ToList();
+                }
 
                 if (context.select() != null)
                     def.Select = context.select().expression().Select(exp => ParseExprContainer(exp, sourceNames)).ToList();
@@ -230,10 +291,12 @@ namespace Packer2.Library.MinifiedQueryParser
                 return def;
             }
 
-            private QueryExpressionContainer ParseExprContainer(IParseTree context, HashSet<string>? sourceNames)
+            private QueryExpressionContainer ParseExprContainer(IParseTree context, HashSet<string>? sourceNames = null, string alias = null)
             {
                 var expression = new QueryExpressionVisitor(validator, false, sourceNames).VisitValidated(context);
                 var container = new QueryExpressionContainer(expression);
+                if (alias != null)
+                    container.Name = alias;
                 return container;
             }
 
@@ -321,10 +384,26 @@ namespace Packer2.Library.MinifiedQueryParser
                 };
             }
 
+            public override QueryExpression VisitVariationExpr([NotNull] pbiqParser.VariationExprContext context)
+            {
+                var expression = VisitValidated(context.sourceRefExpr());
+                if (context.identifier().Count() != 2)
+                    throw new FormatException("Variation syntax is: expr.variation(property, name). Expecting two identifiers (property and name)!");
+                var property = UnescapeIdentifier(context.identifier().ElementAt(0).GetText());
+                var name = UnescapeIdentifier(context.identifier().ElementAt(1).GetText());
+
+                return new QueryPropertyVariationSourceExpression() 
+                {
+                    Expression = expression,
+                    Property = property,
+                    Name = name
+                };
+            }
+
             public override QueryExpression VisitHierarchyExpr([NotNull] pbiqParser.HierarchyExprContext context)
             {
                 var hierarchy = UnescapeIdentifier(context.identifier().GetText());
-                var expression = VisitValidated(context.sourceRefExpr());
+                var expression = VisitValidated(context.hierarchySource());
 
                 return new QueryHierarchyExpression()
                 {
@@ -342,6 +421,17 @@ namespace Packer2.Library.MinifiedQueryParser
                     Expression = expression,
                     Function = function
                 };
+            }
+
+            private string ReadStringLiteral(ITerminalNode node)
+            {
+                var text = node.GetText();
+                return text.Substring(1, text.Length - 2);
+            }
+
+            public override QueryExpression VisitTransformOutputRoleRefExpr([NotNull] pbiqParser.TransformOutputRoleRefExprContext context)
+            {
+                return new QueryTransformOutputRoleRefExpression() { Role = ReadStringLiteral(context.STRING_LITERAL()) };
             }
 
             private QueryAggregateFunction ParseFunction(string v)

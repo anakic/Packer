@@ -19,14 +19,13 @@ string str = @"{from d in Ward
 orderby d.TypeKind ascending
 select d.TypeKind }.TypeKind";
 
-//var str2 = @"from d in Dates
-//where (d.Year, d.Month) in ((2021L, 'July'), (2021L, 'August'))";
+var str2 = @"(Crisis.m_CountCrisisExit3Parallel / ScopedEval(Crisis.m_CountCrisisExit3Parallel, Scope(roleRef[Columns])))";
 
-//var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
-//var q = p1.ParseFilter(str2);
+var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
+var q = p1.ParseExpression(str2);
 
-
-var rfs = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit");
+var rfs = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\SABP Mental Health Flow Tool - v1.2.17 Development Master.pbit");
+//var rfs = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit");
 var report = rfs.Read();
 report = new TestMinificationTransform(loggerFactory.CreateLogger<RestoreModelExpressionsTransform>()).Transform(report);
 // rfs.Save(report);
