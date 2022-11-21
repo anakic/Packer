@@ -1,3 +1,1 @@
-from r in [Referrals and Ward Stays]
-orderby r.m_Referrals descending
-select r.[Service/Ward], r.m_Referrals, r.variation([Entry Datetime], Variation).hierarchy([Date Hierarchy]).level(Year), r.variation([Entry Datetime], Variation).hierarchy([Date Hierarchy]).level(Month)
+null

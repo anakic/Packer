@@ -1,8 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using Antlr4.Runtime;
 using DataModelLoader.Report;
 using Microsoft.Extensions.Logging;
-using Packer2.Library.MinifiedQueryParser;
 using Packer2.Library.Report.Transforms;
 using Packer2.Library.Tools;
 
@@ -15,18 +13,30 @@ using var loggerFactory = LoggerFactory.Create(builder =>
         .AddConsole();
 });
 
-string str = @"{from d in Ward
-orderby d.TypeKind ascending
-select d.TypeKind }.TypeKind";
+//string str = @"{from d in Ward
+//orderby d.TypeKind ascending
+//select d.TypeKind }.TypeKind";
 
-var str2 = @"(Crisis.m_CountCrisisExit3Parallel / ScopedEval(Crisis.m_CountCrisisExit3Parallel, Scope(roleRef[Columns])))";
+//var str2 = @"(Crisis.m_CountCrisisExit3Parallel / ScopedEval(Crisis.m_CountCrisisExit3Parallel, Scope(roleRef[Columns])))";
 
-var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
-var q = p1.ParseExpression(str2);
+//var p1 = new QueryParser(loggerFactory.CreateLogger<QueryParser>());
+//var q = p1.ParseExpression(str2);
 
-var rfs = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\SABP Mental Health Flow Tool - v1.2.17 Development Master.pbit");
-//var rfs = new PBIArchiveStore(@"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit");
+var rfs = new PBIArchiveStore(@"c:\test\samo_jedan_visual.pbix");
 var report = rfs.Read();
-report = new TestMinificationTransform(loggerFactory.CreateLogger<RestoreModelExpressionsTransform>()).Transform(report);
+
+
+report = new MarkerTransform().Transform(report);
+report = new PrettifyModelExpressionsTransform().Transform(report);
+report = new RestoreModelExpressionsTransform(new DummyLogger<RestoreModelExpressionsTransform>()).Transform(report);
+
+var folderStore = new ReportFolderStore(@"c:\test\sjv");
+folderStore.Save(report);
+//var report = folderStore.Read();
+
+var rfs2 = new PBIArchiveStore(@"c:\test\sjv.pbix");
+rfs2.Save(report);
+
+
 // rfs.Save(report);
 

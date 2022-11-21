@@ -3,15 +3,18 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
+using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser
 {
     public class QueryParser
     {
+        const string MEASURES_PREFIX = "M__";
+        const string COLUMNS_PREFIX = "C__";
+
         private readonly ILogger logger;
         private readonly ParserResultValidator validator;
+        RemoveColumnMeasurePrefixesVisitor postProcessVisitor = new RemoveColumnMeasurePrefixesVisitor();
 
         public class ParserResultValidator
         {
@@ -133,7 +136,12 @@ namespace Packer2.Library.MinifiedQueryParser
 
             var queryDefinition = new QueryConstructorVisitor(validator).Visit(tree);
             validator.ValidateQuery(queryDefinition);
-            
+
+            if (input != queryDefinition.ToString())
+                throw new FormatException($"Parsing query did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{queryDefinition}'!");
+
+            postProcessVisitor.Visit(queryDefinition);
+
             return queryDefinition;
         }
 
@@ -148,6 +156,7 @@ namespace Packer2.Library.MinifiedQueryParser
 
             var filter = new FilterDefinition()
             {
+                Version = queryDefinition.Version,
                 From = queryDefinition.From,
                 Where = queryDefinition.Where
             };
@@ -156,6 +165,8 @@ namespace Packer2.Library.MinifiedQueryParser
 
             if(input != filter.ToString())
                  throw new FormatException($"Parsing filter did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{filter}'!");
+
+            postProcessVisitor.Visit(queryDefinition);
 
             return filter;
         }
@@ -170,6 +181,8 @@ namespace Packer2.Library.MinifiedQueryParser
             if (input != expression.ToString())
                 throw new FormatException($"Parsing expression did not throw an exception but the constructed expression does not match the input string. Input string was '{input}', while the minimized constructed expression was '{expression}'!");
 
+            postProcessVisitor.Visit(expression);
+
             return expression;
         }
 
@@ -177,6 +190,24 @@ namespace Packer2.Library.MinifiedQueryParser
         {
             var lexer = new pbiqLexer(CharStreams.fromString(input));
             return new pbiqParser(new CommonTokenStream(lexer));
+        }
+        class RemoveColumnMeasurePrefixesVisitor : InfoNavVisitor
+        {
+            protected override void Visit(QueryMeasureExpression expr)
+            {
+                if (expr.Property.StartsWith(MEASURES_PREFIX))
+                    expr.Property = expr.Property.Substring(MEASURES_PREFIX.Length);
+                else
+                    throw new FormatException("Measure name did not start with expected prefix!");
+            }
+
+            protected override void Visit(QueryColumnExpression expr)
+            {
+                if (expr.Property.StartsWith(COLUMNS_PREFIX))
+                    expr.Property = expr.Property.Substring(COLUMNS_PREFIX.Length);
+                else
+                    throw new FormatException("Column name did not start with expected prefix!");
+            }
         }
 
         class QueryConstructorVisitor : pbiqParserBaseVisitor<QueryDefinition>
@@ -241,7 +272,7 @@ namespace Packer2.Library.MinifiedQueryParser
 
             public override QueryDefinition VisitQuery([NotNull] pbiqParser.QueryContext context)
             {
-                var def = new QueryDefinition();
+                var def = new QueryDefinition() { Version = 2 };
                 if (context.from() != null)
                     def.From = context.from().fromElement().Select(fe =>
                     {
@@ -509,12 +540,30 @@ namespace Packer2.Library.MinifiedQueryParser
                 var expression = VisitValidated((ParserRuleContext)context.sourceRefExpr() ?? context.subQueryExpr());
                 var property = UnescapeIdentifier(context.identifier().GetText());
 
-                // todo: must use measure or column instead, determnine based on data model!
-                return new QueryPropertyExpression()
+                if (property.StartsWith(MEASURES_PREFIX))
                 {
-                    Expression = expression,
-                    Property = property
-                };
+                    return new QueryMeasureExpression()
+                    {
+                        Expression = expression,
+                        Property = property//.Substring(3)  <-- do not trim the prefix otherwise the validation inputStr vs exp.ToString() will fail. We will trim it as a separate step with a visitor
+                    };
+                }
+                else if (property.StartsWith(COLUMNS_PREFIX))
+                {
+                    return new QueryColumnExpression()
+                    {
+                        Expression = expression,
+                        Property = property//.Substring(3)  <-- do not trim the prefix otherwise the validation inputStr vs exp.ToString() will fail. We will trim it as a separate step with a visitor
+                    };
+                }
+                else
+                {
+                    return new QueryPropertyExpression()
+                    {
+                        Expression = expression,
+                        Property = property
+                    };
+                }
             }
 
 
@@ -559,9 +608,9 @@ namespace Packer2.Library.MinifiedQueryParser
 
                 return new QueryComparisonExpression()
                 {
+                    ComparisonKind = GetComparisonKind(context.comparisonOperator()),
                     Left = left,
                     Right = right,
-                    ComparisonKind = GetComparisonKind(context.comparisonOperator())
                 };
             }
 
@@ -606,18 +655,18 @@ namespace Packer2.Library.MinifiedQueryParser
                     throw new FormatException("Invalid logical operator");
             }
 
-            public override QueryExpression VisitBoolExp([NotNull] pbiqParser.BoolExpContext context)
-            {
-                return new QueryBooleanConstantExpression()
-                {
-                    Value = context.TRUE() != null
-                };
-            }
+            //public override QueryExpression VisitBoolExp([NotNull] pbiqParser.BoolExpContext context)
+            //{
+            //    return new QueryBooleanConstantExpression()
+            //    {
+            //        Value = context.TRUE() != null
+            //    };
+            //}
 
-            public override QueryExpression VisitNullEpr([NotNull] pbiqParser.NullEprContext context)
-            {
-                return new QueryNullConstantExpression();
-            }
+            //public override QueryExpression VisitNullEpr([NotNull] pbiqParser.NullEprContext context)
+            //{
+            //    return new QueryNullConstantExpression();
+            //}
         }
 
         static string UnescapeIdentifier(string identifier)

@@ -98,6 +98,26 @@ namespace Packer2.Library.Report.Transforms
         }
     }
 
+    public class MarkerTransform : ModelReferenceTransformBase
+    {
+        protected override BaseQueryExpressionVisitor Visitor => new MinificationMetadataMarkerVisitor();
+
+        class MinificationMetadataMarkerVisitor : BaseQueryExpressionVisitor
+        {
+            protected override void Visit(QueryMeasureExpression expression)
+            {
+                expression.Property = $"M__{expression.Property}";
+                base.Visit(expression);
+            }
+
+            protected override void Visit(QueryColumnExpression expression)
+            {
+                expression.Property = $"C__{expression.Property}";
+                base.Visit(expression);
+            }
+        }
+    }
+
     public class PrettifyModelExpressionsTransform : ModelReferenceTransformBase
     {
         protected override BaseQueryExpressionVisitor Visitor { get; } = new BaseQueryExpressionVisitor();
@@ -150,7 +170,7 @@ namespace Packer2.Library.Report.Transforms
             string input = token.ToString();
             try
             {
-                if (input.StartsWith("{") || input.StartsWith("["))
+                if (input.StartsWith("{") || input.StartsWith("[{"))
                 {
                     res = default;
                     return false;
@@ -161,14 +181,16 @@ namespace Packer2.Library.Report.Transforms
 
                     var test = res.ToString();
                     if (test != input)
-                        throw new FormatException("Parse did not throw an exception but the result was incorrect.");
+                    {
+                        logger.LogError("Parse did not throw an exception but the result was incorrect.");
+                        return false;
+                    }
 
-                    // logger.LogInformation("Succesfully parsed: " + input);
-
+                    //logger.LogInformation("Successfully parsed: " + input);
                     return true;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError($"Failed to parse: {input}: {ex}");
                 res = default;

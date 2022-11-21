@@ -243,12 +243,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitAnyValueExpr([NotNull] pbiqParser.AnyValueExprContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.nullEpr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitNullEpr([NotNull] pbiqParser.NullEprContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.intExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -302,12 +296,6 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitDateSpanExpr([NotNull] pbiqParser.DateSpanExprContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.boolExp"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitBoolExp([NotNull] pbiqParser.BoolExpContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.notExpr"/>.
 	/// </summary>

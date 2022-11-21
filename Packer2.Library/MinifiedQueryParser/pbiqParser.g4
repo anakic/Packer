@@ -52,13 +52,17 @@ betweenExpr: primary_expression BETWEEN left AND right;
 inExpr: primary_expression IN (sourceRefExpr | inExprValues) | LPAREN expression (COMMA expression) RPAREN IN (sourceRefExpr | inExprValues);
 compareExpr: primary_expression comparisonOperator right;
 
+// todo: split up expressions into levels where each level can only reference levels below?
+// could a level ever have to reference itself? i.e. could the first rule in the expression refere to the same level?
+//   if so, this is fine, as long we don't care about priority between the rules in the same level.
+
 primary_expression: 
 	LPAREN expression RPAREN
 	| aggregationExpr
 	| variationExpr
 	| anyValueExpr
 	| arithmenticExpr
-	| boolExp
+//	| boolExp
 	| dateExpr
 	| datetimeExpr
 	| datetimeSecExpr
@@ -69,7 +73,7 @@ primary_expression:
 	| intExpr
 	| logicalExpr
 	| notExpr
-	| nullEpr
+//	| nullEpr
 	| transformOutputRoleRefExpr
 	| roleRefExpression
 	| propertyExpression
@@ -84,21 +88,22 @@ subQueryExpr: LCURLY query RCURLY;
 sourceRefExpr: identifier;
 aggregationExpr: identifier LPAREN expression RPAREN;
 anyValueExpr: ANYVALUE WITH DEFAULTVALUEOVERRIDESANCESTORS;
-nullEpr: NULL;
+// nullEpr: NULL;
 intExpr: INTEGER;
 datetimeExpr: DATETIME;
 dateExpr: DATE;
-/*tmp: should be expression instead of sourceRefExpr but avoiding indirect left recursion*/
+/*tmp: could this be "expression" instead of sourceRefExpr? avoiding indirect left recursion*/
 hierarchySource: sourceRefExpr | variationExpr;
 hierarchyExpr: hierarchySource DOT HIERARCHY LPAREN identifier RPAREN;
 hierarchyLevelExpr: hierarchyExpr DOT LEVEL LPAREN identifier RPAREN;
+/*tmp: could this be "expression" instead of sourceRefExpr? avoiding indirect left recursion*/
 variationExpr: sourceRefExpr DOT VARIATION LPAREN identifier COMMA identifier RPAREN;
 datetimeSecExpr: DATETIME;
 dateSpanExpr: DATESPAN LPAREN timeUnit COMMA expression RPAREN;
-boolExp: TRUE | FALSE;
+// boolExp: TRUE | FALSE;
 notExpr: NOT LPAREN expression RPAREN;
 scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN (expression (COMMA expression)*)? RPAREN RPAREN;
-encodedLiteralExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL;
+encodedLiteralExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL | TRUE | FALSE | NULL;
 inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING inExprEqualityKind)?;
 inExprEqualityKind: identifier;
 roleRefExpression: ROLEREF QUOTED_IDENTIFIER;
