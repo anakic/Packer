@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DataModelLoader.Report;
 using Microsoft.Extensions.Logging;
-using Packer2.Library.Report.Transforms;
+using Packer2.Library.MinifiedQueryParser.QueryTransforms;
 using Packer2.Library.Tools;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
@@ -26,9 +26,9 @@ var rfs = new PBIArchiveStore(@"c:\test\samo_jedan_visual.pbix");
 var report = rfs.Read();
 
 
-report = new MarkerTransform().Transform(report);
-report = new PrettifyModelExpressionsTransform().Transform(report);
-report = new RestoreModelExpressionsTransform(new DummyLogger<RestoreModelExpressionsTransform>()).Transform(report);
+report = new ColumnMeasureMarkerTransform().Transform(report);
+report = new MinifyExpressionsTransform().Transform(report);
+report = new UnminifyExpressionsTransform(new DummyLogger<UnminifyExpressionsTransform>()).Transform(report);
 
 var folderStore = new ReportFolderStore(@"c:\test\sjv");
 folderStore.Save(report);

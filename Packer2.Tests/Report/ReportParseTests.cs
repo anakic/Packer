@@ -1,5 +1,6 @@
 ﻿using DataModelLoader.Report;
 using Packer2.Library.DataModel;
+using Packer2.Library.MinifiedQueryParser.QueryTransforms;
 using Packer2.Library.Report.Transforms;
 using Xunit;
 
@@ -13,7 +14,7 @@ namespace Packer2.Tests.Report
             var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
             var reportModel = new PBIArchiveStore(wf3Pbit).Read();
 
-            reportModel = new PrettifyModelExpressionsTransform().Transform(reportModel);
+            reportModel = new MinifyExpressionsTransform().Transform(reportModel);
 
             var folderStore = new ReportFolderStore(@"c:\test\xx");
             folderStore.Save(reportModel);

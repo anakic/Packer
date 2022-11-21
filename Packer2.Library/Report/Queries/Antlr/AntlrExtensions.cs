@@ -2,7 +2,7 @@
 using Antlr4.Runtime.Tree;
 using System.Linq.Expressions;
 
-namespace Packer2.Library.MinifiedQueryParser
+namespace Packer2.Library.Report.QueryTransforms.Antlr
 {
     public static class AntlrExtensions
     {

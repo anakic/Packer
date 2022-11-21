@@ -1,4 +1,5 @@
 ﻿using DataModelLoader.Report;
+using Packer2.Library.MinifiedQueryParser.QueryTransforms;
 using Packer2.Library.Report.Transforms;
 using System.Management.Automation;
 
@@ -12,7 +13,7 @@ namespace Packer2.PS.Report
 
         protected override void ProcessRecord()
         {
-            var transform = new PrettifyModelExpressionsTransform();
+            var transform = new MinifyExpressionsTransform();
             transform.Transform(Report);
 
             base.ProcessRecord();

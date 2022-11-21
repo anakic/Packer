@@ -5,12 +5,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Packer2.Library.Report.Transforms;
 
-namespace Packer2.Library.MinifiedQueryParser
+namespace Packer2.Library.Report.QueryTransforms.Antlr
 {
     public class QueryParser
     {
-        const string MEASURES_PREFIX = "M__";
-        const string COLUMNS_PREFIX = "C__";
+        public const string MEASURES_PREFIX = "M__";
+        public const string COLUMNS_PREFIX = "C__";
 
         private readonly ILogger logger;
         private readonly ParserResultValidator validator;
@@ -46,7 +46,7 @@ namespace Packer2.Library.MinifiedQueryParser
                 var queryValidator = new QueryDefinitionValidator(expressionValidator);
 
                 queryValidator.Visit(errorContext, definition);
-                
+
                 if (errorContext.HasError)
                     throw new FormatException("Parsing query failed");
 
@@ -163,8 +163,8 @@ namespace Packer2.Library.MinifiedQueryParser
 
             validator.ValidateFilter(filter);
 
-            if(input != filter.ToString())
-                 throw new FormatException($"Parsing filter did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{filter}'!");
+            if (input != filter.ToString())
+                throw new FormatException($"Parsing filter did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{filter}'!");
 
             postProcessVisitor.Visit(queryDefinition);
 
@@ -279,7 +279,7 @@ namespace Packer2.Library.MinifiedQueryParser
                         var source = new EntitySource();
                         source.Name = fe.alias().GetText();
 
-                        if(fe.entity_name() != null)
+                        if (fe.entity_name() != null)
                             source.Entity = UnescapeIdentifier(fe.entity_name().GetText());
 
                         else
@@ -423,7 +423,7 @@ namespace Packer2.Library.MinifiedQueryParser
                 var property = UnescapeIdentifier(context.identifier().ElementAt(0).GetText());
                 var name = UnescapeIdentifier(context.identifier().ElementAt(1).GetText());
 
-                return new QueryPropertyVariationSourceExpression() 
+                return new QueryPropertyVariationSourceExpression()
                 {
                     Expression = expression,
                     Property = property,
@@ -504,7 +504,7 @@ namespace Packer2.Library.MinifiedQueryParser
                         .Select(el => el.expression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList()).ToList();
                 }
 
-                if(context.primary_expression() != null)
+                if (context.primary_expression() != null)
                     expression.Expressions = new List<QueryExpressionContainer>() { VisitValidated(context.primary_expression()) };
                 else
                     expression.Expressions = context.expression().Select(exp => new QueryExpressionContainer(VisitValidated(exp))).ToList();
@@ -529,10 +529,10 @@ namespace Packer2.Library.MinifiedQueryParser
             public override QueryExpression VisitIntExpr([NotNull] pbiqParser.IntExprContext context)
             {
                 var text = context.INTEGER().GetText();
-                if(text.Last() != 'L')
+                if (text.Last() != 'L')
                     throw new FormatException("Invalid input");
 
-                return new QueryIntegerConstantExpression() { Value = Int64.Parse(text.Substring(0, text.Length - 1)) };
+                return new QueryIntegerConstantExpression() { Value = long.Parse(text.Substring(0, text.Length - 1)) };
             }
 
             public override QueryExpression VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context)
@@ -646,7 +646,7 @@ namespace Packer2.Library.MinifiedQueryParser
             {
                 var left = VisitValidated(context.left());
                 var right = VisitValidated(context.right());
-                
+
                 if (context.binary_logic_operator().GetText().ToLower() == "and")
                     return new QueryAndExpression() { Left = left, Right = right };
                 else if (context.binary_logic_operator().GetText().ToLower() == "or")
