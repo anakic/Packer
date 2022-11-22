@@ -1,34 +1,33 @@
-﻿using DataModelLoader.Report;
-using Microsoft.AnalysisServices.Tabular;
+﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
-using Microsoft.InfoNav.Data.Contracts.SemanticQuery.ExpressionBuilder;
-using Microsoft.InfoNav.Utils;
+using Newtonsoft.Json.Linq;
 using Packer2.Library.Tools;
-using System.Linq.Expressions;
 
 namespace Packer2.Library.Report.Transforms
 {
-    public class ValidateModelReferencesTransform : ModelReferenceTransformBase
+    public class ValidateModelReferencesTransform : ReportInfoNavTransformBase
     {
-        private readonly DetectRefErrorsVisitor visitor;
+        int errorCount;
+        private readonly Database database;
         private readonly ILogger<ValidateModelReferencesTransform> logger;
 
         // todo: replace with logger?
         public ValidateModelReferencesTransform(Database database, ILogger<ValidateModelReferencesTransform>? logger = null)
         {
+            this.database = database;
             this.logger = logger ?? new DummyLogger<ValidateModelReferencesTransform>();
-            visitor = new DetectRefErrorsVisitor(database, this.logger);
         }
 
-        protected override BaseQueryExpressionVisitor Visitor => visitor;
+        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
+            => new DetectRefErrorsVisitor(outerPath, innerPath, sourceByAliasMap, database, logger, () => errorCount++);
 
-        protected override void OnProcessingComplete(PowerBIReport model)
+        protected override void OnProcessingComplete(JObject jObj)
         {
-            if (visitor.ErrorCount == 0)
+            if (errorCount == 0)
                 logger.LogInformation("No validation errors detected");
             else
-                throw new Exception($"### A total of {visitor.ErrorCount} validation errors have been detected. ###");
+                throw new Exception($"### A total of {errorCount} validation errors have been detected. ###");
         }
 
 
@@ -38,13 +37,14 @@ namespace Packer2.Library.Report.Transforms
 
             private readonly Database db;
             private readonly ILogger traceRefErrorReporter;
+            private readonly Action incrementErrorCount;
 
-            public int ErrorCount { get; private set; } = 0;
-
-            public DetectRefErrorsVisitor(Database db, ILogger traceRefErrorReporter)
+            public DetectRefErrorsVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap, Database db, ILogger traceRefErrorReporter, Action incrementErrorCount)
+                : base(outerPath, innerPath, sourceByAliasMap)
             {
                 this.db = db;
                 this.traceRefErrorReporter = traceRefErrorReporter;
+                this.incrementErrorCount = incrementErrorCount;
             }
 
             protected override void Visit(QueryHierarchyExpression expression)
@@ -94,7 +94,7 @@ namespace Packer2.Library.Report.Transforms
                 catch (Exception ex)
                 {
                     traceRefErrorReporter.LogError("{errorMessage}. Location: '{outerPath}' => '{innerPath}'", ex.Message, OuterPath, InnerPath);
-                    ErrorCount++;
+                    incrementErrorCount();
                 }
             }
         }

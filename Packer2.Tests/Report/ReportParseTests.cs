@@ -14,7 +14,7 @@ namespace Packer2.Tests.Report
             var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
             var reportModel = new PBIArchiveStore(wf3Pbit).Read();
 
-            reportModel = new MinifyExpressionsTransform().Transform(reportModel);
+            //reportModel = new MinifyExpressionsTransform().Transform(reportModel.Layout);
 
             var folderStore = new ReportFolderStore(@"c:\test\xx");
             folderStore.Save(reportModel);

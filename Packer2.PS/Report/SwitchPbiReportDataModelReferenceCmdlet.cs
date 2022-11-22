@@ -1,5 +1,4 @@
 ﻿using DataModelLoader.Report;
-using Packer2.Library.MinifiedQueryParser.QueryTransforms;
 using Packer2.Library.Report.Transforms;
 using System.Management.Automation;
 
@@ -14,7 +13,7 @@ namespace Packer2.PS.Report
         protected override void ProcessRecord()
         {
             var transform = new MinifyExpressionsTransform();
-            transform.Transform(Report);
+            transform.Transform(Report.Layout);
 
             base.ProcessRecord();
 
@@ -50,7 +49,7 @@ namespace Packer2.PS.Report
                 renames.AddTableRename(TableName, NewName);
 
             var transform = new ReplaceModelReferenceTransform(renames, CreateLogger<ReplaceModelReferenceTransform>());
-            transform.Transform(Report);
+            transform.Transform(Report.Layout);
 
             base.ProcessRecord();
 

@@ -11,10 +11,9 @@ namespace Packer2.Library.Report.Transforms
     /// in the layout file. Used for checking model references, renaming model references, minification
     /// and unminification of query/filter/expression code in the json file.
     /// </summary>
-    public abstract class ModelReferenceTransformBase : IReportTransform
+    public abstract class ReportInfoNavTransformBase
     {
-        record Finding(string parentPath, string nestedPath, string text, object deserialized, Exception ex);
-        public PowerBIReport Transform(PowerBIReport model)
+        public void Transform(JObject layout)
         {
             var stuffedAreaSelectors = new string[] 
             {
@@ -31,7 +30,7 @@ namespace Packer2.Library.Report.Transforms
 
             foreach (var selector in stuffedAreaSelectors)
             {
-                var stuffedTokens = model.Layout.SelectTokens(selector);
+                var stuffedTokens = layout.SelectTokens(selector);
                 foreach (var token in stuffedTokens)
                 {
                     List<JObject> jObjects = new List<JObject>();
@@ -43,15 +42,15 @@ namespace Packer2.Library.Report.Transforms
                     else
                         throw new InvalidOperationException();
 
+                    var expressionSelectors = new[] { "..expr", "..expression", "..expressions[*]", "..fieldExpr", "..identityKeys[*]", "..identityValues[*]", "..scopeId" };
                     foreach (var areaJObj in jObjects)
                     {
-                        var expressionSelectors = new[] { "..expr", "..expression", "..expressions[*]", "..fieldExpr", "..identityKeys[*]", "..identityValues[*]", "..scopeId" };
                         foreach (var expToken in expressionSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            if (TryReadExpression(expToken, out var expObj))
+                            if (TryReadExpression(expToken, out var expression))
                             {
-                                VisitExpression(expObj!, token.Path, expToken.Path);
-                                WriteExpression(expToken, expObj!);
+                                ProcessExpression(expression!, token.Path, expToken.Path);
+                                WriteExpression(expToken, expression!);
                             }
                         }
 
@@ -79,20 +78,20 @@ namespace Packer2.Library.Report.Transforms
                         var queryDefSelectors = new[] { "..prototypeQuery" };
                         foreach (var expToken in queryDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            if (TryReadQuery(expToken, out var queryObj))
+                            if (TryReadQuery(expToken, out var query))
                             {
-                                VisitQuery(queryObj!, token.Path, expToken.Path);
-                                WriteQuery(expToken, queryObj!);
+                                ProcessQuery(query!, token.Path, expToken.Path);
+                                WriteQuery(expToken, query!);
                             }
                         }
 
                         var filterDefSelectors = new[] { "..filter" };
                         foreach (var expToken in filterDefSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
-                            if (TryReadFilter(expToken, out var filterObj))
+                            if (TryReadFilter(expToken, out var filter))
                             {
-                                VisitFilter(filterObj!, token.Path, expToken.Path);
-                                WriteFilter(expToken, filterObj!);
+                                ProcessFilter(filter!, token.Path, expToken.Path);
+                                WriteFilter(expToken, filter!);
                             }
                         }
                     }
@@ -107,9 +106,7 @@ namespace Packer2.Library.Report.Transforms
                 }
             }
 
-            OnProcessingComplete(model);
-
-            return model;
+            OnProcessingComplete(layout);
         }
 
         protected virtual bool TryReadFilter(JToken expToken, out FilterDefinition? filter)
@@ -154,48 +151,38 @@ namespace Packer2.Library.Report.Transforms
             expToken.Replace(JObject.FromObject(expObj));
         }
 
-        protected virtual void OnProcessingComplete(PowerBIReport model) { }
+        protected virtual void OnProcessingComplete(JObject jObject) { }
 
-        // todo: should not force deriving from BaseQueryExpressionVisitor, we could make BaseQueryExpressionVisitor
-        // a decorator around the user's visitor object. The properties of BaseQueryExpressionVisitor are only used
-        // by this class internally, they are not by client code.
-        protected abstract BaseQueryExpressionVisitor Visitor { get; }
+        protected abstract QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null);
 
-        protected void VisitExpression(QueryExpressionContainer expObj, string outerPath, string innerPath)
+        protected void ProcessExpression(QueryExpressionContainer expression, string outerPath, string innerPath)
         {
             // we only have aliases for queries and filters (they have a From clause that specifies them)
-            Visitor.SourcesByAliasMap = null;
-            Visitor.OuterPath = outerPath;
-            Visitor.InnerPath = innerPath;
-            expObj.Expression.Accept(Visitor);
+            var visitor = CreateProcessingVisitor(outerPath, innerPath);
+            expression.Expression.Accept(visitor);
         }
 
-        protected void VisitFilter(FilterDefinition filterObj, string outerPath, string innerPath)
+        protected void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
         {
-            Visitor.OuterPath = outerPath;
-            Visitor.InnerPath = innerPath;
-            Visitor.SourcesByAliasMap = filterObj.From.ToDictionary(f => f.Name, f => f.Entity);
-            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(Visitor));
+            var visitor = CreateProcessingVisitor(outerPath, innerPath, filterObj.From.ToDictionary(f => f.Name, f => f.Entity));
+            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(visitor));
         }
 
-        protected virtual void VisitQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        protected virtual void ProcessQuery(QueryDefinition query, string outerPath, string innerPath)
         {
-            Visitor.OuterPath = outerPath;
-            Visitor.InnerPath = innerPath;
-            Visitor.SourcesByAliasMap = expObj.From.ToDictionary(f => f.Name, f => f.Entity);
-
-            expObj.From.ForEach(es => es.Expression?.Expression.Accept(Visitor));
-            expObj.GroupBy?.ForEach(w => w.Expression.Accept(Visitor));
-            expObj.OrderBy?.ForEach(w => w.Expression.Expression.Accept(Visitor));
-            expObj.Let?.ForEach(w => w.Expression.Accept(Visitor));
-            expObj.Parameters?.ForEach(w => w.Expression.Accept(Visitor));
-            expObj.Select?.ForEach(w => w.Expression.Accept(Visitor));
-            expObj.Where?.ForEach(w => w.Condition.Expression.Accept(Visitor));
-            expObj.Transform?.ForEach(t =>
+            var visitor = CreateProcessingVisitor(outerPath, innerPath, query.From.ToDictionary(f => f.Name, f => f.Entity));
+            query.From.ForEach(es => es.Expression?.Expression.Accept(visitor));
+            query.GroupBy?.ForEach(w => w.Expression.Accept(visitor));
+            query.OrderBy?.ForEach(w => w.Expression.Expression.Accept(visitor));
+            query.Let?.ForEach(w => w.Expression.Accept(visitor));
+            query.Parameters?.ForEach(w => w.Expression.Accept(visitor));
+            query.Select?.ForEach(w => w.Expression.Accept(visitor));
+            query.Where?.ForEach(w => w.Condition.Expression.Accept(visitor));
+            query.Transform?.ForEach(t =>
             {
-                t.Input.Parameters.ForEach(p => p.Expression.Accept(Visitor));
-                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(Visitor));
-                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(Visitor));
+                t.Input.Parameters.ForEach(p => p.Expression.Accept(visitor));
+                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(visitor));
+                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(visitor));
             });
         }
     }

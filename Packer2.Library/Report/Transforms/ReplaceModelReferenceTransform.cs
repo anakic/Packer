@@ -1,6 +1,7 @@
 ﻿using DataModelLoader.Report;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
+using Newtonsoft.Json.Linq;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
@@ -70,30 +71,30 @@ namespace Packer2.Library.Report.Transforms
         }
     }
 
-    public class ReplaceModelReferenceTransform : ModelReferenceTransformBase
+    public class ReplaceModelReferenceTransform : ReportInfoNavTransformBase
     {
-        ReplaceRefErrorsVisitor visitor;
         private readonly Renames renames;
         private readonly ILogger<ReplaceModelReferenceTransform> logger;
+
+        int numberOfReplacements;
 
         public ReplaceModelReferenceTransform(Renames renames, ILogger<ReplaceModelReferenceTransform>? logger = null)
         {
             this.renames = renames;
             this.logger = logger ?? new DummyLogger<ReplaceModelReferenceTransform>();
-            visitor = new ReplaceRefErrorsVisitor(renames, this.logger);
         }
 
-        protected override void OnProcessingComplete(PowerBIReport model)
+        protected override void OnProcessingComplete(JObject jObj)
         {
-            if (visitor.NumberOfReplacements == 0)
+            if (numberOfReplacements == 0)
                 throw new ArgumentException("No references were found, nothing to replace");
             else
-                logger.LogInformation($"A total of {visitor.NumberOfReplacements} replacements were made.");
+                logger.LogInformation($"A total of {numberOfReplacements} replacements were made.");
         }
 
-        protected override void VisitQuery(QueryDefinition expObj, string outerPath, string innerPath)
+        protected override void ProcessQuery(QueryDefinition expObj, string outerPath, string innerPath)
         {
-            base.VisitQuery(expObj, outerPath, innerPath);
+            base.ProcessQuery(expObj, outerPath, innerPath);
             foreach (var f in expObj.From)
             {
                 if (f.Entity != null && renames.TryGetTableRename(f.Entity, out var newName))
@@ -101,24 +102,26 @@ namespace Packer2.Library.Report.Transforms
                     var oldName = f.Entity;
                     f.Entity = newName;
                     logger.LogInformation("Replaced a reference to table '{tableName}' with new name '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", oldName, newName, outerPath, innerPath);
-                    visitor.NumberOfReplacements++;
+                    numberOfReplacements++;
                 }
             }
         }
 
-        protected override BaseQueryExpressionVisitor Visitor => visitor;
+        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
+            => new ReplaceRefErrorsVisitor(outerPath, innerPath, sourceByAliasMap, renames, logger, () => numberOfReplacements++);
 
         class ReplaceRefErrorsVisitor : BaseQueryExpressionVisitor
         {
-            public int NumberOfReplacements { get; set; } = 0;
-
             private readonly Renames renames;
             private readonly ILogger logger;
+            private readonly Action incrementReplaceCountAction;
 
-            public ReplaceRefErrorsVisitor(Renames renames, ILogger traceRefErrorReporter)
+            public ReplaceRefErrorsVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap, Renames renames, ILogger traceRefErrorReporter, Action incrementReplaceCountAction)
+                : base(outerPath, innerPath, sourceByAliasMap)
             {
                 this.renames = renames;
                 this.logger = traceRefErrorReporter;
+                this.incrementReplaceCountAction = incrementReplaceCountAction;
             }
 
             protected override void Visit(QueryColumnExpression expression)
@@ -138,7 +141,7 @@ namespace Packer2.Library.Report.Transforms
                     var oldName = expression.Entity;
                     expression.Entity = newName;
                     logger.LogInformation("Replaced a reference to table '{tableName}' with new name '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", oldName, newName, OuterPath, InnerPath);
-                    NumberOfReplacements++;
+                    incrementReplaceCountAction();
                 }
             }
 
@@ -153,7 +156,7 @@ namespace Packer2.Library.Report.Transforms
                     var originalName = expression.Property;
                     expression.Property = newName;
                     logger.LogInformation("Replaced a reference to an object in table '{tableName}' from '{oldName}' to '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", sourceName, originalName, newName, OuterPath, InnerPath);
-                    NumberOfReplacements++;
+                    incrementReplaceCountAction();
                 }
             }
 
@@ -166,7 +169,7 @@ namespace Packer2.Library.Report.Transforms
                     var originalName = expression.Hierarchy;
                     expression.Hierarchy = newName;
                     logger.LogInformation("Replaced a reference to an object in table '{tableName}' from '{oldName}' to '{newName}'. (Outer path '{outerPath}', inner path {innerPath})", sourceName, originalName, newName, OuterPath, InnerPath);
-                    NumberOfReplacements++;
+                    incrementReplaceCountAction();
                 }
             }
 

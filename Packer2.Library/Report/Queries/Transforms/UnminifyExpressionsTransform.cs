@@ -6,13 +6,17 @@ using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
-    class UnminifyExpressionsTransform : ModelReferenceTransformBase
+    class UnminifyExpressionsLayoutJsonTransform : ReportInfoNavTransformBase
     {
-        protected override BaseQueryExpressionVisitor Visitor { get; } = new BaseQueryExpressionVisitor();
+        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
+            => new BaseQueryExpressionVisitor(outerPath, innerPath, sourceByAliasMap);
+
         QueryParser parser;
         private readonly ILogger logger;
 
-        public UnminifyExpressionsTransform(ILogger logger)
+        // todo: pass in glossary
+
+        public UnminifyExpressionsLayoutJsonTransform(ILogger logger)
         {
             parser = new QueryParser(logger);
             this.logger = logger;

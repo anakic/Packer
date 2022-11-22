@@ -6,9 +6,12 @@ using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
-    public class TestMinificationTransform : ModelReferenceTransformBase
+    public class TestMinificationTransform : ReportInfoNavTransformBase
     {
-        protected override BaseQueryExpressionVisitor Visitor { get; } = new BaseQueryExpressionVisitor();
+        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
+            => new BaseQueryExpressionVisitor(outerPath, innerPath, sourceByAliasMap);
+
+
         QueryParser parser;
         private readonly ILogger logger;
 

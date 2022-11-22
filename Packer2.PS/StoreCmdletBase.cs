@@ -3,6 +3,7 @@ using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 using Packer2.Library;
 using Packer2.Library.DataModel;
+using Packer2.Library.Report.Stores.Folder;
 using System.Data.SqlClient;
 using System.Management.Automation;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;

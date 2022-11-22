@@ -61,7 +61,7 @@ namespace Packer2.PS.Report
             var database = dataModelStore.Read();
 
             var transform = new ValidateModelReferencesTransform(database, CreateLogger<ValidateModelReferencesTransform>());
-            transform.Transform(Report);
+            transform.Transform(Report.Layout);
 
             base.ProcessRecord();
 

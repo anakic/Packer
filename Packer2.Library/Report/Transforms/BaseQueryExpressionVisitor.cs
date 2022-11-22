@@ -4,9 +4,16 @@ namespace Packer2.Library.Report.Transforms
 {
     public class BaseQueryExpressionVisitor : QueryExpressionVisitor
     {
-        public Dictionary<string, string> SourcesByAliasMap { get; internal set; }
-        public string InnerPath { get; internal set; }
-        public string OuterPath { get; internal set; }
+        public BaseQueryExpressionVisitor(string outerPath, string innerPath, Dictionary<string, string> sourcesByAliasMap)
+        {
+            SourcesByAliasMap = sourcesByAliasMap;
+            InnerPath = innerPath;
+            OuterPath = outerPath;
+        }
+
+        public Dictionary<string, string> SourcesByAliasMap { get; }
+        public string InnerPath { get; }
+        public string OuterPath { get; }
 
         protected override void Visit(QuerySourceRefExpression expression)
         {
