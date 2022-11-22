@@ -4,7 +4,7 @@ using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
-    public class MinifyExpressionsTransform : ModelReferenceTransformBase
+    class MinifyExpressionsTransform : ModelReferenceTransformBase
     {
         protected override BaseQueryExpressionVisitor Visitor { get; } = new BaseQueryExpressionVisitor();
 

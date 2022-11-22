@@ -4,7 +4,7 @@ using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
-    public class ColumnMeasureMarkerTransform : ModelReferenceTransformBase
+    class ColumnMeasureMarkerTransform : ModelReferenceTransformBase
     {
         protected override BaseQueryExpressionVisitor Visitor => new MinificationMetadataMarkerVisitor();
 

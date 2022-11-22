@@ -121,6 +121,23 @@ namespace DataModelLoader.Report
             void Restore(JObject obj);
         }
 
+        class MinifyQueries : IJObjTransform
+        {
+            // todo:
+            // need iterator for filters/queries/expressions. this code exists in the
+            // report transform base class, but I need it here
+
+            public void Restore(JObject obj)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Transform(JObject obj)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         class SimplifyBookmarks : IJObjTransform
         {
             public void Restore(JObject obj)
