@@ -22,14 +22,12 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
             var transform = new MinifyExpressionsLayoutJsonTransform();
             transform.Transform(obj);
 
-            // todo: save glossary as file
             var glosaryStr = JsonConvert.SerializeObject(transform.Glossary);
             fileSystem.Save("_glossary.json", glosaryStr);
         }
 
         public void Restore(JObject obj)
         {
-            // todo: read glossary and pass into transformer
             var glosaryStr = fileSystem.ReadAsString("_glossary.json");
             var glossary = JsonConvert.DeserializeObject<ColumnsAndMeasuresGlossary>(glosaryStr);
 

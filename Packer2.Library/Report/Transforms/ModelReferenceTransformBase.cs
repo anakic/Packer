@@ -17,15 +17,15 @@ namespace Packer2.Library.Report.Transforms
         {
             var stuffedAreaSelectors = new string[] 
             {
-                "filters",
-                "sections[*].filters",
-                "sections[*].visualContainers[*].config",
-                "sections[*].visualContainers[*].filters",
-                "sections[*].config",
+                "#filters",
+                "sections[*].#filters",
+                "sections[*].visualContainers[*].#config",
+                "sections[*].visualContainers[*].#filters",
+                "sections[*].#config",
                 "sections[*].visualContainers[*].query",
                 "sections[*].visualContainers[*].dataTransforms",
-                "config",
-                "pods[*].parameters" 
+                "#config",
+                "pods[*].parameters"
             };
 
             foreach (var selector in stuffedAreaSelectors)
@@ -34,10 +34,9 @@ namespace Packer2.Library.Report.Transforms
                 foreach (var token in stuffedTokens)
                 {
                     List<JObject> jObjects = new List<JObject>();
-                    var tok = JsonConvert.DeserializeObject(token.ToString());
-                    if (tok is JArray arr)
+                    if (token is JArray arr)
                         jObjects.AddRange(arr.OfType<JObject>());
-                    else if (tok is JObject obj)
+                    else if (token is JObject obj)
                         jObjects.Add(obj);
                     else
                         throw new InvalidOperationException();
@@ -96,11 +95,10 @@ namespace Packer2.Library.Report.Transforms
                         }
                     }
 
-                    // write back the stuffed string
-                    if (tok is JArray arr2)
-                        token.Replace(new JArray(jObjects).ToString(Formatting.None));
-                    else if (tok is JObject obj2)
-                        token.Replace(jObjects.Single().ToString(Formatting.None));
+                    if (token is JArray arr2)
+                        token.Replace(new JArray(jObjects));
+                    else if (token is JObject obj2)
+                        token.Replace(jObjects.Single());
                     else
                         throw new InvalidOperationException();
                 }

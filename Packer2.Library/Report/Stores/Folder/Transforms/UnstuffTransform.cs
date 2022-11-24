@@ -5,7 +5,7 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
 {
     class UnstuffTransform : IJObjTransform
     {
-        string[] selectorsObj = new[] { "..config" };
+        string[] selectorsObj = new[] { "..config", "sections[*].visualContainers[*].query", "sections[*].visualContainers[*].dataTransforms" };
         string[] selectorsArr = new[] { "pods[*].parameters", "..filters" };
 
         public void Restore(JObject obj)

@@ -51,14 +51,14 @@ namespace Packer2.Library.Report.Stores.Folder
             // that said, I could certainly optimize things by running minification after unstuff
             // becaise this way I unstuff twice.
 
-            if (EnableQueryMinification)
-                yield return new MinifyQueriesTransform(fileSystem, logger);
+            if(EnableStripVisualState)
+                yield return new StripVisualStatePropertiesTransform();
 
             yield return new UnstuffTransform();
             yield return new ConsolidateOrderingTransform();
 
-            if(EnableStripVisualState)
-                yield return new StripVisualStatePropertiesTransform();
+            if (EnableQueryMinification)
+                yield return new MinifyQueriesTransform(fileSystem, logger);
 
             if (EnableBookmarkSimplification)
                 yield return new SimplifyBookmarks();
