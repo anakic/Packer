@@ -33,7 +33,7 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
             var glosaryStr = fileSystem.ReadAsString("_glossary.json");
             var glossary = JsonConvert.DeserializeObject<ColumnsAndMeasuresGlossary>(glosaryStr);
 
-            var transform = new UnminifyExpressionsLayoutJsonTransform(logger);
+            var transform = new UnminifyExpressionsLayoutJsonTransform(glossary, logger);
             transform.Transform(obj);
         }
     }

@@ -2,6 +2,8 @@
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Microsoft.InfoNav.Data.Contracts.Internal;
+using Packer2.Library.MinifiedQueryParser.QueryTransforms;
+using System.Runtime.CompilerServices;
 
 namespace Packer2.Library.Report.QueryTransforms.Antlr
 {
@@ -9,7 +11,9 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
     {
         class QueryExpressionVisitor : pbiqParserBaseVisitor<QueryExpression>
         {
-            private readonly HashSet<string> sourceNames;
+            private readonly Dictionary<string, string> sourceNames;
+            private readonly HashSet<string> transformTableNames;
+            private readonly ColumnsAndMeasuresGlossary glossary;
             private ParserResultValidator validator;
             private readonly bool standalone;
 
@@ -24,11 +28,13 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 return res;
             }
 
-            public QueryExpressionVisitor(ParserResultValidator validator, bool standalone, HashSet<string>? sourceNames = null)
+            public QueryExpressionVisitor(ColumnsAndMeasuresGlossary glossary, ParserResultValidator validator, bool standalone, Dictionary<string, string> sourceNames, HashSet<string> transformTableNames)
             {
+                this.glossary = glossary;
                 this.validator = validator;
                 this.standalone = standalone;
-                this.sourceNames = sourceNames ?? new HashSet<string>();
+                this.sourceNames = sourceNames;
+                this.transformTableNames = transformTableNames;
             }
 
             public override QueryExpression VisitRoleRefExpression([NotNull] pbiqParser.RoleRefExpressionContext context)
@@ -134,7 +140,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
             public override QueryExpression VisitSubQueryExpr([NotNull] pbiqParser.SubQueryExprContext context)
             {
-                var queryDefVisitor = new QueryConstructorVisitor(validator);
+                var queryDefVisitor = new QueryConstructorVisitor(glossary, validator);
                 var query = queryDefVisitor.Visit(context.query());
 
                 return new QuerySubqueryExpression() { Query = query };
@@ -175,17 +181,25 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
             public override QueryExpression VisitSourceRefExpr([NotNull] pbiqParser.SourceRefExprContext context)
             {
-                // todo: what is the schema? the schema is not saved to the minified query.
-                var expression = new QuerySourceRefExpression();
                 var name = UnescapeIdentifier(context.identifier().GetText());
-                if (sourceNames.Contains(name))
-                    expression.Source = name;
+
+                if (transformTableNames.Contains(name))
+                {
+                    return new QueryTransformTableRefExpression() { Source = name };
+                }
                 else
                 {
-                    // todo: if we do add a reference to the model (to distinguish between column and measure properties), we should check that the entity exists
-                    expression.Entity = name;
+                    // todo: what is the schema? the schema is not saved to the minified query.
+                    var expression = new QuerySourceRefExpression();
+                    if (sourceNames.ContainsKey(name))
+                        expression.Source = name;
+                    else
+                    {
+                        // todo: if we do add a reference to the model (to distinguish between column and measure properties), we should check that the entity exists
+                        expression.Entity = name;
+                    }
+                    return expression;
                 }
-                return expression;
             }
 
             public override QueryExpression VisitIntExpr([NotNull] pbiqParser.IntExprContext context)
@@ -199,30 +213,88 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
             public override QueryExpression VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context)
             {
-                var expression = VisitValidated((ParserRuleContext)context.sourceRefExpr() ?? context.subQueryExpr());
+                var expressionContainer = (QueryExpressionContainer)VisitValidated((ParserRuleContext)context.sourceRefExpr() ?? context.subQueryExpr());
                 var property = UnescapeIdentifier(context.identifier().GetText());
 
-                if (property.StartsWith(MEASURES_PREFIX))
+                if (expressionContainer.TransformTableRef != null)
+                {
+                    if (!transformTableNames.Contains(expressionContainer.TransformTableRef.Source))
+                        throw new Exception("Invalid output transform name");
+                    return new QueryColumnExpression()
+                    {
+                        Expression = expressionContainer,
+                        Property = property
+                    };
+                }
+
+                string entity = null;
+                if (expressionContainer.SourceRef != null)
+                    entity = expressionContainer.SourceRef.Entity ?? sourceNames[expressionContainer.SourceRef.Source];
+
+                if (entity != null && glossary.IsMeasure(entity, property))
                 {
                     return new QueryMeasureExpression()
                     {
-                        Expression = expression,
-                        Property = property//.Substring(3)  <-- do not trim the prefix otherwise the validation inputStr vs exp.ToString() will fail. We will trim it as a separate step with a visitor
+                        Expression = expressionContainer,
+                        Property = property
                     };
                 }
-                else if (property.StartsWith(COLUMNS_PREFIX))
+                else if (entity != null && glossary.IsColumn(entity, property))
                 {
                     return new QueryColumnExpression()
                     {
-                        Expression = expression,
-                        Property = property//.Substring(3)  <-- do not trim the prefix otherwise the validation inputStr vs exp.ToString() will fail. We will trim it as a separate step with a visitor
+                        Expression = expressionContainer,
+                        Property = property
                     };
                 }
                 else
                 {
+                    if (expressionContainer.Expression is QuerySubqueryExpression se)
+                    {
+                        var selectExpr = se.Query.Select.Select(x => (QueryPropertyExpression)x.Expression).SingleOrDefault(ec =>
+                        {
+                            var sourceNames = se.Query.From.ToDictionary(f => f.Name, f => f.Entity) ?? new Dictionary<string, string>();
+                            if (se.Query.Transform != null)
+                            {
+                                se.Query.Transform.Select(t => t.Input?.Table.Name).Where(x => x != null).ToList().ForEach(t => sourceNames.Add(t, t));
+                                se.Query.Transform.Select(t => t.Output?.Table.Name).Where(x => x != null).ToList().ForEach(t => sourceNames.Add(t, t));
+                            }
+
+                            if (ec.Expression.SourceRef != null)
+                            {
+                                var sourceRef = ec.Expression.SourceRef;
+                                var entityName = sourceRef.Entity ?? sourceNames[sourceRef.Source];
+                                return $"{entityName}.{ec.Property}" == property;
+                            }
+                            else if (ec.Expression.TransformTableRef != null)
+                            {
+                                return ec.Property == property;
+                            }
+                            else
+                                throw new NotImplementedException("Unexpected element in subquery's select list");
+                        });
+
+                        if (selectExpr is QueryColumnExpression)
+                        {
+                            return new QueryColumnExpression()
+                            {
+                                Expression = expressionContainer,
+                                Property = property
+                            };
+                        }
+                        else if (selectExpr is QueryMeasureExpression)
+                        {
+                            return new QueryMeasureExpression()
+                            {
+                                Expression = expressionContainer,
+                                Property = property
+                            };
+                        }
+                    }
+
                     return new QueryPropertyExpression()
                     {
-                        Expression = expression,
+                        Expression = expressionContainer,
                         Property = property
                     };
                 }

@@ -26,6 +26,16 @@ namespace Packer2.Library.Report.Stores.Folder
         ReportMappedFolder reportFolderMapper = new ReportMappedFolder();
         List<IJObjTransform> transforms;
 
+        public void EnableMinification()
+        {
+            transforms.Insert(0, new MinifyQueriesTransform(fileSystem, this.logger));
+        }
+
+        public void DisableMinification()
+        {
+            transforms.RemoveAll(t => t is MinifyQueriesTransform);
+        }
+
         public ReportFolderStore(string folderPath, ILogger<ReportFolderStore>? logger = null)
             : this(new LocalFileSystem(folderPath), logger)
         {
@@ -38,7 +48,6 @@ namespace Packer2.Library.Report.Stores.Folder
 
             transforms = new List<IJObjTransform>
             {
-                new MinifyQueriesTransform(fileSystem, this.logger),
                 new UnstuffTransform(),
                 new ConsolidateOrderingTransform(),
                 new StripVisualStatePropertiesTransform(),
