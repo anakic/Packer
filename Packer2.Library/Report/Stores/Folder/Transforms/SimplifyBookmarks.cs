@@ -38,7 +38,11 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                     var nodesToRemove1 = bookmarkJObj.SelectTokens("explorationState..filters").ToList();
                     var nodesToRemove2 = bookmarkJObj.SelectTokens("explorationState..visualContainers..singleVisual.activeProjections").ToList();
                     var nodesToRemove3 = bookmarkJObj.SelectTokens("explorationState..visualContainers..singleVisual.orderBy").ToList();
-                    nodesToRemove1.Union(nodesToRemove2).Union(nodesToRemove3).ToList().ForEach(x => x.Parent.Remove());
+                    nodesToRemove1
+                        .Union(nodesToRemove2)
+                        .Union(nodesToRemove3)
+                        .ToList()
+                        .ForEach(x => x.Parent.Remove());
                 }
 
                 foreach (JProperty c in containers1.Union(containers2).ToList())
@@ -52,23 +56,25 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                         removed = true;
                     }
 
-                    if (!removed)
-                    {
-                        // remove the visual's node if no useful data inside it
-                        var singleVisualNode = (JObject)c.Value["singleVisual"]!;
-                        if (singleVisualNode != null)
-                        {
-                            if (singleVisualNode.Properties().Count(p => new[] { "visualType", "objects" }.Contains(p.Name) == false) == 0)
-                            {
-                                var objectsSubNode = (JObject)singleVisualNode["objects"]!;
-                                if (objectsSubNode == null || objectsSubNode.Properties().Count() == 0)
-                                {
-                                    c.Remove();
-                                    removed = true;
-                                }
-                            }
-                        }
-                    }
+                    //// commenting this out for now, it seems like this step does mess up the behavior of bookmarks 
+                    //// when opened in power bi, not sure why.
+                    //if (!removed)
+                    //{
+                    //    // remove the visual's node if no useful data inside it
+                    //    var singleVisualNode = (JObject)c.Value["singleVisual"]!;
+                    //    if (singleVisualNode != null)
+                    //    {
+                    //        if (singleVisualNode.Properties().Count(p => new[] { "visualType", "objects" }.Contains(p.Name) == false) == 0)
+                    //        {
+                    //            var objectsSubNode = (JObject)singleVisualNode["objects"]!;
+                    //            if (objectsSubNode == null || objectsSubNode.Properties().Count() == 0)
+                    //            {
+                    //                c.Remove();
+                    //                removed = true;
+                    //            }
+                    //        }
+                    //    }
+                    //}
 
                     if (!removed)
                         targetVisualNamesFound.Add(c.Name);
