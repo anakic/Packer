@@ -3,6 +3,7 @@ parser grammar pbiqParser;
 options { tokenVocab = pbiqLexer; }
 
 root: query EOF;
+expressionRoot: expression EOF;
 
 query: /*parameters*/ /*let*/ from where? transform* orderby? select? /*visualshape*/ groupby? skip? top?;
 

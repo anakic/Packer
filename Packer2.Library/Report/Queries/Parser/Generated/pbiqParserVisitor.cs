@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from c:\Projects\Packer\Packer2.Library\MinifiedQueryParser\pbiqParser.g4 by ANTLR 4.9.2
+// Generated from c:\Projects\Packer\Packer2.Library\Report\Queries\Parser\pbiqParser.g4 by ANTLR 4.9.2
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -38,6 +38,12 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitRoot([NotNull] pbiqParser.RootContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.expressionRoot"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitExpressionRoot([NotNull] pbiqParser.ExpressionRootContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.query"/>.
 	/// </summary>
