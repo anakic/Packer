@@ -24,17 +24,13 @@ namespace Packer2.Library.Report.Stores.Folder
         private readonly IFileSystem fileSystem;
         private readonly ILogger<ReportFolderStore> logger;
         ReportMappedFolder reportFolderMapper = new ReportMappedFolder();
-        List<IJObjTransform> transforms;
+        
 
-        public void EnableMinification()
-        {
-            transforms.Insert(0, new MinifyQueriesTransform(fileSystem, this.logger));
-        }
+        public bool EnableQueryMinification { get; set; } = true;
 
-        public void DisableMinification()
-        {
-            transforms.RemoveAll(t => t is MinifyQueriesTransform);
-        }
+        public bool EnableBookmarkSimplification { get; set; } = true;
+
+        public bool EnableStripVisualState { get; set; } = true;
 
         public ReportFolderStore(string folderPath, ILogger<ReportFolderStore>? logger = null)
             : this(new LocalFileSystem(folderPath), logger)
@@ -46,15 +42,26 @@ namespace Packer2.Library.Report.Stores.Folder
         {
             this.logger = logger ?? new DummyLogger<ReportFolderStore>();
 
-            transforms = new List<IJObjTransform>
-            {
-                new UnstuffTransform(),
-                new ConsolidateOrderingTransform(),
-                new StripVisualStatePropertiesTransform(),
-                new SimplifyBookmarks(),
-            };
-
             this.fileSystem = fileSystem;
+        }
+
+        private IEnumerable<IJObjTransform> GetTransforms()
+        {
+            // note: ordering is important because unstuff changes selectors
+            // that said, I could certainly optimize things by running minification after unstuff
+            // becaise this way I unstuff twice.
+
+            if (EnableQueryMinification)
+                yield return new MinifyQueriesTransform(fileSystem, logger);
+
+            yield return new UnstuffTransform();
+            yield return new ConsolidateOrderingTransform();
+
+            if(EnableStripVisualState)
+                yield return new StripVisualStatePropertiesTransform();
+
+            if (EnableBookmarkSimplification)
+                yield return new SimplifyBookmarks();
         }
 
         public override PowerBIReport Read()
@@ -79,11 +86,11 @@ namespace Packer2.Library.Report.Stores.Folder
             model.Report_LinguisticSchema = ReadXmlFile(ReportLinguisticSchemaFilePath);
 
             var rpt = reportFolderMapper.Read(fileSystem.Sub(ReportFolderPath));
-            transforms.Reverse<IJObjTransform>().ToList().ForEach(t =>
+            foreach(var t in GetTransforms().Reverse())
             {
                 logger.LogInformation("Restoring report transformation '{transformation}'", t.GetType().Name);
                 t.Restore(rpt);
-            });
+            }
             model.Layout = rpt;
 
             return model;
@@ -112,11 +119,11 @@ namespace Packer2.Library.Report.Stores.Folder
             // object would probably not cause any issues because nobody else is using it, but there's no guarantee
             // this will always continue to be the case so using the clone just in case.
             var layoutJObjClone = (JObject)model.Layout.DeepClone();
-            transforms.ForEach(t =>
+            foreach(var t  in GetTransforms())
             {
                 logger.LogInformation("Applying report transformation '{transformation}'", t.GetType().Name);
                 t.Transform(layoutJObjClone);
-            });
+            }
             reportFolderMapper.Write(layoutJObjClone, fileSystem.Sub(ReportFolderPath));
         }
 
