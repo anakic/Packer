@@ -31,7 +31,7 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                 var containers1 = ((JObject)bookmarkJObj.SelectToken("explorationState.sections..visualContainers")!).Properties();
                 var containers2 = bookmarkJObj.SelectTokens("explorationState.sections..visualContainerGroups..children")!.SelectMany(t => ((JObject)t).Properties());
 
-                // clear data first (we might get rid of entire element if it's left empty after this)
+                // clear data first(we might get rid of entire element if it's left empty after this)
                 var suppressData = bookmarkJObj.SelectToken("options.suppressData")?.Value<bool>() ?? false;
                 if (suppressData)
                 {
@@ -80,7 +80,7 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                         targetVisualNamesFound.Add(c.Name);
                 }
 
-                targetVisualsArr.Replace(new JArray(targetVisualNamesFound));
+                //targetVisualsArr.Replace(new JArray(targetVisualNamesFound));
             }
         }
     }
