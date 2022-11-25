@@ -18,23 +18,27 @@ using var loggerFactory = LoggerFactory.Create(builder =>
         .AddConsole();
 });
 
-string pbix = @"C:\TEst\wf3_ssas.pbix";
-string folder = @"C:\TEst\unpacked";
+string pbix = @"c:\TEst\DHCFT MHFT.pbix";
+string folder = @"C:\TEst\unpacked_dhcft";
 string repackedPbix = @"C:\TEst\repacked.pbix";
 
 // 1. procitaj
 var rfs = new PBIArchiveStore(pbix);
 var report = rfs.Read();
 
-//// 2. spremi minificirano
+//// 2. spremi originalno
 var folderStore = new ReportFolderStore(folder);
+folderStore.EnableQueryMinification = false;
+folderStore.Save(report);
+
+//// 2. spremi minificirano
 folderStore.EnableQueryMinification = true;
 folderStore.Save(report);
 
 //// 3. deminificiraj u folderu
 report = folderStore.Read();
-//folderStore.EnableQueryMinification = false;
-//folderStore.Save(report);
+folderStore.EnableQueryMinification = false;
+folderStore.Save(report);
 
 // 4. procitaj tako deminificirano i zapakiraj
 report = folderStore.Read();
