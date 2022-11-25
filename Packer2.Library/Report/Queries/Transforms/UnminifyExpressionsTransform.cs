@@ -14,8 +14,6 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
         QueryParser parser;
         private readonly ILogger logger;
 
-        // todo: pass in glossary
-
         public UnminifyExpressionsLayoutJsonTransform(ColumnsAndMeasuresGlossary glossary, ILogger logger)
         {
             parser = new QueryParser(glossary, logger);
@@ -35,20 +33,20 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
         protected override bool TryReadQuery(JToken expToken, out QueryDefinition? query)
         {
             var parent = (JProperty)expToken.Parent!;
-            var selectListProp = parent.Parent.SelectToken($"#{parent.Name}SelectList");
+            var selectListProp = parent.Parent!.SelectToken($"#{parent.Name}SelectList");
             if (selectListProp == null)
             {
                 query = default;
                 return false;
             }
 
-            var selectList = selectListProp.ToObject<string[]>();
-            selectListProp.Parent.Remove();
+            var selectList = selectListProp.ToObject<string[]>()!;
+            selectListProp.Parent!.Remove();
 
             var result = DoTryParse(expToken, parser.ParseQuery, out query);
             if (result)
             {
-                query.Select.Zip(selectList).ToList().ForEach(ec => ec.First.Name = ec.Second);
+                query!.Select.Zip(selectList).ToList().ForEach(ec => ec.First.Name = ec.Second);
             }
 
             return result;

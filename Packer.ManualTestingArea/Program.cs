@@ -1,12 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DataModelLoader.Report;
 using Microsoft.Extensions.Logging;
-using Microsoft.InfoNav.Data.Contracts.Internal;
-using Newtonsoft.Json;
-using Packer2.Library.MinifiedQueryParser.QueryTransforms;
-using Packer2.Library.Report.QueryTransforms.Antlr;
 using Packer2.Library.Report.Stores.Folder;
-using Packer2.Library.Tools;
 using System.Diagnostics;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
