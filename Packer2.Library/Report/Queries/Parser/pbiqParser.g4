@@ -46,12 +46,14 @@ expression
 	| betweenExpr
 	| inExpr
 	| compareExpr
+	| endsWithExpr
 	;
 
 containsExpr: primary_expression CONTAINS right;
 betweenExpr: primary_expression BETWEEN left AND right;
 inExpr: primary_expression IN (sourceRefExpr | inExprValues) | LPAREN expression (COMMA expression) RPAREN IN (sourceRefExpr | inExprValues);
 compareExpr: primary_expression comparisonOperator right;
+endsWithExpr: primary_expression STARTSWITH right;
 
 // todo: split up expressions into levels where each level can only reference levels below?
 // could a level ever have to reference itself? i.e. could the first rule in the expression refere to the same level?
@@ -63,7 +65,6 @@ primary_expression:
 	| variationExpr
 	| anyValueExpr
 	| arithmenticExpr
-//	| boolExp
 	| dateExpr
 	| datetimeExpr
 	| datetimeSecExpr
@@ -74,13 +75,15 @@ primary_expression:
 	| intExpr
 	| logicalExpr
 	| notExpr
-//	| nullEpr
 	| transformOutputRoleRefExpr
 	| roleRefExpression
 	| propertyExpression
 	| scopedEvalExpr
 	| sourceRefExpr
 	| subQueryExpr
+	| dateAddExpr
+	| defaultValueExpr
+	| discretizeExpr
 	;
 
 propertyExpression: (sourceRefExpr | subQueryExpr) DOT identifier;
@@ -112,9 +115,35 @@ expressionOrExpressionList: expression | LPAREN expression (COMMA expression)+ R
 arithmenticExpr: LPAREN left binary_arithmetic_operator right RPAREN;
 logicalExpr: LPAREN left binary_logic_operator right RPAREN;
 transformOutputRoleRefExpr: TRANSFORMOUTPUTROLE LPAREN STRING_LITERAL RPAREN;
-
 binary_arithmetic_operator: PLUS | MINUS | DIV | MULT;
 binary_logic_operator: AND | OR;
+dateAddExpr: DATEADD LPAREN amount COMMA timeunit COMMA expression RPAREN;
+amount: INTEGER;
+timeunit: identifier;
+defaultValueExpr: DEFAULTVALUE;
+discretizeExpr: DISCRETIZE LPAREN expression COMMA amount RPAREN;
+
+// According to V1ToV2 class in the infonav dll (derives from QueryDefinitionUpgrader), 
+// we do not need the following expressions:
+
+/*
+Literal:
+	QueryNullConstantExpression,
+	QueryStringConstantExpression,
+	QueryIntegerConstantExpression,
+	QueryDecimalConstantExpression,
+	QueryNumberConstantExpression,
+	QueryBooleanConstantExpression,
+	QueryDateTimeConstantExpression
+DateSpan:
+	QueryDateConstantExpression, (* - see method Visit(QueryDateConstantExpression expression))
+	QueryDateTimeSecondConstantExpression,
+	QueryYearConstantExpression
+	QueryYearAndMonthConstantExpression
+	QueryYearAndWeekConstantExpression
+	QueryDecadeConstantExpression
+	QueryDatePartExpression
+ */
 
 timeUnit: IDENTIFIER;
 left: expression;

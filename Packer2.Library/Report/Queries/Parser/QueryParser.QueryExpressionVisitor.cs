@@ -72,6 +72,13 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 }
             }
 
+            public override QueryExpression VisitAnyValueExpr([NotNull] pbiqParser.AnyValueExprContext context)
+            {
+                return new QueryAnyValueExpression();
+            }
+
+
+
             public override QueryExpression VisitScopedEvalExpr([NotNull] pbiqParser.ScopedEvalExprContext context)
             {
                 var expression = VisitValidated(context.expression()[0]);
@@ -114,12 +121,17 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             public override QueryExpression VisitAggregationExpr([NotNull] pbiqParser.AggregationExprContext context)
             {
                 var expression = VisitValidated(context.expression());
-                var function = ParseFunction(context.identifier().GetText());
-                return new QueryAggregationExpression()
-                {
-                    Expression = expression,
-                    Function = function
-                };
+
+                var functionStr = context.identifier().GetText();
+
+                if (Enum.TryParse<QueryAggregateFunction>(functionStr, true, out var aggFunc))
+                    return new QueryAggregationExpression() { Expression = expression, Function = aggFunc };
+                else if (Enum.TryParse<QueryDatePartFunction>(functionStr, true, out var datePartFunc))
+                    return new QueryDatePartExpression() { Expression = expression, Function = datePartFunc };
+                else if(functionStr?.ToLower() == "any")
+                    return new QueryExistsExpression() { Expression = expression };
+                else 
+                    throw new NotImplementedException($"Not expecting function '{functionStr}'. Todo: send this error message and the pbix to Packer2 maintainer/s.");
             }
 
             private string ReadStringLiteral(ITerminalNode node)
@@ -131,11 +143,6 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             public override QueryExpression VisitTransformOutputRoleRefExpr([NotNull] pbiqParser.TransformOutputRoleRefExprContext context)
             {
                 return new QueryTransformOutputRoleRefExpression() { Role = ReadStringLiteral(context.STRING_LITERAL()) };
-            }
-
-            private QueryAggregateFunction ParseFunction(string v)
-            {
-                return (QueryAggregateFunction)Enum.Parse(typeof(QueryAggregateFunction), v, true);
             }
 
             public override QueryExpression VisitSubQueryExpr([NotNull] pbiqParser.SubQueryExprContext context)
@@ -348,6 +355,11 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 };
             }
 
+            public override QueryExpression VisitDefaultValueExpr([NotNull] pbiqParser.DefaultValueExprContext context)
+            {
+                return new QueryDefaultValueExpression();
+            }
+
             private QueryComparisonKind GetComparisonKind(pbiqParser.ComparisonOperatorContext operatorContext)
             {
                 if (operatorContext.GT() != null)
@@ -360,6 +372,24 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     return QueryComparisonKind.LessThanOrEqual;
                 else
                     return QueryComparisonKind.Equal;
+            }
+
+            public override QueryExpression VisitEndsWithExpr([NotNull] pbiqParser.EndsWithExprContext context)
+            {
+                return new QueryEndsWithExpression()
+                {
+                    Left = VisitValidated(context.primary_expression()),
+                    Right = VisitValidated(context.right())
+                };
+            }
+
+            public override QueryExpression VisitDiscretizeExpr([NotNull] pbiqParser.DiscretizeExprContext context)
+            {
+                return new QueryDiscretizeExpression() 
+                {
+                    Expression = VisitValidated(context.expression()),
+                    Count = int.Parse(context.amount().GetText())
+                };
             }
 
             public override QueryExpression VisitContainsExpr([NotNull] pbiqParser.ContainsExprContext context)
@@ -389,18 +419,15 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     throw new FormatException("Invalid logical operator");
             }
 
-            //public override QueryExpression VisitBoolExp([NotNull] pbiqParser.BoolExpContext context)
-            //{
-            //    return new QueryBooleanConstantExpression()
-            //    {
-            //        Value = context.TRUE() != null
-            //    };
-            //}
-
-            //public override QueryExpression VisitNullEpr([NotNull] pbiqParser.NullEprContext context)
-            //{
-            //    return new QueryNullConstantExpression();
-            //}
+            public override QueryExpression VisitDateAddExpr([NotNull] pbiqParser.DateAddExprContext context)
+            {
+                return new QueryDateAddExpression()
+                {
+                    Amount = int.Parse(context.amount().GetText()),
+                    TimeUnit = ParseTimeUnit(context.timeunit().GetText()),
+                    Expression = VisitValidated(context.expression())
+                };
+            }
         }
     }
 }
