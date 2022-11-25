@@ -61,27 +61,30 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             {
                 if (input.StartsWith("{") || input.StartsWith("[{"))
                 {
+                    logger.LogTrace("Token at path '{path}' is not a serialized query/filter/expression. Skipping.", token.Path);
                     res = default;
                     return false;
                 }
                 else
                 {
+                    logger.LogTrace("Parsing token at path '{path}'", token.Path);
+
                     res = parseFunc(input);
 
                     var test = res.ToString();
                     if (test != input)
                     {
-                        logger.LogError("Parse did not throw an exception but the result was incorrect.");
+                        logger.LogError("Parse did not throw an exception but the result was incorrect. Original query was '{input}', but the parsed result is {result}", input, test);
                         return false;
                     }
 
-                    //logger.LogInformation("Successfully parsed: " + input);
+                    logger.LogTrace("Successfully parsed: {input}", input);
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError($"Failed to parse: {input}: {ex}");
+                logger.LogError("An exception occured while parsing: {input}: {ex}", input, ex);
                 res = default;
                 return false;
             }

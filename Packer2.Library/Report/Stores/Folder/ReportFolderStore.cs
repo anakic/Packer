@@ -54,14 +54,14 @@ namespace Packer2.Library.Report.Stores.Folder
             if(EnableStripVisualState)
                 yield return new StripVisualStatePropertiesTransform();
 
-            yield return new UnstuffTransform();
+            yield return new UnstuffTransform(logger);
             yield return new ConsolidateOrderingTransform();
 
             if (EnableQueryMinification)
                 yield return new MinifyQueriesTransform(fileSystem, logger);
 
             if (EnableBookmarkSimplification)
-                yield return new SimplifyBookmarks();
+                yield return new SimplifyBookmarks(logger);
         }
 
         public override PowerBIReport Read()

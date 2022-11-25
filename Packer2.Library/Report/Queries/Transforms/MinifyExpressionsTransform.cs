@@ -1,4 +1,5 @@
-﻿using Microsoft.InfoNav.Data.Contracts.Internal;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
 using Packer2.Library.Report.Transforms;
 
@@ -46,6 +47,13 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 
     class MinifyExpressionsLayoutJsonTransform : ReportInfoNavTransformBase
     {
+        private readonly ILogger logger;
+
+        public MinifyExpressionsLayoutJsonTransform(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         public ColumnsAndMeasuresGlossary Glossary { get; } = new ColumnsAndMeasuresGlossary();
 
         // todo: use visitor to populate dictionary of measures and columns that we will then save to a file (outside of this class)
@@ -58,11 +66,17 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             var res = base.TryReadExpression(expToken, out expressionContainer);
             if (res == true)
             {
-                res = !expressionContainer.ToString().Contains("#error#");
+                string str = expressionContainer.ToString();
+
+                res = !str.Contains("#error#");
                 // do not use minification on expressions that report errors on minimization
                 if (expressionContainer.ToString().Contains("#error#"))
                 {
                     res = false;
+                }
+                else
+                {
+                    logger.LogDebug("Read minified expression '{expression}'", str);
                 }
             }
             return res;

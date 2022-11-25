@@ -19,17 +19,19 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
 
         public void Transform(JObject obj)
         {
-            var transform = new MinifyExpressionsLayoutJsonTransform();
+            var transform = new MinifyExpressionsLayoutJsonTransform(logger);
             transform.Transform(obj);
 
+            logger.LogInformation("Creting glossary of columns and measures");
             var glosaryStr = JsonConvert.SerializeObject(transform.Glossary);
             fileSystem.Save("_glossary.json", glosaryStr);
         }
 
         public void Restore(JObject obj)
         {
+            logger.LogInformation("Reading glossary of columns and measures");
             var glosaryStr = fileSystem.ReadAsString("_glossary.json");
-            var glossary = JsonConvert.DeserializeObject<ColumnsAndMeasuresGlossary>(glosaryStr);
+            var glossary = JsonConvert.DeserializeObject<ColumnsAndMeasuresGlossary>(glosaryStr)!;
 
             var transform = new UnminifyExpressionsLayoutJsonTransform(glossary, logger);
             transform.Transform(obj);

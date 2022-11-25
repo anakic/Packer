@@ -1,9 +1,17 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace Packer2.Library.Report.Stores.Folder.Transforms
 {
     class SimplifyBookmarks : IJObjTransform
     {
+        private ILogger logger;
+
+        public SimplifyBookmarks(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         public void Restore(JObject obj)
         {
             // restore nothing - that useless fluff is toast!
@@ -23,6 +31,8 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
 
             foreach (var bookmarkJObj in bookmarkJobjs)
             {
+                logger.LogInformation("Simplifying bookmark at path '{path}'.", bookmarkJObj.Path);
+
                 var applyOnlyToTargetVisuals = bookmarkJObj.SelectToken("options.applyOnlyToTargetVisuals")?.Value<bool>() ?? false;
 
                 var targetVisualsArr = (JArray)bookmarkJObj.SelectToken("options.targetVisualNames")!;
@@ -31,10 +41,12 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                 var containers1 = ((JObject)bookmarkJObj.SelectToken("explorationState.sections..visualContainers")!).Properties();
                 var containers2 = bookmarkJObj.SelectTokens("explorationState.sections..visualContainerGroups..children")!.SelectMany(t => ((JObject)t).Properties());
 
+
                 // clear data first(we might get rid of entire element if it's left empty after this)
                 var suppressData = bookmarkJObj.SelectToken("options.suppressData")?.Value<bool>() ?? false;
                 if (suppressData)
                 {
+
                     var nodesToRemove1 = bookmarkJObj.SelectTokens("explorationState..filters").ToList();
                     var nodesToRemove2 = bookmarkJObj.SelectTokens("explorationState..visualContainers..singleVisual.activeProjections").ToList();
                     var nodesToRemove3 = bookmarkJObj.SelectTokens("explorationState..visualContainers..singleVisual.orderBy").ToList();
@@ -52,6 +64,7 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                     // remove the visual's node if not in targetVisuals and applyOnlyToTargetVisuals=true
                     if (applyOnlyToTargetVisuals && !targetVisualNames.Contains(c.Name))
                     {
+
                         c.Remove();
                         removed = true;
                     }
