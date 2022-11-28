@@ -37,11 +37,6 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 this.transformTableNames = transformTableNames;
             }
 
-            public override QueryExpression VisitRoleRefExpression([NotNull] pbiqParser.RoleRefExpressionContext context)
-            {
-                return new QueryRoleRefExpression() { Role = context.QUOTED_IDENTIFIER().GetText().TrimStart('[').TrimEnd(']') };
-            }
-
             public override QueryExpression VisitArithmenticExpr([NotNull] pbiqParser.ArithmenticExprContext context)
             {
                 var left = context.left();
@@ -118,20 +113,168 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 };
             }
 
-            public override QueryExpression VisitAggregationExpr([NotNull] pbiqParser.AggregationExprContext context)
+            public override QueryExpression VisitFuncExpr([NotNull] pbiqParser.FuncExprContext context)
             {
-                var expression = VisitValidated(context.expression());
+                var functionStr = context.identifier().GetText()?.ToLower();
 
-                var functionStr = context.identifier().GetText();
+                QueryExpression expression;
+                var argReader = new FuncArgReader(context, VisitValidated);
 
                 if (Enum.TryParse<QueryAggregateFunction>(functionStr, true, out var aggFunc))
-                    return new QueryAggregationExpression() { Expression = expression, Function = aggFunc };
+                    expression = new QueryAggregationExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        Function = aggFunc
+                    };
                 else if (Enum.TryParse<QueryDatePartFunction>(functionStr, true, out var datePartFunc))
-                    return new QueryDatePartExpression() { Expression = expression, Function = datePartFunc };
-                else if(functionStr?.ToLower() == "any")
-                    return new QueryExistsExpression() { Expression = expression };
-                else 
+                    expression = new QueryDatePartExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        Function = datePartFunc
+                    };
+                else if (functionStr == "any")
+                    expression = new QueryExistsExpression()
+                    {
+                        Expression = argReader.ReadExpr()
+                    };
+                else if (functionStr == "dateadd")
+                    expression = new QueryDateAddExpression()
+                    {
+                        Amount = argReader.ReadInt(),
+                        TimeUnit = argReader.ReadEnum<TimeUnit>(),
+                        Expression = argReader.ReadExpr()
+                    };
+                else if (functionStr == "datespan")
+                    expression = new QueryDateSpanExpression()
+                    {
+                        TimeUnit = argReader.ReadEnum<TimeUnit>(),
+                        Expression = argReader.ReadExpr()
+                    };
+                else if (functionStr == "discretize")
+                    expression = new QueryDiscretizeExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        Count = argReader.ReadInt()
+                    };
+                else if (functionStr == "floor")
+                    expression = new QueryFloorExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        Size = argReader.ReadDouble(),
+                        TimeUnit = argReader.ReadArgAsEnumIfExists<TimeUnit>()
+                    };
+                else if (functionStr == "member")
+                    expression = new QueryMemberExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        Member = argReader.ReadString()
+                    };
+                else if (functionStr == "nativeformat")
+                    expression = new QueryNativeFormatExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        FormatString = argReader.ReadString()
+                    };
+                else if (functionStr == "nativemeasure")
+                    expression = new QueryNativeMeasureExpression()
+                    {
+                        Language = argReader.ReadString(),
+                        Expression = argReader.ReadString(),
+                    };
+                else if (functionStr == "not")
+                    expression = new QueryNotExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                    };
+                else if (functionStr == "now")
+                    expression = new QueryNowExpression();
+                else if (functionStr == "percentile")
+                    expression = new QueryPercentileExpression()
+                    {
+                        Exclusive = argReader.ReadString() == "exclusive" ? true : false,
+                        K = argReader.ReadDouble(),
+                        Expression = argReader.ReadExpr(),
+                    };
+                else if (functionStr == "tabletype")
+                    expression = new QueryTableTypeExpression()
+                    {
+                        Columns = argReader.ReadExprs().Select(e => (QueryExpressionContainer)e).ToList(),
+                    };
+                else if (functionStr == "transformoutputrole")
+                    expression = new QueryTransformOutputRoleRefExpression()
+                    {
+                        Role = argReader.ReadString()
+                    };
+                else if (functionStr == "typeof")
+                    expression = new QueryTypeOfExpression()
+                    {
+                        Expression = argReader.ReadExpr()
+                    };
+                else
                     throw new NotImplementedException($"Not expecting function '{functionStr}'. Todo: send this error message and the pbix to Packer2 maintainer/s.");
+
+                argReader.EnsureNoRemainingArgs();
+                return expression;
+            }
+
+            private class FuncArgReader
+            {
+                int argIdx;
+                int argsCount;
+                private readonly pbiqParser.FuncExprContext context;
+                private readonly Func<IParseTree, QueryExpression> parseExprFunc;
+
+                public FuncArgReader(pbiqParser.FuncExprContext context, Func<IParseTree, QueryExpression> parseExprFunc)
+                {
+                    this.context = context;
+                    this.parseExprFunc = parseExprFunc;
+                    argsCount = context.arg().Count();
+                }
+
+                public ICollection<QueryExpression> ReadExprs()
+                {
+                    return context.arg().Select(parseExprFunc).ToList();
+                }
+
+                public QueryExpression ReadExpr()
+                {
+                    return parseExprFunc(context.arg().ElementAt(argIdx++));
+                }
+
+                public int ReadInt()
+                {
+                    return int.Parse(ReadString());
+                }
+
+                public double ReadDouble()
+                {
+                    return double.Parse(ReadString());
+                }
+
+                public string ReadString()
+                {
+                    return context.arg().ElementAt(argIdx++).GetText();
+                }
+
+                public T ReadEnum<T>() where T : struct
+                {
+                    var str = ReadString();
+                    return Enum.Parse<T>(str, true);
+                }
+
+                public T? ReadArgAsEnumIfExists<T>() where T : struct
+                {
+                    if (argsCount <= argIdx)
+                        return null;
+
+                    return ReadEnum<T>();
+                }
+
+                public void EnsureNoRemainingArgs()
+                {
+                    if (argIdx < argsCount)
+                        throw new FormatException($"Function '{context.identifier().GetText()}' got {argsCount} arguments but it only accepts {argIdx}");
+                }
             }
 
             private string ReadStringLiteral(ITerminalNode node)
@@ -209,13 +352,20 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 }
             }
 
-            public override QueryExpression VisitIntExpr([NotNull] pbiqParser.IntExprContext context)
+            public override QueryExpression VisitIndexer([NotNull] pbiqParser.IndexerContext context)
             {
-                var text = context.INTEGER().GetText();
-                if (text.Last() != 'L')
-                    throw new FormatException("Invalid input");
-
-                return new QueryIntegerConstantExpression() { Value = long.Parse(text.Substring(0, text.Length - 1)) };
+                var left = context.IDENTIFIER().GetText().ToLower();
+                var arg = UnescapeIdentifier(context.QUOTED_IDENTIFIER().GetText());
+                if (left == "letref")
+                    return new QueryLetRefExpression() { Name = arg };
+                if (left == "parameterref")
+                    return new QueryParameterRefExpression() { Name = arg };
+                if (left == "roleRef")
+                    return new QueryRoleRefExpression() { Role = arg };
+                if (left == "summaryvalueref")
+                    return new QuerySummaryValueRefExpression() { Name = arg };
+                else
+                    throw new NotImplementedException("Todo: expression currently not supported. Please send this error message and the pbix/t file that caused it to maintainer of Packer.");
             }
 
             public override QueryExpression VisitPropertyExpression([NotNull] pbiqParser.PropertyExpressionContext context)
@@ -313,11 +463,6 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 return new QueryLiteralExpression() { Value = context.GetText() };
             }
 
-            public override QueryExpression VisitNotExpr([NotNull] pbiqParser.NotExprContext context)
-            {
-                return new QueryNotExpression() { Expression = VisitValidated(context.expression()) };
-            }
-
             public override QueryExpression VisitBetweenExpr([NotNull] pbiqParser.BetweenExprContext context)
             {
                 return new QueryBetweenExpression()
@@ -326,20 +471,6 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     LowerBound = VisitValidated(context.left()),
                     UpperBound = VisitValidated(context.right())
                 };
-            }
-
-            public override QueryExpression VisitDateSpanExpr([NotNull] pbiqParser.DateSpanExprContext context)
-            {
-                return new QueryDateSpanExpression()
-                {
-                    TimeUnit = ParseTimeUnit(context.timeUnit().GetText()),
-                    Expression = VisitValidated(context.expression())
-                };
-            }
-
-            private TimeUnit ParseTimeUnit(string v)
-            {
-                return (TimeUnit)Enum.Parse(typeof(TimeUnit), v, true);
             }
 
             public override QueryExpression VisitCompareExpr([NotNull] pbiqParser.CompareExprContext context)
@@ -374,22 +505,27 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     return QueryComparisonKind.Equal;
             }
 
-            public override QueryExpression VisitEndsWithExpr([NotNull] pbiqParser.EndsWithExprContext context)
+            public override QueryExpression VisitBinaryStringExpr([NotNull] pbiqParser.BinaryStringExprContext context)
             {
-                return new QueryEndsWithExpression()
+                var op = context.binary_string_operator().GetText();
+                switch (op)
                 {
-                    Left = VisitValidated(context.primary_expression()),
-                    Right = VisitValidated(context.right())
-                };
-            }
-
-            public override QueryExpression VisitDiscretizeExpr([NotNull] pbiqParser.DiscretizeExprContext context)
-            {
-                return new QueryDiscretizeExpression() 
-                {
-                    Expression = VisitValidated(context.expression()),
-                    Count = int.Parse(context.amount().GetText())
-                };
+                    case "startswith":
+                        return new QueryStartsWithExpression()
+                        {
+                            Left = VisitValidated(context.primary_expression()),
+                            Right = VisitValidated(context.right())
+                        };
+                    case "endswith":
+                        return new QueryEndsWithExpression()
+                        {
+                            Left = VisitValidated(context.primary_expression()),
+                            Right = VisitValidated(context.right())
+                        };
+                    default:
+                        throw new NotImplementedException($"Not expecting binary operator '{op}'. Todo: send this error message and the pbix to Packer2 maintainer/s.");
+                }
+                
             }
 
             public override QueryExpression VisitContainsExpr([NotNull] pbiqParser.ContainsExprContext context)
@@ -418,16 +554,8 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 else
                     throw new FormatException("Invalid logical operator");
             }
-
-            public override QueryExpression VisitDateAddExpr([NotNull] pbiqParser.DateAddExprContext context)
-            {
-                return new QueryDateAddExpression()
-                {
-                    Amount = int.Parse(context.amount().GetText()),
-                    TimeUnit = ParseTimeUnit(context.timeunit().GetText()),
-                    Expression = VisitValidated(context.expression())
-                };
-            }
         }
+
+        // todo: filteredeval
     }
 }

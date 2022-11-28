@@ -46,56 +46,48 @@ expression
 	| betweenExpr
 	| inExpr
 	| compareExpr
-	| endsWithExpr
+	| binaryStringExpr
+	| indexer
 	;
 
 containsExpr: primary_expression CONTAINS right;
 betweenExpr: primary_expression BETWEEN left AND right;
 inExpr: primary_expression IN (sourceRefExpr | inExprValues) | LPAREN expression (COMMA expression) RPAREN IN (sourceRefExpr | inExprValues);
 compareExpr: primary_expression comparisonOperator right;
-endsWithExpr: primary_expression STARTSWITH right;
-
+binaryStringExpr: primary_expression binary_string_operator right;
+binary_string_operator: STARTSWITH | ENDSWITH;
+indexer: IDENTIFIER QUOTED_IDENTIFIER;
 // todo: split up expressions into levels where each level can only reference levels below?
 // could a level ever have to reference itself? i.e. could the first rule in the expression refere to the same level?
 //   if so, this is fine, as long we don't care about priority between the rules in the same level.
 
 primary_expression: 
 	LPAREN expression RPAREN
-	| aggregationExpr
+	| funcExpr
 	| variationExpr
 	| anyValueExpr
 	| arithmenticExpr
-	| dateExpr
-	| datetimeExpr
 	| datetimeSecExpr
-	| dateSpanExpr
 	| encodedLiteralExpr
 	| hierarchyExpr
 	| hierarchyLevelExpr
-	| intExpr
 	| logicalExpr
-	| notExpr
 	| transformOutputRoleRefExpr
-	| roleRefExpression
 	| propertyExpression
 	| scopedEvalExpr
 	| sourceRefExpr
 	| subQueryExpr
-	| dateAddExpr
 	| defaultValueExpr
-	| discretizeExpr
 	;
 
 propertyExpression: (sourceRefExpr | subQueryExpr) DOT identifier;
 
 subQueryExpr: LCURLY query RCURLY;
 sourceRefExpr: identifier;
-aggregationExpr: identifier LPAREN expression RPAREN;
+funcExpr: identifier LPAREN (arg (COMMA arg)*)? RPAREN;
+arg: expression | number | IDENTIFIER;
+number: INTEGER | DECIMAL;
 anyValueExpr: ANYVALUE WITH DEFAULTVALUEOVERRIDESANCESTORS;
-// nullEpr: NULL;
-intExpr: INTEGER;
-datetimeExpr: DATETIME;
-dateExpr: DATE;
 /*tmp: could this be "expression" instead of sourceRefExpr? avoiding indirect left recursion*/
 hierarchySource: sourceRefExpr | variationExpr;
 hierarchyExpr: hierarchySource DOT HIERARCHY LPAREN identifier RPAREN;
@@ -103,25 +95,20 @@ hierarchyLevelExpr: hierarchyExpr DOT LEVEL LPAREN identifier RPAREN;
 /*tmp: could this be "expression" instead of sourceRefExpr? avoiding indirect left recursion*/
 variationExpr: sourceRefExpr DOT VARIATION LPAREN identifier COMMA identifier RPAREN;
 datetimeSecExpr: DATETIME;
-dateSpanExpr: DATESPAN LPAREN timeUnit COMMA expression RPAREN;
 // boolExp: TRUE | FALSE;
-notExpr: NOT LPAREN expression RPAREN;
 scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN (expression (COMMA expression)*)? RPAREN RPAREN;
 encodedLiteralExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL | TRUE | FALSE | NULL;
 inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING inExprEqualityKind)?;
 inExprEqualityKind: identifier;
-roleRefExpression: ROLEREF QUOTED_IDENTIFIER;
 expressionOrExpressionList: expression | LPAREN expression (COMMA expression)+ RPAREN;
 arithmenticExpr: LPAREN left binary_arithmetic_operator right RPAREN;
 logicalExpr: LPAREN left binary_logic_operator right RPAREN;
 transformOutputRoleRefExpr: TRANSFORMOUTPUTROLE LPAREN STRING_LITERAL RPAREN;
 binary_arithmetic_operator: PLUS | MINUS | DIV | MULT;
 binary_logic_operator: AND | OR;
-dateAddExpr: DATEADD LPAREN amount COMMA timeunit COMMA expression RPAREN;
 amount: INTEGER;
 timeunit: identifier;
 defaultValueExpr: DEFAULTVALUE;
-discretizeExpr: DISCRETIZE LPAREN expression COMMA amount RPAREN;
 
 // According to V1ToV2 class in the infonav dll (derives from QueryDefinitionUpgrader), 
 // we do not need the following expressions:

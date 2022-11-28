@@ -18,7 +18,7 @@ string folder = @"C:\TEst\unpacked_dhcft";
 string repackedPbix = @"C:\TEst\repacked.pbix";
 
 // 1. procitaj
-var rfs = new PBIArchiveStore(pbix);
+var rfs = new PBIArchiveStore(@"C:\TEst\wf3_ssas.pbix");
 var report = rfs.Read();
 
 //// 2. spremi originalno
