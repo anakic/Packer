@@ -18,6 +18,7 @@ SKIP_: [Ss] [Kk] [Ii] [Pp];
 TOP: [Tt] [Oo] [Pp];
 SCOPE: [Ss] [Cc] [Oo] [Pp] [Ee];
 SCOPEDEVAL: [Ss] [Cc] [Oo] [Pp] [Ee] [Dd] [Ee] [Vv] [Aa] [Ll];
+FILTEREDEVAL : [Ff] [Ii] [Ll] [Tt] [Ee] [Rr] [Ee] [Dd] [Ee] [Vv] [Aa] [Ll];
 USING: [Uu] [Ss] [Ii] [Nn] [Gg];
 ANYVALUE: [Aa] [Nn] [Yy] [Vv] [Aa] [Ll] [Uu] [Ee];
 VARIATION: [Vv] [Aa] [Rr] [Ii] [Aa] [Tt] [Ii] [Oo] [Nn];

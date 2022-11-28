@@ -315,6 +315,12 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitScopedEvalExpr([NotNull] pbiqParser.ScopedEvalExprContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.filteredEvalExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFilteredEvalExpr([NotNull] pbiqParser.FilteredEvalExprContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.encodedLiteralExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

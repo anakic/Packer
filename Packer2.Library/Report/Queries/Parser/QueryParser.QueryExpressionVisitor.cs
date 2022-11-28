@@ -308,6 +308,17 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 };
             }
 
+            public override QueryExpression VisitFilteredEvalExpr([NotNull] pbiqParser.FilteredEvalExprContext context)
+            {
+                // todo: Check if this works.
+                // I never checked if this works properly because I did not have a pbix file that uses this kind of expressions
+                return new QueryFilteredEvalExpression()
+                {
+                    Expression = VisitValidated(context.expression()),
+                    Filters = context.whereCriterion().Select(qf => new QueryFilter() { Condition = VisitValidated(qf) }).ToList()
+                };
+            }
+
             public override QueryExpression VisitInExpr([NotNull] pbiqParser.InExprContext context)
             {
                 var expression = new QueryInExpression();

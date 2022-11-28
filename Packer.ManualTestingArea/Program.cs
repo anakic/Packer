@@ -9,7 +9,7 @@ using var loggerFactory = LoggerFactory.Create(builder =>
     builder
         .AddFilter("Microsoft", LogLevel.Debug)
         .AddFilter("System", LogLevel.Debug)
-        .AddFilter("NonHostConsoleApp.Program", LogLevel.Debug)
+        .AddFilter("NonHostConsoleApp.Program", LogLevel.Trace)
         .AddConsole();
 });
 
@@ -18,7 +18,7 @@ string folder = @"C:\TEst\unpacked_dhcft";
 string repackedPbix = @"C:\TEst\repacked.pbix";
 
 // 1. procitaj
-var rfs = new PBIArchiveStore(@"C:\TEst\wf3_ssas.pbix");
+var rfs = new PBIArchiveStore(pbix);
 var report = rfs.Read();
 
 //// 2. spremi originalno
