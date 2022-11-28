@@ -36,7 +36,7 @@ using ParserRuleContext = Antlr4.Runtime.ParserRuleContext;
 [System.CLSCompliant(false)]
 public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Result>, IpbiqParserVisitor<Result> {
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.root"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.queryRoot"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -44,7 +44,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitRoot([NotNull] pbiqParser.RootContext context) { return VisitChildren(context); }
+	public virtual Result VisitQueryRoot([NotNull] pbiqParser.QueryRootContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.expressionRoot"/>.
 	/// <para>
@@ -136,7 +136,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// <return>The visitor result.</return>
 	public virtual Result VisitWhere([NotNull] pbiqParser.WhereContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.queryFilterElement"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.whereCriterion"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -144,7 +144,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitQueryFilterElement([NotNull] pbiqParser.QueryFilterElementContext context) { return VisitChildren(context); }
+	public virtual Result VisitWhereCriterion([NotNull] pbiqParser.WhereCriterionContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.transform"/>.
 	/// <para>
@@ -156,7 +156,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// <return>The visitor result.</return>
 	public virtual Result VisitTransform([NotNull] pbiqParser.TransformContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.parameters"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_parameters"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -164,9 +164,9 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitParameters([NotNull] pbiqParser.ParametersContext context) { return VisitChildren(context); }
+	public virtual Result VisitTransform_parameters([NotNull] pbiqParser.Transform_parametersContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.parameter"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_parameter"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -174,9 +174,9 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitParameter([NotNull] pbiqParser.ParameterContext context) { return VisitChildren(context); }
+	public virtual Result VisitTransform_parameter([NotNull] pbiqParser.Transform_parameterContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.inputTable"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_inputTable"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -184,9 +184,9 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitInputTable([NotNull] pbiqParser.InputTableContext context) { return VisitChildren(context); }
+	public virtual Result VisitTransform_inputTable([NotNull] pbiqParser.Transform_inputTableContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.outputTable"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_outputTable"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -194,9 +194,9 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitOutputTable([NotNull] pbiqParser.OutputTableContext context) { return VisitChildren(context); }
+	public virtual Result VisitTransform_outputTable([NotNull] pbiqParser.Transform_outputTableContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.tableColumn"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_tableColumn"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -204,9 +204,9 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitTableColumn([NotNull] pbiqParser.TableColumnContext context) { return VisitChildren(context); }
+	public virtual Result VisitTransform_tableColumn([NotNull] pbiqParser.Transform_tableColumnContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.algorithm"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_algorithm"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -214,7 +214,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitAlgorithm([NotNull] pbiqParser.AlgorithmContext context) { return VisitChildren(context); }
+	public virtual Result VisitTransform_algorithm([NotNull] pbiqParser.Transform_algorithmContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.orderby"/>.
 	/// <para>
@@ -226,7 +226,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// <return>The visitor result.</return>
 	public virtual Result VisitOrderby([NotNull] pbiqParser.OrderbyContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.orderbySection"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.orderingCriterion"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -234,7 +234,7 @@ public partial class pbiqParserBaseVisitor<Result> : AbstractParseTreeVisitor<Re
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitOrderbySection([NotNull] pbiqParser.OrderbySectionContext context) { return VisitChildren(context); }
+	public virtual Result VisitOrderingCriterion([NotNull] pbiqParser.OrderingCriterionContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.direction"/>.
 	/// <para>

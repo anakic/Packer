@@ -22,7 +22,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
         public QueryDefinition ParseQuery(string input)
         {
             var parser = CreateParser(input);
-            var tree = parser.root();
+            var tree = parser.queryRoot();
 
             var queryDefinition = new QueryConstructorVisitor(glossary, validator).Visit(tree);
             validator.ValidateQuery(queryDefinition);
@@ -36,7 +36,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
         public FilterDefinition ParseFilter(string input)
         {
             var parser = CreateParser(input);
-            var tree = parser.root();
+            var tree = parser.queryRoot();
             var queryDefinition = new QueryConstructorVisitor(glossary, validator).Visit(tree);
 
             if (queryDefinition.Select?.Count > 0 && queryDefinition.Parameters?.Count > 0 || queryDefinition.Transform?.Count > 0 || queryDefinition.GroupBy?.Count > 0 || queryDefinition.Let?.Count > 0 || queryDefinition.OrderBy?.Count > 0 || queryDefinition.Skip != null || queryDefinition.Top != null)

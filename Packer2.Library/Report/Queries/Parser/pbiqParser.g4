@@ -2,7 +2,7 @@ parser grammar pbiqParser;
 
 options { tokenVocab = pbiqLexer; }
 
-root: query EOF;
+queryRoot: query EOF;
 expressionRoot: expression EOF;
 
 query: /*parameters*/ /*let*/ from where? transform* orderby? select? /*visualshape*/ groupby? skip? top?;
@@ -14,21 +14,20 @@ schema: identifier;
 expressionContainer: expression (AS alias)? (WITH NATIVEREFERENCENAME)?;
 alias: identifier;
 
-where: WHERE queryFilterElement (COMMA queryFilterElement)*;
-queryFilterElement: /*target*/ expression /*annotations, filter, restatement*/;
+where: WHERE whereCriterion (COMMA whereCriterion)*;
+// todo: should we limit this to only expressions that return a boolean?
+whereCriterion: /*target*/ expression /*annotations, filter, restatement*/;
 
-transform: TRANSFORM VIA algorithm AS identifier WITH parameters? COMMA? inputTable? COMMA? outputTable?;
-parameters: INPUTPARAMETERS LPAREN parameter (COMMA parameter)* RPAREN;
-parameter: expression (AS alias)?;
-inputTable: INPUTTABLE LPAREN tableColumn (COMMA tableColumn)* RPAREN AS alias;
-outputTable: OUTPUTTABLE LPAREN tableColumn (COMMA tableColumn)* RPAREN AS alias;
-tableColumn: expression (AS alias)? (WITH ROLE STRING_LITERAL)?;
-algorithm: STRING_LITERAL;
+transform: TRANSFORM VIA transform_algorithm AS identifier WITH transform_parameters? COMMA? transform_inputTable? COMMA? transform_outputTable?;
+transform_parameters: INPUTPARAMETERS LPAREN transform_parameter (COMMA transform_parameter)* RPAREN;
+transform_parameter: expression (AS alias)?;
+transform_inputTable: INPUTTABLE LPAREN transform_tableColumn (COMMA transform_tableColumn)* RPAREN AS alias;
+transform_outputTable: OUTPUTTABLE LPAREN transform_tableColumn (COMMA transform_tableColumn)* RPAREN AS alias;
+transform_tableColumn: expression (AS alias)? (WITH ROLE STRING_LITERAL)?;
+transform_algorithm: STRING_LITERAL;
 
-// transform: TRANSFORM VIA STRING_LITERAL AS alias WITH --todo;
-
-orderby: ORDERBY orderbySection (COMMA orderbySection)*;
-orderbySection: expression direction;
+orderby: ORDERBY orderingCriterion (COMMA orderingCriterion)*;
+orderingCriterion: expression direction;
 direction: ASCENDING | DESCENDING;
 
 groupby: GROUPBY expression (COMMA expression)*;
@@ -108,8 +107,20 @@ binary_arithmetic_operator: PLUS | MINUS | DIV | MULT;
 binary_logic_operator: AND | OR;
 amount: INTEGER;
 timeunit: identifier;
-defaultValueExpr: DEFAULTVALUE;
+defaultValueExpr: DEFAULTVALUE; 
 
+timeUnit: IDENTIFIER;
+left: expression;
+right: expression;
+comparisonOperator: GT | LT | EQ | GTE | LTE;
+
+identifier
+	: IDENTIFIER 
+	| QUOTED_IDENTIFIER 
+	| LEVEL
+	| VARIATION
+	/* todo: all keywords can show up as identifiers as well unfortunately so add them here */;
+	
 // According to V1ToV2 class in the infonav dll (derives from QueryDefinitionUpgrader), 
 // we do not need the following expressions:
 
@@ -131,15 +142,3 @@ DateSpan:
 	QueryDecadeConstantExpression
 	QueryDatePartExpression
  */
-
-timeUnit: IDENTIFIER;
-left: expression;
-right: expression;
-comparisonOperator: GT | LT | EQ | GTE | LTE;
-
-identifier
-	: IDENTIFIER 
-	| QUOTED_IDENTIFIER 
-	| LEVEL
-	| VARIATION
-	/* todo: all keywords can show up as identifiers as well unfortunately so add them here */;

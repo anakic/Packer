@@ -1,6 +1,7 @@
 ﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
+using Microsoft.InfoNav;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Packer2.Library.MinifiedQueryParser.QueryTransforms;
 using System.Runtime.CompilerServices;
@@ -332,6 +333,14 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             public override QueryExpression VisitSourceRefExpr([NotNull] pbiqParser.SourceRefExprContext context)
             {
                 var name = UnescapeIdentifier(context.identifier().GetText());
+
+                // the identifier might be a QueryPrimitiveTypeExpression value (enum) or a reference to a source, we don't know ahead of time.
+                // todo: might want to reconsider the naming of this node.
+                if (Enum.TryParse<ConceptualPrimitiveType>(name, out var val))
+                {
+                    return new QueryPrimitiveTypeExpression() { Type = val };
+                }
+                
 
                 if (transformTableNames.Contains(name))
                 {

@@ -33,11 +33,11 @@ using IToken = Antlr4.Runtime.IToken;
 [System.CLSCompliant(false)]
 public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.root"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.queryRoot"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitRoot([NotNull] pbiqParser.RootContext context);
+	Result VisitQueryRoot([NotNull] pbiqParser.QueryRootContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.expressionRoot"/>.
 	/// </summary>
@@ -93,11 +93,11 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitWhere([NotNull] pbiqParser.WhereContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.queryFilterElement"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.whereCriterion"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitQueryFilterElement([NotNull] pbiqParser.QueryFilterElementContext context);
+	Result VisitWhereCriterion([NotNull] pbiqParser.WhereCriterionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.transform"/>.
 	/// </summary>
@@ -105,41 +105,41 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTransform([NotNull] pbiqParser.TransformContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.parameters"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_parameters"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitParameters([NotNull] pbiqParser.ParametersContext context);
+	Result VisitTransform_parameters([NotNull] pbiqParser.Transform_parametersContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.parameter"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_parameter"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitParameter([NotNull] pbiqParser.ParameterContext context);
+	Result VisitTransform_parameter([NotNull] pbiqParser.Transform_parameterContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.inputTable"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_inputTable"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitInputTable([NotNull] pbiqParser.InputTableContext context);
+	Result VisitTransform_inputTable([NotNull] pbiqParser.Transform_inputTableContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.outputTable"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_outputTable"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitOutputTable([NotNull] pbiqParser.OutputTableContext context);
+	Result VisitTransform_outputTable([NotNull] pbiqParser.Transform_outputTableContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.tableColumn"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_tableColumn"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitTableColumn([NotNull] pbiqParser.TableColumnContext context);
+	Result VisitTransform_tableColumn([NotNull] pbiqParser.Transform_tableColumnContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.algorithm"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.transform_algorithm"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitAlgorithm([NotNull] pbiqParser.AlgorithmContext context);
+	Result VisitTransform_algorithm([NotNull] pbiqParser.Transform_algorithmContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.orderby"/>.
 	/// </summary>
@@ -147,11 +147,11 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitOrderby([NotNull] pbiqParser.OrderbyContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="pbiqParser.orderbySection"/>.
+	/// Visit a parse tree produced by <see cref="pbiqParser.orderingCriterion"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitOrderbySection([NotNull] pbiqParser.OrderbySectionContext context);
+	Result VisitOrderingCriterion([NotNull] pbiqParser.OrderingCriterionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.direction"/>.
 	/// </summary>

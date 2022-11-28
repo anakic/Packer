@@ -26,25 +26,25 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 QueryTransformInput input = new QueryTransformInput();
                 QueryTransformOutput output = new QueryTransformOutput();
 
-                if (context.parameters() != null)
-                    input.Parameters = context.parameters().parameter().Select(pc => ParseExprContainer(pc, sourceNames, transformTables, UnescapeIdentifier(pc.alias().GetText()))).ToList();
+                if (context.transform_parameters() != null)
+                    input.Parameters = context.transform_parameters().transform_parameter().Select(pc => ParseExprContainer(pc, sourceNames, transformTables, UnescapeIdentifier(pc.alias().GetText()))).ToList();
 
-                if (context.inputTable() != null)
+                if (context.transform_inputTable() != null)
                 {
                     input.Table = new QueryTransformTable()
                     {
-                        Name = context.inputTable().alias().GetText(),
-                        Columns = context.inputTable().tableColumn().Select(tc => new QueryTransformTableColumn() { Role = ReadStringLiteral(tc.STRING_LITERAL()), Expression = ParseExprContainer(tc.expression(), sourceNames, transformTables, UnescapeIdentifier(tc.alias().GetText())) }).ToList()
+                        Name = context.transform_inputTable().alias().GetText(),
+                        Columns = context.transform_inputTable().transform_tableColumn().Select(tc => new QueryTransformTableColumn() { Role = ReadStringLiteral(tc.STRING_LITERAL()), Expression = ParseExprContainer(tc.expression(), sourceNames, transformTables, UnescapeIdentifier(tc.alias().GetText())) }).ToList()
                     };
                     transformTables.Add(input.Table.Name);
                 }
 
-                if (context.outputTable() != null)
+                if (context.transform_outputTable() != null)
                 {
                     output.Table = new QueryTransformTable()
                     {
-                        Name = context.outputTable().alias().GetText(),
-                        Columns = context.outputTable().tableColumn().Select(tc => new QueryTransformTableColumn() { Role = ReadStringLiteral(tc.STRING_LITERAL()), Expression = ParseExprContainer(tc.expression(), sourceNames, transformTables, UnescapeIdentifier(tc.alias().GetText())) }).ToList()
+                        Name = context.transform_outputTable().alias().GetText(),
+                        Columns = context.transform_outputTable().transform_tableColumn().Select(tc => new QueryTransformTableColumn() { Role = ReadStringLiteral(tc.STRING_LITERAL()), Expression = ParseExprContainer(tc.expression(), sourceNames, transformTables, UnescapeIdentifier(tc.alias().GetText())) }).ToList()
                     };
                     transformTables.Add(output.Table.Name);
                 }
@@ -54,7 +54,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     Name = UnescapeIdentifier(context.identifier().GetText()),
                     Input = input,
                     Output = output,
-                    Algorithm = ReadStringLiteral(context.algorithm().STRING_LITERAL())
+                    Algorithm = ReadStringLiteral(context.transform_algorithm().STRING_LITERAL())
                 };
             }
 
@@ -64,7 +64,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 this.validator = validator;
             }
 
-            public override QueryDefinition VisitRoot([NotNull] pbiqParser.RootContext context)
+            public override QueryDefinition VisitQueryRoot([NotNull] pbiqParser.QueryRootContext context)
             {
                 return VisitQuery(context.query());
             }
@@ -98,14 +98,13 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     def.Transform = context.transform().Select(t => ParseTransform(t, sourceNames, transformNames)).ToList();
 
                 if (context.where() != null)
-                    def.Where = context.where().queryFilterElement().Select(qf => new QueryFilter() { Condition = ParseExprContainer(qf, sourceNames, transformNames) }).ToList();
-
+                    def.Where = context.where().whereCriterion().Select(qf => new QueryFilter() { Condition = ParseExprContainer(qf, sourceNames, transformNames) }).ToList();
 
                 if (context.select() != null)
                     def.Select = context.select().expression().Select((exp, i) => { var expCont = ParseExprContainer(exp, sourceNames, transformNames); return expCont; }).ToList();
 
                 if (context.orderby() != null)
-                    def.OrderBy = context.orderby().orderbySection().Select(obs => new QuerySortClause() { Expression = ParseExprContainer(obs.expression(), sourceNames, transformNames), Direction = ParseDirection(obs.direction().GetText()) }).ToList();
+                    def.OrderBy = context.orderby().orderingCriterion().Select(obs => new QuerySortClause() { Expression = ParseExprContainer(obs.expression(), sourceNames, transformNames), Direction = ParseDirection(obs.direction().GetText()) }).ToList();
 
                 if (context.groupby() != null)
                     def.GroupBy = context.groupby().expression().Select(exp => ParseExprContainer(exp, sourceNames, transformNames)).ToList();
