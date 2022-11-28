@@ -8,29 +8,29 @@ namespace Packer2.Tests.Report
 {
     public class ReportParseTests
     {
-        [Fact]
-        public void TEMP()
-        {
-            var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
-            var reportModel = new PBIArchiveStore(wf3Pbit).Read();
+        //[Fact]
+        //public void TEMP()
+        //{
+        //    var wf3Pbit = @"C:\Users\AntonioNakic-Alfirev\OneDrive - SSG Partners Limited\Desktop\ward_flow3.pbit";
+        //    var reportModel = new PBIArchiveStore(wf3Pbit).Read();
 
-            //reportModel = new MinifyExpressionsTransform().Transform(reportModel.Layout);
+        //    //reportModel = new MinifyExpressionsTransform().Transform(reportModel.Layout);
 
-            var folderStore = new ReportFolderStore(@"c:\test\xx");
-            folderStore.Save(reportModel);
+        //    var folderStore = new ReportFolderStore(@"c:\test\xx");
+        //    folderStore.Save(reportModel);
 
-            // TEMP2();
-        }
+        //    // TEMP2();
+        //}
 
-        [Fact]
-        public void TEMP2()
-        {
-            var folderStore = new ReportFolderStore(@"c:\test\xx");
-            var rptModel = folderStore.Read();
+        //[Fact]
+        //public void TEMP2()
+        //{
+        //    var folderStore = new ReportFolderStore(@"c:\test\xx");
+        //    var rptModel = folderStore.Read();
 
-            var pbixStore = new PBIArchiveStore(@"c:\test\xx.pbit");
-            pbixStore.Save(rptModel);
-        }
+        //    var pbixStore = new PBIArchiveStore(@"c:\test\xx.pbit");
+        //    pbixStore.Save(rptModel);
+        //}
 
 
         //[Fact]

@@ -5,7 +5,7 @@ options { tokenVocab = pbiqLexer; }
 queryRoot: query EOF;
 expressionRoot: expression EOF;
 
-query: /*parameters*/ /*let*/ from where? transform* orderby? select? /*visualshape*/ groupby? skip? top?;
+query: /*parameters*/ /*let*/ from where? transform* orderby? select? groupby? skip? top?;
 
 from: FROM fromElement (COMMA fromElement)*;
 fromElement: alias IN (entity_name | subQueryExpr);
