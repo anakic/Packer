@@ -321,6 +321,24 @@ public interface IpbiqParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFilteredEvalExpr([NotNull] pbiqParser.FilteredEvalExprContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.sparkLineDataExpr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSparkLineDataExpr([NotNull] pbiqParser.SparkLineDataExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.sparkLineDataMeasure"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSparkLineDataMeasure([NotNull] pbiqParser.SparkLineDataMeasureContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="pbiqParser.scalarKey"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitScalarKey([NotNull] pbiqParser.ScalarKeyContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="pbiqParser.encodedLiteralExpr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

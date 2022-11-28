@@ -1,1 +1,1 @@
-filteredeval(abc, (test = 123d))
+SparklineData(test, groupby: (t.a, t.b), 4, SCALARKEY: 1d)

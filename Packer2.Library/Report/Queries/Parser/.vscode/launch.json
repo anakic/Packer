@@ -7,7 +7,7 @@
             "request": "launch",
             "input": "sample.txt",
             "grammar": "pbiqParser.g4",
-            "startRule": "filteredEvalExpr",
+            "startRule": "expressionRoot",
             //"printParseTree": true,
             "visualParseTree": true
         }

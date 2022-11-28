@@ -75,6 +75,7 @@ primary_expression:
 	| propertyExpression
 	| scopedEvalExpr
 	| filteredEvalExpr
+	| sparkLineDataExpr
 	| sourceRefExpr
 	| subQueryExpr
 	| defaultValueExpr
@@ -98,6 +99,9 @@ datetimeSecExpr: DATETIME;
 // boolExp: TRUE | FALSE;
 scopedEvalExpr: SCOPEDEVAL LPAREN expression COMMA SCOPE LPAREN (expression (COMMA expression)*)? RPAREN RPAREN;
 filteredEvalExpr: FILTEREDEVAL LPAREN expression COMMA LPAREN (whereCriterion (COMMA whereCriterion)*)? RPAREN RPAREN;
+sparkLineDataExpr: SPARKLINEDATA LPAREN sparkLineDataMeasure COMMA GROUPBY COLON LPAREN (expression (COMMA expression)*)? RPAREN COMMA INTEGER (COMMA SCALARKEY COLON scalarKey)? (COMMA INCLUDEMINGROUPINGINTERVAL)? RPAREN;
+sparkLineDataMeasure: expression;
+scalarKey: expression;
 encodedLiteralExpr: STRING_LITERAL | INTEGER_LITERAL | DECIMAL_LITERAL | DOUBLE_LITERAL | BASE64BYTES_LITERAL | DATEIME_LITERAL | TRUE | FALSE | NULL;
 inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING inExprEqualityKind)?;
 inExprEqualityKind: identifier;

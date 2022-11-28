@@ -319,6 +319,20 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 };
             }
 
+            public override QueryExpression VisitSparkLineDataExpr([NotNull] pbiqParser.SparkLineDataExprContext context)
+            {
+                // todo: Check if this works.
+                // I never checked if this works properly because I did not have a pbix file that uses this kind of expressions
+                return new QuerySparklineDataExpression()
+                {
+                    Measure = VisitValidated(context.sparkLineDataMeasure()),
+                    Groupings = context.expression().Select(VisitValidated).Select(ex => (QueryExpressionContainer)ex).ToList(),
+                    PointsPerSparkline = int.Parse(context.INTEGER().GetText()),
+                    IncludeMinGroupingInterval = context.INCLUDEMINGROUPINGINTERVAL() != null,
+                    ScalarKey = context.scalarKey() != null ? VisitValidated(context.scalarKey()) : null
+                };
+            }
+
             public override QueryExpression VisitInExpr([NotNull] pbiqParser.InExprContext context)
             {
                 var expression = new QueryInExpression();
