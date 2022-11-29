@@ -79,7 +79,10 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                         source.Name = fe.alias().GetText();
 
                         if (fe.entity_name() != null)
-                            source.Entity = UnescapeIdentifier(fe.entity_name().GetText());
+                        {
+                            source.Entity = UnescapeIdentifier(fe.entity_name().identifier().GetText());
+                            source.Schema = UnescapeIdentifier(fe.entity_name().schema()?.GetText());
+                        }
 
                         else
                         {
