@@ -23,15 +23,29 @@ namespace Packer2.Library.Tools
 
         protected sealed override string ReadPayloadLocation(JToken elem)
         {
-            return (string)elem.SelectToken(PayloadContainingObjectJsonPath)![refPrefix + PayloadProperty]!;
+            return (string)elem.SelectToken(PayloadContainingObjectJsonPath)?[refPrefix + PayloadProperty];
         }
 
         protected sealed override void RegisterPayloadLocation(JToken elem, string destinationFileName)
         {
-            (elem.SelectToken(PayloadContainingObjectJsonPath)![PayloadProperty]!.Parent as JProperty)!.Replace(new JProperty(refPrefix + PayloadProperty, destinationFileName));
+            var payloadProperty = elem.SelectToken(PayloadContainingObjectJsonPath)?[PayloadProperty];
+            if (payloadProperty == null)
+            {
+                if (PayloadMandatory)
+                    throw new Exception($"No payload found for zone {GetType().Name}, json path is '{elem.Path}'!");
+                else
+                    return;
+            }
+            else
+                (payloadProperty.Parent as JProperty)!.Replace(new JProperty(refPrefix + PayloadProperty, destinationFileName));
         }
 
         // JsonPropertyZone zones do not have children so they won't create new subfolders
         protected override string GetSubfolderForElement(JToken elem) => String.Empty;
+
+        /// <summary>
+        /// If true, the payload must exist else an exception will be thrown. If the payload property is allowed to not exist and it does not it is simply skipped.
+        /// </summary>
+        protected virtual bool PayloadMandatory { get; } = false;
     }
 }
