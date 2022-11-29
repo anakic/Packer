@@ -76,8 +76,11 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             return new pbiqParser(new CommonTokenStream(lexer));
         }
 
-        static string UnescapeIdentifier(string identifier)
+        static string? UnescapeIdentifier(string? identifier)
         {
+            if (identifier == null)
+                return null;
+
             identifier = identifier.Trim();
             if (identifier.StartsWith("["))
             {
@@ -89,8 +92,5 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             }
             return identifier;
         }
-
-        private T Clone<T>(T obj)
-            => JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj))!;
     }
 }
