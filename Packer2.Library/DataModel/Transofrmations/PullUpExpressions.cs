@@ -1,5 +1,6 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
+using Packer2.Library.Tools;
 
 namespace Packer2.Library.DataModel.Transofrmations
 {
@@ -9,7 +10,7 @@ namespace Packer2.Library.DataModel.Transofrmations
 
         public PullUpExpressionsTranform(ILogger<PullUpExpressionsTranform> logger = null)
         {
-            this.logger = logger;
+            this.logger = logger ?? new DummyLogger<PullUpExpressionsTranform>();
         }
 
         public Database Transform(Database database)

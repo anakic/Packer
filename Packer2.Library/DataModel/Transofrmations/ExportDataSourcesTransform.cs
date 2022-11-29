@@ -1,5 +1,6 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
+using Packer2.Library.Tools;
 
 namespace Packer2.Library.DataModel.Transofrmations
 {
@@ -7,9 +8,9 @@ namespace Packer2.Library.DataModel.Transofrmations
     {
         private readonly ILogger<ExportDataSourcesTransform> logger;
 
-        public ExportDataSourcesTransform(ILogger<ExportDataSourcesTransform> logger)
+        public ExportDataSourcesTransform(ILogger<ExportDataSourcesTransform>? logger = null)
         {
-            this.logger = logger;
+            this.logger = logger ?? new DummyLogger<ExportDataSourcesTransform>();
         }
 
         public Database Transform(Database database)
