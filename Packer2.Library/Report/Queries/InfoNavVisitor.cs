@@ -2,44 +2,25 @@
 
 namespace Packer2.Library.Report.Transforms
 {
-    //class LocationAwareInfoNavVisitor : InfoNavVisitor
-    //{
-    //    public string InnerPath { get; internal set; }
-    //    public string OuterPath { get; internal set; }
-    //}
-
+    // The only purpose of this class is to detect when a new kind of expression is introduced
+    // in which case the compiler will throw a compilation error because we did not override the
+    // abstract method that corresponds to that method. This class is never used in our code.
     class InfoNavVisitor : QueryExpressionVisitor
     {
-        protected Dictionary<string, string>? SourcesByAliasMap { get; private set; }
-
         public virtual void Visit(QueryExpressionContainer expObj)
         {
-            SourcesByAliasMap = null;
-            expObj.Expression.Accept(this);
         }
 
         public virtual void Visit(FilterDefinition filterObj)
         {
-            SourcesByAliasMap = filterObj.From.ToDictionary(f => f.Name, f => f.Entity);
-            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(this));
         }
 
         public virtual void Visit(QueryDefinition expObj)
         {
-            SourcesByAliasMap = expObj.From.ToDictionary(f => f.Name, f => f.Entity);
-            expObj.From.ForEach(es => es.Expression?.Expression.Accept(this));
-            expObj.Let?.ForEach(w => w.Expression.Accept(this));
-            expObj.Parameters?.ForEach(w => w.Expression.Accept(this));
-            expObj.Where?.ForEach(w => w.Condition.Expression.Accept(this));
-            expObj.Select?.ForEach(w => w.Expression.Accept(this));
-            expObj.Transform?.ForEach(t =>
-            {
-                t.Input.Parameters.ForEach(p => p.Expression.Accept(this));
-                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(this));
-                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(this));
-            });
-            expObj.GroupBy?.ForEach(w => w.Expression.Accept(this));
-            expObj.OrderBy?.ForEach(w => w.Expression.Expression.Accept(this));
+        }
+
+        protected override void Visit(QueryNativeVisualCalculationExpression expression)
+        {
         }
 
         protected override void Visit(QuerySourceRefExpression expression)

@@ -199,6 +199,11 @@ namespace Packer2.Library.Report.Transforms
                 return table.Columns[expression.Property].Variations[expression.Name];
             }
 
+            protected override NamedMetadataObject Visit(QueryNativeVisualCalculationExpression expression)
+            {
+                throw new NotImplementedException();
+            }
+
             protected override NamedMetadataObject Visit(QueryAggregationExpression expression)
             {
                 throw new NotImplementedException();

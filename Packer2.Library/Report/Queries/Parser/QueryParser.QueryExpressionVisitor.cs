@@ -211,6 +211,12 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     {
                         Expression = argReader.ReadExpr()
                     };
+                else if (functionStr == "nativevisualcalculation")
+                    expression = new QueryNativeVisualCalculationExpression()
+                    {
+                        Language = argReader.ReadString(),
+                        Expression = argReader.ReadString()
+                    };
                 else
                     throw new NotImplementedException($"Not expecting function '{functionStr}'. Todo: send this error message and the pbix to Packer2 maintainer/s.");
 
