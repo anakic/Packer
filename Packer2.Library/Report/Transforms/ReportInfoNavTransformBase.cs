@@ -46,6 +46,10 @@ namespace Packer2.Library.Report.Transforms
                     {
                         foreach (var expToken in expressionSelectors.SelectMany(areaJObj.SelectTokens).ToArray())
                         {
+                            // these are DAX expressions, we don't want to work with those, we only want infonav expressions/filters/queries
+                            if (expToken.Path.Contains(".modelExtensions["))
+                                continue;
+
                             if (TryReadExpression(expToken, out var expression))
                             {
                                 ProcessExpression(expression!, token.Path, expToken.Path);
@@ -127,8 +131,16 @@ namespace Packer2.Library.Report.Transforms
 
         protected virtual bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)
         {
-            expressionContainer = expToken.ToObject<QueryExpressionContainer>()!;
-            return (expressionContainer.Expression != null);
+            try
+            {
+                expressionContainer = expToken.ToObject<QueryExpressionContainer>()!;
+                return (expressionContainer?.Expression != null);
+            }
+            catch
+            {
+                expressionContainer = default;
+                return false;
+            }
         }
 
         protected virtual void WriteFilter(JToken expToken, FilterDefinition filterObj)
