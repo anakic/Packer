@@ -1,36 +1,15 @@
-﻿using DataModelLoader.Report;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
 {
+    public record TableObjectName(string TableName, string ObjectName);
+
     public class Renames
     {
-        class TableObjectRenames
-        {
-            IDictionary<string, string> renamesDict;
-
-            public TableObjectRenames()
-                : this(new Dictionary<string, string>())
-            { }
-
-            public TableObjectRenames(IDictionary<string, string> renames)
-            {
-                this.renamesDict = renames;
-            }
-
-            public void Add(string oldName, string newName)
-                => this.renamesDict[oldName] = newName;
-
-            public bool TryGetNewName(string originalName, out string? newName)
-            {
-                return renamesDict.TryGetValue(originalName, out newName);
-            }
-        }
-
-        Dictionary<string, TableObjectRenames> tableObjectsRenamesDict = new Dictionary<string, TableObjectRenames>();
+        Dictionary<TableObjectName, TableObjectName> tableObjectsRenamesDict = new Dictionary<TableObjectName, TableObjectName>();
 
         Dictionary<string, string> tableRenamesDict = new Dictionary<string, string>();
         public void AddTableRename(string tableName, string newTableName)
@@ -45,10 +24,13 @@ namespace Packer2.Library.Report.Transforms
         }
 
         public void AddRename(string tableName, string oldObjectName, string newObjectName)
+            => AddRename(tableName, oldObjectName, newObjectName);
+
+        public void AddRename(string originalParentTable, string oldObjectName, string newParentTable, string newObjectName)
         {
-            if (!tableObjectsRenamesDict.TryGetValue(tableName, out var renames))
-                renames = tableObjectsRenamesDict[tableName] = new TableObjectRenames();
-            renames.Add(oldObjectName, newObjectName);
+            var original = new TableObjectName(originalParentTable, oldObjectName);
+            var renamed = new TableObjectName(newParentTable, newObjectName);
+            tableObjectsRenamesDict[original] = renamed;
         }
 
         public bool TryGetTableRename(string tableName, out string? newName)
@@ -56,18 +38,10 @@ namespace Packer2.Library.Report.Transforms
             return tableRenamesDict.TryGetValue(tableName, out newName);
         }
 
-        public bool TryGetTableObjectRename(string tableName, string objectName, out string? newName)
+        public bool TryGetTableObjectRename(string tableName, string objectName, out TableObjectName? renamed)
         {
-            if (
-                tableObjectsRenamesDict.TryGetValue(tableName, out var tableObjectRenames_inner)
-                && tableObjectRenames_inner.TryGetNewName(objectName, out newName)
-            )
-                return true;
-            else
-            {
-                newName = null;
-                return false;
-            }
+            var original = new TableObjectName(tableName, objectName);
+            return tableObjectsRenamesDict.TryGetValue(original, out renamed);
         }
     }
 
@@ -147,6 +121,9 @@ namespace Packer2.Library.Report.Transforms
 
             private void Process(QueryPropertyExpression expression)
             {
+                if (expression.Expression.SourceRef == null)
+                    return;
+
                 expression.Expression.Expression.Accept(this);
 
                 var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
