@@ -23,7 +23,7 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
             transform.Transform(obj);
 
             logger.LogInformation("Creting glossary of columns and measures");
-            var glosaryStr = JsonConvert.SerializeObject(transform.Glossary);
+            var glosaryStr = JsonConvert.SerializeObject(transform.Glossary, Formatting.Indented);
             fileSystem.Save("_glossary.json", glosaryStr);
         }
 
