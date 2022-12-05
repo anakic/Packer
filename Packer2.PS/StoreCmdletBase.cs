@@ -55,8 +55,7 @@ namespace Packer2.PS
             IModelStore<Database> store;
             try
             {
-                var connStrBuilder = new SqlConnectionStringBuilder(location);
-                store = new SSASDataModelStore(connStrBuilder.DataSource, connStrBuilder.InitialCatalog, true, CreateLogger<SSASDataModelStore>());
+                store = new SSASDataModelStore(location, true, CreateLogger<SSASDataModelStore>());
                 logger.LogTrace("Created SSAS data model store '({location})'", location);
             }
             catch
