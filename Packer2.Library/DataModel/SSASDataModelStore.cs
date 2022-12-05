@@ -13,6 +13,16 @@ namespace Packer2.Library.DataModel
         private readonly bool processOnSave;
         private readonly ILogger<SSASDataModelStore> logger;
 
+        public SSASDataModelStore(string connectionString, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
+        {
+            var connStrBuilder = new SqlConnectionStringBuilder(connectionString);
+
+            this.serverName = connStrBuilder.DataSource;
+            this.databaseName = connStrBuilder.InitialCatalog;
+            this.processOnSave = processOnSave;
+            this.logger = logger ?? new DummyLogger<SSASDataModelStore>();
+        }
+
         public SSASDataModelStore(string server, string? database, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
         {
             // server can be e.g. "localhost:54287"
@@ -43,7 +53,11 @@ namespace Packer2.Library.DataModel
                 logger.LogInformation("Connecting to server '{serverName}'...", serverName);
                 server.Connect(builder.ConnectionString);
 
-                database.ID = database.Name = databaseName;
+                if(!string.Equals(database.ID, databaseName, StringComparison.CurrentCultureIgnoreCase))
+                    database.ID = databaseName;
+
+                if (!string.Equals(database.Name, databaseName, StringComparison.CurrentCultureIgnoreCase))
+                    database.Name = databaseName;
 
                 if (server.Databases.Contains(database.Name))
                 {
