@@ -25,7 +25,7 @@ namespace Packer2.Library.Report.Stores.Folder
         private readonly ILogger<ReportFolderStore> logger;
         ReportMappedFolder reportFolderMapper = new ReportMappedFolder();
 
-        public bool EnableQueryMinification { get; set; } = false;
+        public bool EnableQueryMinification { get; set; } = true;
 
         public bool EnableBookmarkSimplification { get; set; } = true;
 
