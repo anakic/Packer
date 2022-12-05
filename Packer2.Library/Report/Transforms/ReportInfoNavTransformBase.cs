@@ -172,9 +172,10 @@ namespace Packer2.Library.Report.Transforms
             expression.Expression.Accept(visitor);
         }
 
-        protected void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
+        protected virtual void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
         {
             var visitor = CreateProcessingVisitor(outerPath, innerPath, filterObj.From.ToDictionary(f => f.Name, f => f.Entity));
+            filterObj.From.ForEach(es => es.Expression?.Expression.Accept(visitor));
             filterObj.Where.ForEach(w => w.Condition.Expression.Accept(visitor));
         }
 
