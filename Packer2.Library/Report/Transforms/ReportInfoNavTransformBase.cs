@@ -1,6 +1,4 @@
-﻿using DataModelLoader.Report;
-using Microsoft.InfoNav.Data.Contracts.Internal;
-using Newtonsoft.Json;
+﻿using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
 
 namespace Packer2.Library.Report.Transforms
@@ -134,7 +132,15 @@ namespace Packer2.Library.Report.Transforms
             try
             {
                 expressionContainer = expToken.ToObject<QueryExpressionContainer>()!;
-                return (expressionContainer?.Expression != null);
+
+                // avoid using exceptions (below check) if possible
+                if(expressionContainer?.Expression == null)
+                    return false;
+
+                // will throw if a nested Expression somewhere is null
+                expressionContainer.ToString();
+
+                return true;
             }
             catch
             {
