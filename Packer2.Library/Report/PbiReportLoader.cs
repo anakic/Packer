@@ -30,6 +30,13 @@ public static class PbiReportLoader
         return ReplaceModelReferences(report, renames);
     }
 
+    public static PowerBIReport RebaseMeasure(this PowerBIReport report, string measureName, string desiredOwnerTable)
+    {
+        var renames = new Renames();
+        renames.AddMeasureRebase(measureName, desiredOwnerTable);
+        return ReplaceModelReferences(report, renames);
+    }
+
     public static PowerBIReport ReplaceModelReference(this PowerBIReport report, string tableName, string oldName, string newName)
     {
         var renames = new Renames();

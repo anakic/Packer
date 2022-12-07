@@ -30,7 +30,7 @@ namespace Packer2.Library.Report.Transforms
         }
 
         Dictionary<string, TableObjectRenames> tableObjectsRenamesDict = new Dictionary<string, TableObjectRenames>();
-
+        Dictionary<string, string> measureUpdatedOwnerTables = new Dictionary<string, string>();
         Dictionary<string, string> tableRenamesDict = new Dictionary<string, string>();
         public void AddTableRename(string tableName, string newTableName)
         {
@@ -41,6 +41,11 @@ namespace Packer2.Library.Report.Transforms
         {
             foreach (var kvp in objectRenames)
                 AddRename(tableName, kvp.Key, kvp.Value);
+        }
+
+        public void AddMeasureRebase(string measureName, string desiredOwnerTable)
+        {
+            measureUpdatedOwnerTables[measureName] = desiredOwnerTable;
         }
 
         public void AddRename(string tableName, string oldObjectName, string newObjectName)
@@ -68,6 +73,9 @@ namespace Packer2.Library.Report.Transforms
                 return false;
             }
         }
+
+        public bool TryGetMeasureNewOwnerTable(string measureName, out string? newOwnerTable)
+            => measureUpdatedOwnerTables.TryGetValue(measureName, out newOwnerTable);
     }
 
     public class ReplaceModelReferenceTransform : ReportInfoNavTransformBase
@@ -142,6 +150,29 @@ namespace Packer2.Library.Report.Transforms
             protected override void Visit(QueryMeasureExpression expression)
             {
                 Process(expression);
+
+                if (renames.TryGetMeasureNewOwnerTable(expression.Property, out var newOwnerName))
+                {
+                    if (expression.Expression.Expression is QuerySourceRefExpression qse)
+                    {
+                        if (qse.Entity != null)
+                        {
+                            if (qse.Entity != newOwnerName)
+                            {
+                                logger.LogInformation("Rebased measure reference '{measure}' from table {oldTable} to table '{newTable}'. (Outer path '{outerPath}', inner path {innerPath})", expression.Property, qse.Entity, newOwnerName, OuterPath, InnerPath);
+                                qse.Entity = newOwnerName;
+                            }
+                        }
+                        else
+                        {
+                            logger.LogWarning("Skipping rebase measure '{measure}' from table '{oldTable}' to table '{newTable}' because the table is aliased and automatic modification of the 'from' section is currently not supported. (Outer path '{outerPath}', inner path {innerPath})", expression.Property, qse.Entity, newOwnerName, OuterPath, InnerPath);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("Skipping rebase measure '{measure}' to table '{newTable}' because the original table is a subquery and this case is currently not supported. (Outer path '{outerPath}', inner path {innerPath})", expression.Property, newOwnerName, OuterPath, InnerPath);
+                    }
+                }
             }
 
             protected override void Visit(QuerySourceRefExpression expression)
