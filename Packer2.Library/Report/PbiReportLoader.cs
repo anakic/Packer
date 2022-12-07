@@ -56,6 +56,34 @@ public static class PbiReportLoader
         return report;
     }
 
+    public static PowerBIReport DetectModelExtensions(this PowerBIReport report, out IEnumerable<Table> extensions)
+    {
+        UnstuffTransform ut = new UnstuffTransform(new DummyLogger<UnstuffTransform>());
+        var clone = JObject.Parse(report.Layout.ToString());
+        ut.Transform(clone);
+        
+        var tableExtensions = new Dictionary<string, Table>();
+
+        foreach (var elem in clone.SelectTokens("#config.modelExtensions[*].entities[*]"))
+        {
+            string tableName = elem["extends"]!.ToString();
+            if(tableExtensions.TryGetValue(tableName, out var table) == false)
+                table = tableExtensions[tableName] = new Table() { Name = tableName };
+
+            foreach (var measureElem in elem.SelectTokens("measures[*]"))
+            {
+                table.Measures.Add(new Measure()
+                {
+                    Name = measureElem["name"]!.ToString(),
+                    Expression = measureElem["expression"]!.ToString()
+                });
+            }
+            
+        }
+        extensions = tableExtensions.Values;
+        return report;
+    }
+
     public static PowerBIReport DetectReferences(this PowerBIReport report, Detections detections)
     {
         UnstuffTransform ut = new UnstuffTransform(new DummyLogger<UnstuffTransform>());

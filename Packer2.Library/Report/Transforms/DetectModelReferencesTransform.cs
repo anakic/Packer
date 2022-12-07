@@ -1,4 +1,5 @@
-﻿using Microsoft.InfoNav.Data.Contracts.Internal;
+﻿using Microsoft.AnalysisServices.Tabular;
+using Microsoft.InfoNav.Data.Contracts.Internal;
 
 namespace Packer2.Library.Report.Transforms
 {
@@ -31,6 +32,26 @@ namespace Packer2.Library.Report.Transforms
             MeasureReferences = new List<DetectedMeasureReference>();
             HierarchyReferences = new List<DetectedHierarchyReference>();
             HierarchyLevelReferences = new List<DetectedHierarchyLevelReference>();
+        }
+
+        public void Exclude(IEnumerable<Table> modelExtensions)
+        {
+            foreach (var meas in modelExtensions.SelectMany(t => t.Measures))
+            {
+                MeasureReferences
+                    .Where(mr => mr.TableName == meas.Table.Name && mr.measure == meas.Name)
+                    .ToList()
+                    .ForEach(m => MeasureReferences.Remove(m));
+            }
+        }
+
+        public void Add(Detections detections)
+        {
+            TableReferences.AddRange(detections.TableReferences);
+            ColumnReferences.AddRange(detections.ColumnReferences);
+            MeasureReferences.AddRange(detections.MeasureReferences);
+            HierarchyReferences.AddRange(detections.HierarchyReferences);
+            HierarchyLevelReferences.AddRange(detections.HierarchyLevelReferences);
         }
     }
 
