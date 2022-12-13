@@ -5,6 +5,8 @@ using Packer2.Library;
 using Packer2.Library.Report.Transforms;
 using LibGit2Sharp;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using Microsoft.AnalysisServices.Tabular;
+using System.Diagnostics;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -18,20 +20,26 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 //      - check dax (checking M not needed if tables can't reference each other but only expressions)
 //      - check report references (infonav)
 // 2. ability to rename measures without mentioning table name
-// 3. abiltiy to move measure from table to table
+// + 3. abiltiy to move measure from table to table
 // 4. ability to fix up measure parent table automatically (will fix all measures that have been moved)
 // 5. find unused model extensions (measures defined inside the report)
 // 6. when replacing table names in queries, also replace it in #config.modelExtensions area (e.g. "Advanced Analytics, Productivity, All Services (WLT).pbix")
 // 7. include unmatched hierarchies/levels
 
-
-var allDetections = new Detections();
+bool skipPrompts = false;
+Mappings renames = CreateRenames();
 
 var folder = @"C:\Dropbox (RwHealth)\WLT\Flow Tool - WLT\Modules";
 var pbiFiles = Directory.GetFiles(folder, "*(WLT).pbix", SearchOption.AllDirectories);
 
-pbiFiles = pbiFiles.Skip(4).Take(1).ToArray();
+var db = TabularModel.LoadFromSSAS(@"localhost\rc2022", "test234");
+var srv = new Server();
+srv.Connect(@"Data source=powerbi://api.powerbi.com/v1.0/myorg/WLT | PROD;initial catalog=Mental Health Flow Tool (WLT)");
+var oldDb = srv.Databases[0];
 
+var allDetections = new Detections();
+
+int i = 1;
 foreach (var originalPbix in pbiFiles)
 {
     string name = Path.GetFileNameWithoutExtension(originalPbix);
@@ -41,84 +49,78 @@ foreach (var originalPbix in pbiFiles)
     if (!File.Exists(workingPbix))
         File.Copy(originalPbix, workingPbix);
 
-    var detections = new Detections();
+    Console.Write($"{i}: ");
     try
     {
-        string repoFolder = Path.Combine(@"c:\test\wlt", name);
+        bool redo = false;
+        do
+        {
+            var detections = new Detections();
+            string repoFolder = Path.Combine(@"c:\test\wlt", name);
 
-        // load the report from the folder if it's already been worked on manually
-        // (indicated by the presence of the .git folder), from pbix if not.
-        PowerBIReport report = LoadOrInitializeRepository(workingPbix, repoFolder);
-        
-        PerformReplacements(report);
-        report
-            .DetectModelExtensions(out var extensions)
-            .DetectReferences(detections)
-            .SaveToFolder(repoFolder)
-            .SwitchToSSASDataSource("server=LTP-220118-ANA\\RC2022;database=test123")
-            .SaveToPbiArchive(workingPbix);
+            // load the report from the folder if it's already been worked on manually
+            // (indicated by the presence of the .git folder), from pbix if not.
+            PowerBIReport report = LoadOrInitializeRepository(workingPbix, repoFolder);
 
-        detections.Exclude(extensions);
+            report.ReplaceModelReferences(renames);
+            report
+                .DetectModelExtensions(out var extensions)
+                .DetectReferences(detections)
+                .SaveToFolder(repoFolder)
+                .SwitchToSSASDataSource("server=LTP-220118-ANA\\RC2022;database=test123")
+                .SaveToPbiArchive(workingPbix);
 
-        allDetections.Add(detections);
+            detections.Exclude(extensions);
+
+            allDetections.Add(detections);
+
+            PrintDetections(detections, db, oldDb);
+            Console.WriteLine("");
+            redo = InteractiveLoop(workingPbix, repoFolder);
+        }
+        while (redo);
     }
     catch (Exception ex)
     {
         Console.WriteLine(ex);
     }
-    PrintDetections(detections);
-
-    // Process.Start("explorer.exe", "\"" + outputArchivePath + "\"");
-
-    //Console.Write("Processed file. Press enter to resume...");
-    //Console.ReadLine();
 
     Console.WriteLine();
+    Console.WriteLine("*************************************************************************************");
     Console.WriteLine();
-    Console.WriteLine("*********************************************");
-    Console.WriteLine();
+    i++;
 }
+
+Console.WriteLine("*************************************************************************************");
+Console.WriteLine("*************************************************************************************");
+Console.WriteLine("*************************************************************************************");
+
+PrintDetections(allDetections, db, oldDb);
+
+Console.ForegroundColor = ConsoleColor.Yellow;
+Console.WriteLine("Processing complete");
+Console.ResetColor();
+
 
 PowerBIReport LoadOrInitializeRepository(string pbix, string repoFolder)
 {
     if (!Directory.Exists(Path.Combine(repoFolder, ".git")))
     {
-        var sig = new Signature("antonio", "antonio@realworld.health", DateTimeOffset.Now);
         PbiReportLoader
             .LoadFromPbiArchive(pbix)
             .SaveToFolder(repoFolder);
         Repository.Init(repoFolder);
-        using (var repo = new Repository(repoFolder))
-        {
-            Commands.Stage(repo, "*");
-            repo.Commit("initial commit", sig, sig);
-        }
+        Commit(repoFolder, "initial commit");
     }
 
     Console.WriteLine($"Processing from folder: '{repoFolder}'");
     return PbiReportLoader.LoadFromFolder(repoFolder);
-    // return PbiReportLoader.LoadFromPbiArchive(pbix);
 }
 
-void GitCommitChanges(string repoFolder, string v)
-{
-    throw new NotImplementedException();
-}
 
-void GitCreateRepository(string repoFolder)
-{
-    
-}
-
-Console.WriteLine("*********************************************");
-Console.WriteLine("*********************************************");
-
-PrintDetections(allDetections);
-
-void PrintDetections(Detections detections)
+void PrintDetections(Detections detections, Database ssasModel, Database oldModel)
 {
     var uniqueTables = detections.ColumnReferences.Select(c => c.TableName).Union(detections.MeasureReferences.Select(m => m.TableName)).ToHashSet();
-    var db = TabularModel.LoadFromSSAS(@"localhost\rc2022", "test123");
     var serverTables = db.Model.Tables.Select(t => t.Name).ToHashSet();
 
     var unmappedTables = uniqueTables.Except(serverTables).ToList();
@@ -131,7 +133,7 @@ void PrintDetections(Detections detections)
             Console.WriteLine($"- {t}");
     }
 
-    var unmappedCols = detections.ColumnReferences.Where(x => !db.Model.Tables.SelectMany(t => t.Columns).Any(m => m.Table.Name == x.TableName && m.Name == x.column)).GroupBy(cr => cr.TableName).ToList();
+    var unmappedCols = detections.ColumnReferences.Where(x => !IsColumnInModel(new[] { x.TableName }, x.column, db)).GroupBy(cr => cr.TableName).ToList();
     if (unmappedCols.Any())
     {
         Console.WriteLine("");
@@ -141,11 +143,18 @@ void PrintDetections(Detections detections)
         {
             Console.WriteLine($"- {g.Key}");
             foreach (var col in g.GroupBy(x => x.column))
-                Console.WriteLine($"    - {col.Key} ({col.Count()})");
+            {
+                bool isInModel = IsColumnInModel(renames.GetTablesMappedTo(g.Key).Append(g.Key).Distinct(), col.Key, oldDb);
+                string prefix = isInModel ? "-" : "X";
+                if (!isInModel)
+                    Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"    {prefix} {col.Key} ({col.Count()})");
+                Console.ResetColor();
+            }
         }
     }
 
-    var unmappedMeasures = detections.MeasureReferences.Where(x => !db.Model.Tables.SelectMany(t => t.Measures).Any(m => m.Table.Name == x.TableName && m.Name == x.measure)).GroupBy(cr => cr.TableName);
+    var unmappedMeasures = detections.MeasureReferences.Where(x => !IsMeasureInModel(x.measure, db)).GroupBy(cr => cr.TableName);
     if (unmappedMeasures.Any())
     {
         Console.WriteLine("");
@@ -155,107 +164,207 @@ void PrintDetections(Detections detections)
         {
             Console.WriteLine($"- {g.Key}");
             foreach (var meas in g.GroupBy(x => x.measure))
-                Console.WriteLine($"    - {meas.Key} ({meas.Count()})");
+            {
+                bool isInModel = IsMeasureInModel(meas.Key, oldDb);
+                string prefix = isInModel ? "-" : "X";
+                if (!isInModel)
+                    Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"    {prefix} {meas.Key} ({meas.Count()})");
+                Console.ResetColor();
+            }
         }
     }
 }
 
-
-void PerformReplacements(PowerBIReport report)
+bool InteractiveLoop(string archivePath, string folderPath)
 {
-    report.ReplaceTableReference("GPs", "GP Practices");
-    report.ReplaceModelReference("GP Practices", "WLT PCN", "PCN_Group");
+    if (skipPrompts)
+        return false;
 
-    report.ReplaceTableReference("Days of Week", "Weekdays");
+    bool done = false;
+    do
+    {
+        Console.WriteLine("C - continue, P - Open in PowerBI, V - Open in VSCode, F - Extract to folder, A - Assemble archive, G - Create Git commit, S - Skip all prompts, R - Redo analysis, Q - Quit");
+        var answer = Console.ReadKey();
+        Console.WriteLine();
+        if (answer.Key == ConsoleKey.Q)
+            Environment.Exit(0);
+        else if (answer.Key == ConsoleKey.R)
+            return true;
+        else if (answer.Key == ConsoleKey.S)
+        {
+            skipPrompts = true;
+            done = true;
+        }
+        else if (answer.Key == ConsoleKey.C)
+        {
+            done = true;
+        }
+        else if (answer.Key == ConsoleKey.P)
+        {
+            Process.Start("explorer.exe", "\"" + archivePath + "\"");
+        }
+        else if (answer.Key == ConsoleKey.F)
+        {
+            PbiReportLoader.LoadFromPbiArchive(archivePath).SaveToFolder(folderPath);
+        }
+        else if (answer.Key == ConsoleKey.A)
+        {
+            PbiReportLoader.LoadFromFolder(folderPath).SaveToPbiArchive(archivePath);
+        }
+        else if (answer.Key == ConsoleKey.G)
+        {
+            Console.WriteLine("Enter commit message: ");
+            var message = Console.ReadLine()!;
+            Commit(folderPath, message);
+        }
+        else if (answer.Key == ConsoleKey.V)
+        {
+            Process.Start("C:\\Users\\AntonioNakic-Alfirev\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe", "\"" + folderPath + "\"");
+        }
+    }
+    while (!done);
 
-    report.ReplaceTableReference("WardLeave", "Ward Leave");
+    return false;
+}
 
-    report.ReplaceTableReference("Localities", "Local Authorities");
+bool IsColumnInModel(IEnumerable<string> tableNames, string columnName, Database db)
+    => db.Model.Tables.SelectMany(t => t.Columns).Any(m => tableNames.Contains(m.Table.Name) && m.Name == columnName);
 
-    report.ReplaceTableReference("Latest Week", "Last Model Date");
+bool IsMeasureInModel(string measureName, Database db)
+    => db.Model.Tables.SelectMany(t => t.Measures).Any(m => /*m.Table.Name == tableName && */m.Name == measureName);
 
-    report.ReplaceTableReference("Acuity Tier", "Acuity Tier (T0)");
-    report.ReplaceModelReference("Acuity Tier (T0)", "Service/Ward", "Service");
-    report.ReplaceModelReference("Acuity Tier (T0)", "Service/Ward (Trial Balance LoD)", "Service (Trial Balance LoD)");
-    report.ReplaceModelReference("Acuity Tier (T0)", "Simplified Service Type", "Service Type");
+Mappings CreateRenames()
+{
+    var renames = new Mappings();
 
-    report.ReplaceTableReference("Acuity Tier (Previous)", "Acuity Tier (T-1)");
-    report.ReplaceTableReference("Acuity Tier (Previous Service)", "Acuity Tier (T-1)");
-    report.ReplaceModelReference("Acuity Tier (T-1)", "Service/Ward", "Service");
-    report.ReplaceModelReference("Acuity Tier (T-1)", "Simplified Service Type", "Service Type");
+    renames.AddTableRename("GPs", "GP Practices");
+    renames.AddRename("GP Practices", "WLT PCN", "PCN_Group");
 
-    report.ReplaceTableReference("Acuity Tier (T-2 Service)", "Acuity Tier (T-2)");
-    report.ReplaceModelReference("Acuity Tier (T-2)", "Service/Ward", "Service");
-    report.ReplaceModelReference("Acuity Tier (T-2)", "Simplified Service Type", "Service Type");
+    renames.AddTableRename("Days of Week", "Weekdays");
 
-    report.ReplaceTableReference("Acuity Tier (T+1 Service)", "Acuity Tier (T+1)");
-    report.ReplaceModelReference("Acuity Tier (T+1)", "Service/Ward", "Service");
-    report.ReplaceModelReference("Acuity Tier (T+1)", "Simplified Service Type", "Service Type");
+    renames.AddMove("Weekdays", "Weekday or Weekend", "Calendar", "Weekday or Weekend");
 
-    report.ReplaceTableReference("Acuity Tier (T+2 Service)", "Acuity Tier (T+2)");
-    report.ReplaceModelReference("Acuity Tier (T+2)", "Service/Ward", "Service");
-    report.ReplaceModelReference("Acuity Tier (T+2)", "Simplified Service Type", "Service Type");
+    renames.AddTableRename("WardLeave", "Ward Leave");
 
-    report.ReplaceTableReference("Acuity Tier (Next Service Within 6 months)", "Acuity Tier (T+1_w6M)");
-    report.ReplaceModelReference("Acuity Tier (T+1_w6M)", "Simplified Service Type", "Service Type");
+    renames.AddTableRename("Localities", "Local Authorities");
 
-    report.ReplaceTableReference("Care Changes", "Flows");
-    report.ReplaceTableReference("Care Changes data", "Flows");
-    report.ReplaceModelReference("Flows", "Service Flows for graphing", "m_Flows");
-    report.ReplaceModelReference("Flows", "Next Service within 6 months", "T+1_w6M Service");
-    report.ReplaceModelReference("Flows", "Resultant Service", "T0 Service");
-    report.ReplaceModelReference("Flows", "m_ServiceFlows_NoCalendarTableRelationship", "m_Flows_NoCalendarTableRelationship");
+    renames.AddTableRename("Latest Week", "Last Model Date");
+
+    renames.AddTableRename("Acuity Tier", "Acuity Tier (T0)");
+    renames.AddRename("Acuity Tier (T0)", "Service/Ward", "Service");
+    renames.AddRename("Acuity Tier (T0)", "Service/Ward (Trial Balance LoD)", "Service (Trial Balance LoD)");
+    renames.AddRename("Acuity Tier (T0)", "Simplified Service Type", "Service Type");
+
+    renames.AddTableRename("Acuity Tier (Previous)", "Acuity Tier (T-1)");
+    renames.AddTableRename("Acuity Tier (Previous Service)", "Acuity Tier (T-1)");
+    renames.AddRename("Acuity Tier (T-1)", "Service/Ward", "Service");
+    renames.AddRename("Acuity Tier (T-1)", "Simplified Service Type", "Service Type");
+
+    renames.AddTableRename("Acuity Tier (T-2 Service)", "Acuity Tier (T-2)");
+    renames.AddRename("Acuity Tier (T-2)", "Service/Ward", "Service");
+    renames.AddRename("Acuity Tier (T-2)", "Simplified Service Type", "Service Type");
+
+    renames.AddTableRename("Acuity Tier (T+1 Service)", "Acuity Tier (T+1)");
+    renames.AddRename("Acuity Tier (T+1)", "Service/Ward", "Service");
+    renames.AddRename("Acuity Tier (T+1)", "Simplified Service Type", "Service Type");
+    renames.AddRename("Acuity Tier (T+1)", "Conversion into Next Service_Latest 3 months", "m_%ConversionToT+1_Latest3Months");
+    renames.AddRename("Acuity Tier (T+1)", "Conversion into Next Service_excl Latest 3 months", "m_%ConversionToT+1_NotLatest3Months ");
+
+    renames.AddTableRename("Acuity Tier (T+2 Service)", "Acuity Tier (T+2)");
+    renames.AddRename("Acuity Tier (T+2)", "Service/Ward", "Service");
+    renames.AddRename("Acuity Tier (T+2)", "Simplified Service Type", "Service Type");
+
+    renames.AddTableRename("Acuity Tier (Next Service Within 6 months)", "Acuity Tier (T+1_w6M)");
+    renames.AddRename("Acuity Tier (T+1_w6M)", "Simplified Service Type", "Service Type");
+
+    renames.AddTableRename("Care Changes", "Flows");
+    renames.AddTableRename("Care Changes data", "Flows");
+    renames.AddRename("Flows", "Service Flows for graphing", "m_Flows");
+    renames.AddRename("Flows", "Next Service within 6 months", "T+1_w6M Service");
+    renames.AddRename("Flows", "Resultant Service", "T0 Service");
+    renames.AddRename("Flows", "m_ServiceFlows_NoCalendarTableRelationship", "m_Flows_NoCalendarTableRelationship");
+    renames.AddRename("Flows", "Service Flows", "m_Flows_0");
+    renames.AddRename("Flows", "Previous Service", "T-1 Service");
+    renames.AddRename("Flows", "30-day Readmission Rate", "m_ReadmissionRate_30days");
+    renames.AddRename("Flows", "Conversion Rate to Inpatient", "m_ConversionRate_Inpatient");
+
+    renames.AddRename("Flows", "m_ReadmissionRate_30Days", "m_ReadmissionRate_30days");
+    renames.AddRename("Flows", "m_ConversionRate_ToInpatient", "m_ConversionRate_Inpatient");
+
+    renames.AddMove("Gender (Simplifcations)", "Gender (Simplification)", "Patients", "Gender");
+    renames.AddMove("Gender", "Gender (Simplification)", "Patients", "Gender");
+
+    renames.AddRename("Flows", "Average Flows", "m_Flows_AverageperWeek");
     // todo: remove my added m_Flows_InPeriod measure => we're using m_Flows instead
 
-    report.ReplaceModelReference("Crisis", "m_CountCrisisPresentation", "m_CrisisPresentations_Count");
+    renames.AddRename("Crisis", "m_CountCrisisPresentation", "m_CrisisPresentations_Count");
 
-    report.ReplaceModelReference("Local Authorities", "Local Authority Name", "Local Authority");
+    renames.AddRename("Local Authorities", "Local Authority Name", "Local Authority");
 
-    report.ReplaceModelReference("Referral Spells", "m_CountReferralsSpells", "m_ReferralSpellsOpening_Count");
-    report.ReplaceModelReference("Referral Spells", "m_ReferralSpells_AverageCaseLength_Days", "m_ReferralSpells_AverageLength_Days");
+    renames.AddRename("Referral Spells", "m_CountReferralsSpells", "m_ReferralSpellsOpening_Count");
+    renames.AddRename("Referral Spells", "m_ReferralSpells_AverageCaseLength_Days", "m_ReferralSpells_AverageLength_Days");
 
-    report.ReplaceModelReference("Trial Balance", "m_WTEs", "m_WTEs_AllPaid");
-    report.ReplaceModelReference("Trial Balance", "m_Cost_Pay_PerWTE_InPeriod", "m_Cost_PerWTE_AllPaid_InPeriod");
-    report.ReplaceModelReference("Trial Balance", "m_Cost_Pay_PerContact", "m_Cost_PerContact");
-    report.ReplaceModelReference("Trial Balance", "m_Cost_Pay_PerCase", "m_CostPerReferral");
-    report.ReplaceModelReference("Trial Balance", "m_Cost_Pay_1000s", "m_Cost_1000s");
-    report.ReplaceModelReference("Trial Balance", "Cost Centre Desc", "Cost Centre Code Desc");
+    renames.AddRename("Trial Balance", "m_WTEs", "m_WTEs_AllPaid");
+    renames.AddRename("Trial Balance", "m_Cost_Pay_PerWTE_InPeriod", "m_Cost_PerWTE_AllPaid_InPeriod");
+    renames.AddRename("Trial Balance", "m_Cost_Pay_PerContact", "m_Cost_PerContact");
+    renames.AddRename("Trial Balance", "m_Cost_Pay_PerCase", "m_CostPerReferral");
+    renames.AddRename("Trial Balance", "m_Cost_Pay_1000s", "m_Cost_1000s");
+    renames.AddRename("Trial Balance", "Cost Centre Desc", "Cost Centre Code Desc");
 
-    report.ReplaceTableReference("flow ReferralSourcesSimplified", "Pathways");
-    report.ReplaceModelReference("Pathways", "Referral Source Simplified", "Pathway Referral source");
+    renames.AddTableRename("flow ReferralSourcesSimplified", "Pathways");
+    renames.AddRename("Pathways", "Referral Source Simplified", "Pathway Referral source");
 
-    report.ReplaceModelReference("Localities", "Locality", "Local Authority");
+    renames.AddRename("Localities", "Locality", "Local Authority");
 
-    report.ReplaceModelReference("Last Model Date", "Model Update Date", "m_LastUpdated_VisualLabel");
+    renames.AddRename("Last Model Date", "Model Update Date", "m_LastUpdated_VisualLabel");
 
-    report.ReplaceTableReference("Calendar Helper", "Calendar");
-    report.ReplaceModelReference("Calendar", "Is Current 3 Years", "Is Last 3 Years");
-    report.ReplaceModelReference("Calendar", "m_DatesSelected", "DateRangeHeader");
-    report.ReplaceModelReference("Calendar", "Is Current 52 Weeks", "Is Last 52 Weeks");
-    report.ReplaceModelReference("Calendar", "Is Current 6 Months", "Is Last 6 Months");
-    report.ReplaceModelReference("Calendar", "Is Current 3 Months", "Is Last 3 Months");
-    report.ReplaceModelReference("Calendar", "Is Current 57 Weeks", "Is Last 57 Weeks");
-    report.ReplaceModelReference("Calendar", "Is Current 30 Days", "Is Last 30 Days");
-    report.ReplaceModelReference("Calendar", "Is Current Week", "Is Last Week");
+    renames.AddTableRename("Calendar Helper", "Calendar");
+    renames.AddRename("Calendar", "Is Current 3 Years", "Is Last 3 Years");
+    renames.AddRename("Calendar", "m_DatesSelected", "DateRangeHeader");
+    renames.AddRename("Calendar", "Is Current 52 Weeks", "Is Last 52 Weeks");
+    renames.AddRename("Calendar", "Is Current 6 Months", "Is Last 6 Months");
+    renames.AddRename("Calendar", "Is Current 3 Months", "Is Last 3 Months");
+    renames.AddRename("Calendar", "Is Current 57 Weeks", "Is Last 57 Weeks");
+    renames.AddRename("Calendar", "Is Current 30 Days", "Is Last 30 Days");
+    renames.AddRename("Calendar", "Is Current Week", "Is Last Week");
 
-    report.ReplaceTableReference("Referrals and Ward Stays", "Care Episodes");
-    // report.ReplaceModelReference("Calendar", "Completed Month", "???");
+    renames.AddTableRename("Referrals and Ward Stays", "Care Episodes");
+    // renames.AddRename("Calendar", "Completed Month", "???");
 
-    report.ReplaceTableReference("Staff Types", "Subjective Code Descriptions");
-    report.ReplaceModelReference("Subjective Code Descriptions", "Staff Grouping", "Staff Type");
+    renames.AddTableRename("Staff Types", "Subjective Code Descriptions");
+    renames.AddRename("Subjective Code Descriptions", "Staff Grouping", "Staff Type");
 
-    report.ReplaceModelReference("Patients", "Ethnicity/BAME Group", "Ethnic Category (group)");
-    report.ReplaceModelReference("EthnicityDescription", "Ethnicity/BAME Group", "Ethnic Category");
+    renames.AddRename("Patients", "Ethnicity/BAME Group", "Ethnic Category (group)");
+    renames.AddRename("EthnicityDescription", "Ethnicity/BAME Group", "Ethnic Category");
 
-    report.ReplaceModelReference("Admissions", "Adult Acute & PICU Admissions in last Year", "Acute or PICU Admissions in last Year");
-    report.ReplaceModelReference("Admissions", "Admission Ward", "T0 Service");
-    report.ReplaceModelReference("Admissions", "LA on Admission", "Local Authority on Admission");
+    renames.AddRename("Admissions", "Adult Acute & PICU Admissions in last Year", "Acute or PICU Admissions in last Year");
+    renames.AddRename("Admissions", "Admission Ward", "T0 Service");
+    renames.AddRename("Admissions", "LA on Admission", "Local Authority on Admission");
+    renames.AddRename("Admissions", "Admission Gateway Simplified", "T-1 Service Type");
+    renames.AddRename("Admissions", "Age at Admission (group)", "Age at Admission (band)");
+    renames.AddRename("Admissions", "Admitted Under Section (all)", "MHA Section Admission Status");
 
-    report.ReplaceTableReference("Acuity Tier (CATT)", "Acuity Tier HTT");
-    report.ReplaceModelReference("Acuity Tier HTT", "Service/Ward", "Service");
+    renames.AddTableRename("Acuity Tier (CATT)", "Acuity Tier HTT");
+    renames.AddRename("Acuity Tier HTT", "Service/Ward", "Service");
 
-    report.RebaseMeasure("m_Caseload_Total_EndofPeriod_Stratified_byIntensity", "Referral Spells");
-    report.RebaseMeasure("m_Caseload_Total_EndofPeriod_Stratified_byLastContact", "Referral Spells");
+    renames.AddMeasureRebase("m_Caseload_Total_EndofPeriod_Stratified_byIntensity", "Referral Spells");
+    renames.AddMeasureRebase("m_Caseload_Total_EndofPeriod_Stratified_byLastContact", "Referral Spells");
+
+    renames.AddTableRename("Days from Trust Entry to Admission", "Days from Trust Entry to Admission Label Rank");
+    renames.AddRename("Days from Trust Entry to Admission Label Rank", "Days From Trust Entry to Admission", "Days from Trust entry to Admission (bins)");
+
+    return renames;
 }
 
 Console.ReadKey();
+
+static void Commit(string repoFolder, string message)
+{
+    var sig = new Signature("antonio", "antonio@realworld.health", DateTimeOffset.Now);
+    using (var repo = new Repository(repoFolder))
+    {
+        Commands.Stage(repo, "*");
+        repo.Commit(message, sig, sig);
+    }
+}
