@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
+using Packer2.Library.Report.Queries;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
@@ -19,8 +20,8 @@ namespace Packer2.Library.Report.Transforms
             this.logger = logger ?? new DummyLogger<ValidateModelReferencesTransform>();
         }
 
-        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
-            => new DetectRefErrorsVisitor(outerPath, innerPath, sourceByAliasMap, database, logger, () => errorCount++);
+        protected override ExtendedExpressionVisitor CreateProcessingVisitor(string path)
+            => new DetectRefErrorsVisitor(path, database, logger, () => errorCount++);
 
         protected override void OnProcessingComplete(JObject jObj)
         {
@@ -31,7 +32,7 @@ namespace Packer2.Library.Report.Transforms
         }
 
 
-        class DetectRefErrorsVisitor : BaseQueryExpressionVisitor
+        class DetectRefErrorsVisitor : BaseTransformVisitor
         {
             public HashSet<string>? SourcesToIgnore { get; set; } = new HashSet<string>();
 
@@ -39,8 +40,8 @@ namespace Packer2.Library.Report.Transforms
             private readonly ILogger traceRefErrorReporter;
             private readonly Action incrementErrorCount;
 
-            public DetectRefErrorsVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap, Database db, ILogger traceRefErrorReporter, Action incrementErrorCount)
-                : base(outerPath, innerPath, sourceByAliasMap)
+            public DetectRefErrorsVisitor(string path, Database db, ILogger traceRefErrorReporter, Action incrementErrorCount)
+                : base(path)
             {
                 this.db = db;
                 this.traceRefErrorReporter = traceRefErrorReporter;
@@ -93,7 +94,7 @@ namespace Packer2.Library.Report.Transforms
                 }
                 catch (Exception ex)
                 {
-                    traceRefErrorReporter.LogError("{errorMessage}. Location: '{outerPath}' => '{innerPath}'", ex.Message, OuterPath, InnerPath);
+                    traceRefErrorReporter.LogError("{errorMessage}. Path: '{path}'", ex.Message, Path);
                     incrementErrorCount();
                 }
             }

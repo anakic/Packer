@@ -1,5 +1,7 @@
 ﻿using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
+using Packer2.Library.Report.Queries;
+using System.Linq.Expressions;
 
 namespace Packer2.Library.Report.Transforms
 {
@@ -50,7 +52,9 @@ namespace Packer2.Library.Report.Transforms
 
                             if (TryReadExpression(expToken, out var expression))
                             {
-                                ProcessExpression(expression!, token.Path, expToken.Path);
+
+                                var visitor = CreateProcessingVisitor(expToken.Path);
+                                visitor.VisitExpression(expression);
                                 WriteExpression(expToken, expression!);
                             }
                         }
@@ -81,7 +85,8 @@ namespace Packer2.Library.Report.Transforms
                         {
                             if (TryReadQuery(expToken, out var query))
                             {
-                                ProcessQuery(query!, token.Path, expToken.Path);
+                                var visitor = CreateProcessingVisitor(expToken.Path);
+                                visitor.Visit(query);
                                 WriteQuery(expToken, query!);
                             }
                         }
@@ -91,7 +96,8 @@ namespace Packer2.Library.Report.Transforms
                         {
                             if (TryReadFilter(expToken, out var filter))
                             {
-                                ProcessFilter(filter!, token.Path, expToken.Path);
+                                var visitor = CreateProcessingVisitor(expToken.Path);
+                                visitor.Visit(filter);
                                 WriteFilter(expToken, filter!);
                             }
                         }
@@ -111,6 +117,8 @@ namespace Packer2.Library.Report.Transforms
 
         protected virtual bool TryReadFilter(JToken expToken, out FilterDefinition? filter)
         {
+            // todo: check if we need the same try-catch logic as in TryReadExpression
+
             if (expToken["From"] == null)
             {
                 filter = null;
@@ -123,6 +131,8 @@ namespace Packer2.Library.Report.Transforms
 
         protected virtual bool TryReadQuery(JToken expToken, out QueryDefinition? queryDefinition)
         {
+            // todo: check if we need the same try-catch logic as in TryReadExpression
+
             queryDefinition = expToken.ToObject<QueryDefinition>()!;
             return true;
         }
@@ -169,38 +179,6 @@ namespace Packer2.Library.Report.Transforms
 
         protected virtual void OnProcessingComplete(JObject jObject) { }
 
-        protected abstract QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null);
-
-        protected void ProcessExpression(QueryExpressionContainer expression, string outerPath, string innerPath)
-        {
-            // we only have aliases for queries and filters (they have a From clause that specifies them)
-            var visitor = CreateProcessingVisitor(outerPath, innerPath);
-            expression.Expression.Accept(visitor);
-        }
-
-        protected virtual void ProcessFilter(FilterDefinition filterObj, string outerPath, string innerPath)
-        {
-            var visitor = CreateProcessingVisitor(outerPath, innerPath, filterObj.From.ToDictionary(f => f.Name, f => f.Entity));
-            filterObj.From.ForEach(es => es.Expression?.Expression.Accept(visitor));
-            filterObj.Where.ForEach(w => w.Condition.Expression.Accept(visitor));
-        }
-
-        protected virtual void ProcessQuery(QueryDefinition query, string outerPath, string innerPath)
-        {
-            var visitor = CreateProcessingVisitor(outerPath, innerPath, query.From.ToDictionary(f => f.Name, f => f.Entity));
-            query.From.ForEach(es => es.Expression?.Expression.Accept(visitor));
-            query.GroupBy?.ForEach(w => w.Expression.Accept(visitor));
-            query.OrderBy?.ForEach(w => w.Expression.Expression.Accept(visitor));
-            query.Let?.ForEach(w => w.Expression.Accept(visitor));
-            query.Parameters?.ForEach(w => w.Expression.Accept(visitor));
-            query.Select?.ForEach(w => w.Expression.Accept(visitor));
-            query.Where?.ForEach(w => w.Condition.Expression.Accept(visitor));
-            query.Transform?.ForEach(t =>
-            {
-                t.Input.Parameters.ForEach(p => p.Expression.Accept(visitor));
-                t.Input.Table.Columns.ForEach(c => c.Expression.Expression.Accept(visitor));
-                t.Output.Table.Columns.ForEach(p => p.Expression.Expression.Accept(visitor));
-            });
-        }
+        protected abstract ExtendedExpressionVisitor CreateProcessingVisitor(string path);
     }
 }

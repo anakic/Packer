@@ -1,21 +1,22 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.InfoNav.Data.Contracts.Internal;
+using Packer2.Library.Report.Queries;
 
 namespace Packer2.Library.Report.Transforms
 {
-    public record DetectedTableReference(string outerPath, string innerPath, string TableName);
+    public record DetectedTableReference(string path, string TableName);
 
-    public record DetectedColumnReference(string outerPath, string innerPath, string TableName, string column) 
-        : DetectedTableReference(outerPath, innerPath, TableName);
+    public record DetectedColumnReference(string path, string TableName, string column) 
+        : DetectedTableReference(path, TableName);
 
-    public record DetectedMeasureReference(string outerPath, string innerPath, string TableName, string measure)
-        : DetectedTableReference(outerPath, innerPath, TableName);
+    public record DetectedMeasureReference(string path, string TableName, string measure)
+        : DetectedTableReference(path, TableName);
 
-    public record DetectedHierarchyReference(string outerPath, string innerPath, string TableName, string hierarchy)
-        : DetectedTableReference(outerPath, innerPath, TableName);
+    public record DetectedHierarchyReference(string path, string TableName, string hierarchy)
+        : DetectedTableReference(path, TableName);
 
-    public record DetectedHierarchyLevelReference(string outerPath, string innerPath, string TableName, string hierarchy, string level)
-        : DetectedHierarchyReference(outerPath, innerPath, TableName, hierarchy);
+    public record DetectedHierarchyLevelReference(string path, string TableName, string hierarchy, string level)
+        : DetectedHierarchyReference(path, TableName, hierarchy);
 
     public class Detections
     {
@@ -59,25 +60,20 @@ namespace Packer2.Library.Report.Transforms
     {
         private readonly Detections detections;
 
-        class DetectVisitor : DefaultQueryExpressionVisitor
+        class DetectVisitor : BaseTransformVisitor
         {
             private readonly Detections detections;
-            private string outerPath;
-            private string innerPath;
-            private Dictionary<string, string> sourceByAliasMap;
 
-            public DetectVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap, Detections detections)
+            public DetectVisitor(string path, Detections detections)
+                :base(path)
             {
-                this.outerPath = outerPath;
-                this.innerPath = innerPath;
-                this.sourceByAliasMap = sourceByAliasMap;
                 this.detections = detections;
             }
 
             protected override void Visit(QueryMeasureExpression expression)
             {
-                var sourceName = expression.Expression.SourceRef.Entity ?? sourceByAliasMap[expression.Expression.SourceRef.Source];
-                detections.MeasureReferences.Add(new DetectedMeasureReference(outerPath, innerPath, sourceName, expression.Property));
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                detections.MeasureReferences.Add(new DetectedMeasureReference(Path, sourceName, expression.Property));
             }
 
             protected override void Visit(QueryColumnExpression expression)
@@ -85,8 +81,8 @@ namespace Packer2.Library.Report.Transforms
                 if (expression.Expression.SourceRef == null)
                     return;
 
-                var sourceName = expression.Expression.SourceRef.Entity ?? sourceByAliasMap[expression.Expression.SourceRef.Source];
-                detections.ColumnReferences.Add(new DetectedColumnReference(outerPath, innerPath, sourceName, expression.Property));
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                detections.ColumnReferences.Add(new DetectedColumnReference(Path, sourceName, expression.Property));
             }
 
             protected override void Visit(QueryHierarchyExpression expression)
@@ -94,14 +90,8 @@ namespace Packer2.Library.Report.Transforms
                 if (expression.Expression.SourceRef == null)
                     return;
 
-                var sourceName = expression.Expression.SourceRef.Entity ?? sourceByAliasMap[expression.Expression.SourceRef.Source];
-                detections.HierarchyReferences.Add(new DetectedHierarchyReference(outerPath, innerPath, sourceName, expression.Hierarchy));
-            }
-
-            protected override void Visit(QueryHierarchyLevelExpression expression)
-            {
-                var sourceName = expression.Expression.SourceRef.Entity ?? sourceByAliasMap[expression.Expression.SourceRef.Source];
-                // detections.HierarchyReferences.Add(new DetectedHierarchyLevelReference(outerPath, innerPath, sourceName, expression.Level, expression.));
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                detections.HierarchyReferences.Add(new DetectedHierarchyReference(Path, sourceName, expression.Hierarchy));
             }
         }
 
@@ -110,9 +100,9 @@ namespace Packer2.Library.Report.Transforms
             this.detections = detections;
         }
 
-        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
+        protected override ExtendedExpressionVisitor CreateProcessingVisitor(string path)
         {
-            return new DetectVisitor(outerPath, innerPath, sourceByAliasMap, detections);
+            return new DetectVisitor(path, detections);
         }
     }
 }

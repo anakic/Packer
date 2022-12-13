@@ -23,7 +23,7 @@ namespace Packer2.Library
         public static Database LoadFromSSAS(string connectionString)
             => new SSASDataModelStore(connectionString).Read();
 
-        public static Database LoadFromSSAS(string server, string database)
+        public static Database LoadFromSSAS(string server, string? database)
             => new SSASDataModelStore(server, database).Read();
 
         public static Database ExtractDataSourcesOnly(this Database db)

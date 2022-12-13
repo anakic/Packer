@@ -24,7 +24,7 @@ namespace Packer2.PS.Report
 
         protected override void ProcessRecord()
         {
-            var renames = new Renames();
+            var renames = new Mappings();
             if (ObjectName != null)
                 renames.AddRename(TableName, ObjectName, NewName);
             else

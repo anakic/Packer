@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
+using Packer2.Library.Report.Queries;
 using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
@@ -58,8 +59,8 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 
         // todo: use visitor to populate dictionary of measures and columns that we will then save to a file (outside of this class)
 
-        protected override QueryExpressionVisitor CreateProcessingVisitor(string outerPath, string innerPath, Dictionary<string, string> sourceByAliasMap = null)
-            => new DetectMeasuresAndColumnsVisitor(outerPath, innerPath, sourceByAliasMap, Glossary);
+        protected override ExtendedExpressionVisitor CreateProcessingVisitor(string path)
+            => new DetectMeasuresAndColumnsVisitor(path, Glossary);
 
         protected override bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)
         {
@@ -130,15 +131,13 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             expToken.Replace(queryObj.ToString());
         }
 
-        class DetectMeasuresAndColumnsVisitor : BaseQueryExpressionVisitor
+        class DetectMeasuresAndColumnsVisitor : BaseTransformVisitor
         {
-            private readonly Dictionary<string, string> sourcesByAliasMap;
             private readonly ColumnsAndMeasuresGlossary glossary;
 
-            public DetectMeasuresAndColumnsVisitor(string outerPath, string innerPath, Dictionary<string, string> sourcesByAliasMap, ColumnsAndMeasuresGlossary glossary) 
-                : base(outerPath, innerPath, sourcesByAliasMap)
+            public DetectMeasuresAndColumnsVisitor(string path, ColumnsAndMeasuresGlossary glossary) 
+                : base(path)
             {
-                this.sourcesByAliasMap = sourcesByAliasMap;
                 this.glossary = glossary;
             }
 

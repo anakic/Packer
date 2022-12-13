@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DataModelLoader.Report;
 using Microsoft.AnalysisServices.Tabular;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Packer2.Library;
 using Packer2.Library.DataModel;
@@ -23,29 +22,10 @@ public static class PbiReportLoader
     public static Database ReadDataModel(this PowerBIReport report)
         => new BimDataModelStore(new JObjFile(report.DataModelSchemaFile)).Read();
 
-    public static PowerBIReport ReplaceTableReference(this PowerBIReport report, string oldTableName, string newTableName)
+    public static PowerBIReport ReplaceModelReferences(this PowerBIReport report, Mappings renames)
     {
-        var renames = new Renames();
-        renames.AddTableRename(oldTableName, newTableName);
-        return ReplaceModelReferences(report, renames);
-    }
+        // todo: handle this stuffinf/unstuffing logic in a centralized place
 
-    public static PowerBIReport RebaseMeasure(this PowerBIReport report, string measureName, string desiredOwnerTable)
-    {
-        var renames = new Renames();
-        renames.AddMeasureRebase(measureName, desiredOwnerTable);
-        return ReplaceModelReferences(report, renames);
-    }
-
-    public static PowerBIReport ReplaceModelReference(this PowerBIReport report, string tableName, string oldName, string newName)
-    {
-        var renames = new Renames();
-        renames.AddRename(tableName, oldName, newName);
-        return ReplaceModelReferences(report, renames);
-    }
-
-    public static PowerBIReport ReplaceModelReferences(this PowerBIReport report, Renames renames)
-    {
         UnstuffTransform ut = new UnstuffTransform(new DummyLogger<UnstuffTransform>());
         var clone = JObject.Parse(report.Layout.ToString());
         ut.Transform(clone);
