@@ -14,7 +14,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
         {
             private readonly Dictionary<string, string> sourceNames;
             private readonly HashSet<string> transformTableNames;
-            private readonly ColumnsAndMeasuresGlossary glossary;
+            private readonly Lazy<ColumnsAndMeasuresGlossary> glossary;
             private ParserResultValidator validator;
             private readonly bool standalone;
 
@@ -29,7 +29,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 return res;
             }
 
-            public QueryExpressionVisitor(ColumnsAndMeasuresGlossary glossary, ParserResultValidator validator, bool standalone, Dictionary<string, string> sourceNames, HashSet<string> transformTableNames)
+            public QueryExpressionVisitor(Lazy<ColumnsAndMeasuresGlossary> glossary, ParserResultValidator validator, bool standalone, Dictionary<string, string> sourceNames, HashSet<string> transformTableNames)
             {
                 this.glossary = glossary;
                 this.validator = validator;
@@ -428,7 +428,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 if (expressionContainer.SourceRef != null)
                     entity = expressionContainer.SourceRef.Entity ?? sourceNames[expressionContainer.SourceRef.Source];
 
-                if (entity != null && glossary.IsMeasure(entity, property))
+                if (entity != null && glossary.Value.IsMeasure(entity, property))
                 {
                     return new QueryMeasureExpression()
                     {
@@ -436,7 +436,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                         Property = property
                     };
                 }
-                else if (entity != null && glossary.IsColumn(entity, property))
+                else if (entity != null && glossary.Value.IsColumn(entity, property))
                 {
                     return new QueryColumnExpression()
                     {

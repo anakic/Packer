@@ -29,11 +29,15 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
 
         public void Restore(JObject obj)
         {
-            logger.LogInformation("Reading glossary of columns and measures");
-            var glosaryStr = fileSystem.ReadAsString("_glossary.json");
-            var glossary = JsonConvert.DeserializeObject<ColumnsAndMeasuresGlossary>(glosaryStr)!;
+            Lazy<ColumnsAndMeasuresGlossary> glossaryLazy = new Lazy<ColumnsAndMeasuresGlossary>(() =>
+            {
+                logger.LogInformation("Reading glossary of columns and measures");
+                var glossaryStr = fileSystem.ReadAsString("_glossary.json");
+                var glossary = JsonConvert.DeserializeObject<ColumnsAndMeasuresGlossary>(glossaryStr)!;
+                return glossary;
+            });
 
-            var transform = new UnminifyExpressionsLayoutJsonTransform(glossary, logger);
+            var transform = new UnminifyExpressionsLayoutJsonTransform(glossaryLazy, logger);
             transform.Transform(obj);
         }
     }

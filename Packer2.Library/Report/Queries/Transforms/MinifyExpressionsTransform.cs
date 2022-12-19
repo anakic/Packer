@@ -48,11 +48,9 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 
     class MinifyExpressionsLayoutJsonTransform : ReportInfoNavTransformBase
     {
-        private readonly ILogger logger;
-
         public MinifyExpressionsLayoutJsonTransform(ILogger logger)
+            : base(logger)
         {
-            this.logger = logger;
         }
 
         public ColumnsAndMeasuresGlossary Glossary { get; } = new ColumnsAndMeasuresGlossary();

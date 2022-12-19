@@ -1,7 +1,8 @@
-﻿using Microsoft.InfoNav.Data.Contracts.Internal;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
 using Packer2.Library.Report.Queries;
-using System.Linq.Expressions;
+using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
 {
@@ -13,6 +14,13 @@ namespace Packer2.Library.Report.Transforms
     /// </summary>
     public abstract class ReportInfoNavTransformBase
     {
+        protected readonly ILogger logger;
+
+        public ReportInfoNavTransformBase(ILogger? logger)
+        {
+            this.logger = logger ?? new DummyLogger<ReplaceModelReferenceTransform>();
+        }
+
         public void Transform(JObject layout)
         {
             var stuffedAreaSelectors = new string[] 
@@ -52,9 +60,8 @@ namespace Packer2.Library.Report.Transforms
 
                             if (TryReadExpression(expToken, out var expression))
                             {
-
                                 var visitor = CreateProcessingVisitor(expToken.Path);
-                                visitor.VisitExpression(expression);
+                                PerformOperationAndLog(expression, e => visitor.VisitExpression(e), expToken.Path);
                                 WriteExpression(expToken, expression!);
                             }
                         }
@@ -86,7 +93,7 @@ namespace Packer2.Library.Report.Transforms
                             if (TryReadQuery(expToken, out var query))
                             {
                                 var visitor = CreateProcessingVisitor(expToken.Path);
-                                visitor.Visit(query);
+                                PerformOperationAndLog(query, (q) => visitor.Visit(q), expToken.Path);
                                 WriteQuery(expToken, query!);
                             }
                         }
@@ -97,7 +104,7 @@ namespace Packer2.Library.Report.Transforms
                             if (TryReadFilter(expToken, out var filter))
                             {
                                 var visitor = CreateProcessingVisitor(expToken.Path);
-                                visitor.Visit(filter);
+                                PerformOperationAndLog(filter, f => visitor.Visit(f), expToken.Path);
                                 WriteFilter(expToken, filter!);
                             }
                         }
@@ -113,6 +120,35 @@ namespace Packer2.Library.Report.Transforms
             }
 
             OnProcessingComplete(layout);
+        }
+
+        private void PerformOperationAndLog<T>(T exp, Action<T> action, string path)
+        {
+            var before = exp.ToString();
+
+            action(exp);
+            var after = exp.ToString();
+            if (after != before)
+            {
+                string objectTypeFriendlyName;
+                switch (exp)
+                {
+                    case QueryExpression:
+                    case QueryExpressionContainer:
+                        objectTypeFriendlyName = "Expression";
+                        break;
+                    case QueryDefinition:
+                        objectTypeFriendlyName = "Query";
+                        break;
+                    case FilterDefinition:
+                        objectTypeFriendlyName = "Filter";
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+
+                logger.LogInformation($"{objectTypeFriendlyName} transformed: {{before}} ==> {{after}}. Location: {{path}}", before, after, path);
+            }
         }
 
         protected virtual bool TryReadFilter(JToken expToken, out FilterDefinition? filter)

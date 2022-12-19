@@ -8,11 +8,11 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 {
     public partial class QueryParser
     {
-        private readonly ColumnsAndMeasuresGlossary glossary;
+        private readonly Lazy<ColumnsAndMeasuresGlossary> glossary;
         private readonly ILogger logger;
         private readonly ParserResultValidator validator;
         
-        public QueryParser(ColumnsAndMeasuresGlossary glossary, ILogger logger)
+        public QueryParser(Lazy<ColumnsAndMeasuresGlossary> glossary, ILogger logger)
         {
             this.glossary = glossary;
             this.logger = logger;

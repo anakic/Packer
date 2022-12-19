@@ -88,14 +88,13 @@ namespace Packer2.Library.Report.Transforms
     public class ReplaceModelReferenceTransform : ReportInfoNavTransformBase
     {
         private readonly Mappings renames;
-        private readonly ILogger<ReplaceModelReferenceTransform> logger;
 
         int numberOfReplacements;
 
         public ReplaceModelReferenceTransform(Mappings renames, ILogger<ReplaceModelReferenceTransform>? logger = null)
+            : base(logger)
         {
             this.renames = renames;
-            this.logger = logger ?? new DummyLogger<ReplaceModelReferenceTransform>();
         }
 
         protected override void OnProcessingComplete(JObject jObj)

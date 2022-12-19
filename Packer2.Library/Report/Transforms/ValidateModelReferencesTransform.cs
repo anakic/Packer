@@ -11,13 +11,12 @@ namespace Packer2.Library.Report.Transforms
     {
         int errorCount;
         private readonly Database database;
-        private readonly ILogger<ValidateModelReferencesTransform> logger;
 
         // todo: replace with logger?
         public ValidateModelReferencesTransform(Database database, ILogger<ValidateModelReferencesTransform>? logger = null)
+            : base(logger)
         {
             this.database = database;
-            this.logger = logger ?? new DummyLogger<ValidateModelReferencesTransform>();
         }
 
         protected override ExtendedExpressionVisitor CreateProcessingVisitor(string path)

@@ -13,12 +13,11 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             => new BaseTransformVisitor(path);
 
         QueryParser parser;
-        private readonly ILogger logger;
 
-        public UnminifyExpressionsLayoutJsonTransform(ColumnsAndMeasuresGlossary glossary, ILogger logger)
+        public UnminifyExpressionsLayoutJsonTransform(Lazy<ColumnsAndMeasuresGlossary> glossary, ILogger logger)
+            : base(logger)
         {
             parser = new QueryParser(glossary, logger);
-            this.logger = logger;
         }
 
         protected override bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)

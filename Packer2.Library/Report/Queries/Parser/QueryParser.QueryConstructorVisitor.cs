@@ -9,7 +9,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
     {
         class QueryConstructorVisitor : pbiqParserBaseVisitor<QueryDefinition>
         {
-            private readonly ColumnsAndMeasuresGlossary glossary;
+            private readonly Lazy<ColumnsAndMeasuresGlossary> glossary;
             private readonly ParserResultValidator validator;
 
             private string ReadStringLiteral(ITerminalNode node)
@@ -58,7 +58,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 };
             }
 
-            public QueryConstructorVisitor(ColumnsAndMeasuresGlossary glossary, ParserResultValidator validator)
+            public QueryConstructorVisitor(Lazy<ColumnsAndMeasuresGlossary> glossary, ParserResultValidator validator)
             {
                 this.glossary = glossary;
                 this.validator = validator;

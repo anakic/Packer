@@ -1,4 +1,5 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
+using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Packer2.Library.Report.Queries;
 
@@ -95,7 +96,8 @@ namespace Packer2.Library.Report.Transforms
             }
         }
 
-        public DetectModelReferencesTransform(Detections detections)
+        public DetectModelReferencesTransform(Detections detections, ILogger? logger = null)
+            : base(logger)
         {
             this.detections = detections;
         }
