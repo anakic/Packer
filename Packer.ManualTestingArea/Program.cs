@@ -127,7 +127,7 @@ void PrintDetections(Detections detections, Database ssasModel, Database oldMode
             Console.WriteLine($"- {t}");
     }
 
-    var unmappedCols = detections.ColumnReferences.Where(x => !IsColumnInModel(new[] { x.TableName }, x.column, db)).GroupBy(cr => cr.TableName).ToList();
+    var unmappedCols = detections.ColumnReferences.Where(x => !IsColumnInModel(new[] { x.TableName }, x.Column, db)).GroupBy(cr => cr.TableName).ToList();
     if (unmappedCols.Any())
     {
         Console.WriteLine("");
@@ -136,7 +136,7 @@ void PrintDetections(Detections detections, Database ssasModel, Database oldMode
         foreach (var g in unmappedCols)
         {
             Console.WriteLine($"- {g.Key}");
-            foreach (var col in g.GroupBy(x => x.column))
+            foreach (var col in g.GroupBy(x => x.Column))
             {
                 bool isInModel = IsColumnInModel(renames.GetTablesMappedTo(g.Key).Append(g.Key).Distinct(), col.Key, oldDb);
                 string prefix = isInModel ? "-" : "X";
@@ -148,7 +148,7 @@ void PrintDetections(Detections detections, Database ssasModel, Database oldMode
         }
     }
 
-    var unmappedMeasures = detections.MeasureReferences.Where(x => !IsMeasureInModel(x.measure, db)).GroupBy(cr => cr.TableName);
+    var unmappedMeasures = detections.MeasureReferences.Where(x => !IsMeasureInModel(x.Measure, db)).GroupBy(cr => cr.TableName);
     if (unmappedMeasures.Any())
     {
         Console.WriteLine("");
@@ -157,7 +157,7 @@ void PrintDetections(Detections detections, Database ssasModel, Database oldMode
         foreach (var g in unmappedMeasures)
         {
             Console.WriteLine($"- {g.Key}");
-            foreach (var meas in g.GroupBy(x => x.measure))
+            foreach (var meas in g.GroupBy(x => x.Measure))
             {
                 bool isInModel = IsMeasureInModel(meas.Key, oldDb);
                 string prefix = isInModel ? "-" : "X";

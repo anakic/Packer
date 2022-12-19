@@ -14,7 +14,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
         {
             private readonly Dictionary<string, string> sourceNames;
             private readonly HashSet<string> transformTableNames;
-            private readonly Lazy<ColumnsAndMeasuresGlossary> glossary;
+            private readonly IDbInfoGetter dbInfoGetter;
             private ParserResultValidator validator;
             private readonly bool standalone;
 
@@ -29,9 +29,9 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 return res;
             }
 
-            public QueryExpressionVisitor(Lazy<ColumnsAndMeasuresGlossary> glossary, ParserResultValidator validator, bool standalone, Dictionary<string, string> sourceNames, HashSet<string> transformTableNames)
+            public QueryExpressionVisitor(IDbInfoGetter dbInfoGetter, ParserResultValidator validator, bool standalone, Dictionary<string, string> sourceNames, HashSet<string> transformTableNames)
             {
-                this.glossary = glossary;
+                this.dbInfoGetter = dbInfoGetter;
                 this.validator = validator;
                 this.standalone = standalone;
                 this.sourceNames = sourceNames;
@@ -297,7 +297,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
             public override QueryExpression VisitSubQueryExpr([NotNull] pbiqParser.SubQueryExprContext context)
             {
-                var queryDefVisitor = new QueryConstructorVisitor(glossary, validator);
+                var queryDefVisitor = new QueryConstructorVisitor(dbInfoGetter, validator);
                 var query = queryDefVisitor.Visit(context.query());
 
                 return new QuerySubqueryExpression() { Query = query };
@@ -428,7 +428,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 if (expressionContainer.SourceRef != null)
                     entity = expressionContainer.SourceRef.Entity ?? sourceNames[expressionContainer.SourceRef.Source];
 
-                if (entity != null && glossary.Value.IsMeasure(entity, property))
+                if (entity != null && dbInfoGetter.IsMeasure(entity, property))
                 {
                     return new QueryMeasureExpression()
                     {
@@ -436,7 +436,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                         Property = property
                     };
                 }
-                else if (entity != null && glossary.Value.IsColumn(entity, property))
+                else if (entity != null && dbInfoGetter.IsColumn(entity, property))
                 {
                     return new QueryColumnExpression()
                     {

@@ -6,6 +6,12 @@ using Packer2.Library.Report.Transforms;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
+    public interface IDbInfoGetter
+    {
+        bool IsMeasure(string tableName, string propertyName);
+        bool IsColumn(string tableName, string propertyName);
+    }
+
     public class ColumnsAndMeasuresGlossary
     {
         public Dictionary<string, PerTableColumnsMeasuresGlossary> TableGlossaries { get; set; } = new Dictionary<string, PerTableColumnsMeasuresGlossary>();
@@ -45,7 +51,9 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
         }
     }
 
-
+    // todo: this requires unstuffed json, do not inherit from ReportInfoNavTransformBase,
+    // refactor to ensure we cannot call this on the stuffed json. E.g. make a composite ReportInfoNavTransformBase
+    // that will perform a series of transformations on the unstuffed version of the layout json file.
     class MinifyExpressionsLayoutJsonTransform : ReportInfoNavTransformBase
     {
         public MinifyExpressionsLayoutJsonTransform(ILogger logger)
@@ -55,10 +63,29 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 
         public ColumnsAndMeasuresGlossary Glossary { get; } = new ColumnsAndMeasuresGlossary();
 
-        // todo: use visitor to populate dictionary of measures and columns that we will then save to a file (outside of this class)
+        protected override void Process(FilterDefinition filter, string path)
+        {
+            // just register the columns and measures into the glossary here,
+            // we'll minify when writing
+            var visitor = new AddMeasuresAndColumnsToGlossaryVisitor(Glossary);
+            visitor.Visit(filter);
+        }
 
-        protected override ExtendedExpressionVisitor CreateProcessingVisitor(string path)
-            => new DetectMeasuresAndColumnsVisitor(path, Glossary);
+        protected override void Process(QueryDefinition query, string path)
+        {
+            // just register the columns and measures into the glossary here
+            // we'll minify when writing
+            var visitor = new AddMeasuresAndColumnsToGlossaryVisitor(Glossary);
+            visitor.Visit(query);
+        }
+
+        protected override void Process(QueryExpressionContainer expression, string path)
+        {
+            // just register the columns and measures into the glossary here
+            // we'll minify when writing
+            var visitor = new AddMeasuresAndColumnsToGlossaryVisitor(Glossary);
+            visitor.VisitExpression(expression);
+        }
 
         protected override bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)
         {
@@ -129,12 +156,11 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             expToken.Replace(queryObj.ToString());
         }
 
-        class DetectMeasuresAndColumnsVisitor : BaseTransformVisitor
+        class AddMeasuresAndColumnsToGlossaryVisitor : BaseTransformVisitor
         {
             private readonly ColumnsAndMeasuresGlossary glossary;
 
-            public DetectMeasuresAndColumnsVisitor(string path, ColumnsAndMeasuresGlossary glossary) 
-                : base(path)
+            public AddMeasuresAndColumnsToGlossaryVisitor(ColumnsAndMeasuresGlossary glossary) 
             {
                 this.glossary = glossary;
             }

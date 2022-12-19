@@ -37,8 +37,28 @@ namespace Packer2.Library.Report.Stores.Folder.Transforms
                 return glossary;
             });
 
-            var transform = new UnminifyExpressionsLayoutJsonTransform(glossaryLazy, logger);
+            var transform = new UnminifyExpressionsLayoutJsonTransform(new GlossaryDbInfoGetter(glossaryLazy), logger);
             transform.Transform(obj);
+        }
+
+        class GlossaryDbInfoGetter : IDbInfoGetter
+        {
+            private readonly Lazy<ColumnsAndMeasuresGlossary> glossaryLazy;
+
+            public GlossaryDbInfoGetter(Lazy<ColumnsAndMeasuresGlossary> glossaryLazy)
+            {
+                this.glossaryLazy = glossaryLazy;
+            }
+
+            public bool IsColumn(string tableName, string propertyName)
+            {
+                return glossaryLazy.Value.IsColumn(tableName, propertyName);
+            }
+
+            public bool IsMeasure(string tableName, string propertyName)
+            {
+                return glossaryLazy.Value.IsMeasure(tableName, propertyName);
+            }
         }
     }
 }

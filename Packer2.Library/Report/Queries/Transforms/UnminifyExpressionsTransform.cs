@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
-using Packer2.Library.Report.Queries;
 using Packer2.Library.Report.QueryTransforms.Antlr;
 using Packer2.Library.Report.Transforms;
 
@@ -9,15 +8,12 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
     class UnminifyExpressionsLayoutJsonTransform : ReportInfoNavTransformBase
     {
-        protected override ExtendedExpressionVisitor CreateProcessingVisitor(string path)
-            => new BaseTransformVisitor(path);
-
         QueryParser parser;
 
-        public UnminifyExpressionsLayoutJsonTransform(Lazy<ColumnsAndMeasuresGlossary> glossary, ILogger logger)
+        public UnminifyExpressionsLayoutJsonTransform(IDbInfoGetter dbInfoGetter, ILogger logger)
             : base(logger)
         {
-            parser = new QueryParser(glossary, logger);
+            parser = new QueryParser(dbInfoGetter, logger);
         }
 
         protected override bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)

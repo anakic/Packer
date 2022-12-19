@@ -9,7 +9,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
     {
         class QueryConstructorVisitor : pbiqParserBaseVisitor<QueryDefinition>
         {
-            private readonly Lazy<ColumnsAndMeasuresGlossary> glossary;
+            private readonly IDbInfoGetter dbInfoGetter;
             private readonly ParserResultValidator validator;
 
             private string ReadStringLiteral(ITerminalNode node)
@@ -58,9 +58,9 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                 };
             }
 
-            public QueryConstructorVisitor(Lazy<ColumnsAndMeasuresGlossary> glossary, ParserResultValidator validator)
+            public QueryConstructorVisitor(IDbInfoGetter dbInfoGetter, ParserResultValidator validator)
             {
-                this.glossary = glossary;
+                this.dbInfoGetter = dbInfoGetter;
                 this.validator = validator;
             }
 
@@ -125,7 +125,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
             private QueryExpressionContainer ParseExprContainer(IParseTree context, Dictionary<string, string>? sourceNames = null, HashSet<string> transformTableNames = null, string alias = null)
             {
-                var expression = new QueryExpressionVisitor(glossary, validator, false, sourceNames, transformTableNames).VisitValidated(context);
+                var expression = new QueryExpressionVisitor(dbInfoGetter, validator, false, sourceNames, transformTableNames).VisitValidated(context);
                 var container = new QueryExpressionContainer(expression);
                 if (alias != null)
                     container.Name = alias;

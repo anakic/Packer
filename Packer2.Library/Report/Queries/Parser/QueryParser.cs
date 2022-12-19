@@ -1,22 +1,21 @@
 ﻿using Antlr4.Runtime;
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
-using Newtonsoft.Json;
 using Packer2.Library.MinifiedQueryParser.QueryTransforms;
+using Packer2.Library.Tools;
+using System.Text.RegularExpressions;
 
 namespace Packer2.Library.Report.QueryTransforms.Antlr
 {
     public partial class QueryParser
     {
-        private readonly Lazy<ColumnsAndMeasuresGlossary> glossary;
-        private readonly ILogger logger;
+        private readonly IDbInfoGetter dbInfoGetter;
         private readonly ParserResultValidator validator;
-        
-        public QueryParser(Lazy<ColumnsAndMeasuresGlossary> glossary, ILogger logger)
+
+        public QueryParser(IDbInfoGetter dbInfoGetter, ILogger? logger = null)
         {
-            this.glossary = glossary;
-            this.logger = logger;
-            validator = new ParserResultValidator(logger);
+            this.dbInfoGetter = dbInfoGetter;
+            validator = new ParserResultValidator(logger ?? new DummyLogger<QueryParser>());
         }
 
         public QueryDefinition ParseQuery(string input)
@@ -24,20 +23,24 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             var parser = CreateParser(input);
             var tree = parser.queryRoot();
 
-            var queryDefinition = new QueryConstructorVisitor(glossary, validator).Visit(tree);
+            var queryDefinition = new QueryConstructorVisitor(dbInfoGetter, validator).Visit(tree);
             validator.ValidateQuery(queryDefinition);
 
-            if (input != queryDefinition.ToString())
+            if (NormalizeNewlines(input) != NormalizeNewlines(queryDefinition.ToString()))
                 throw new FormatException($"Parsing query did not throw an exception but the constructed filter does not match the input string. Input string was '{input}', while the minimized constructed filter was '{queryDefinition}'!");
 
             return queryDefinition;
         }
 
+        Regex wsRx = new Regex(@"(\r|\n)+", RegexOptions.Compiled);
+        private string NormalizeNewlines(string input)
+            => wsRx.Replace(input, " ");
+
         public FilterDefinition ParseFilter(string input)
         {
             var parser = CreateParser(input);
             var tree = parser.queryRoot();
-            var queryDefinition = new QueryConstructorVisitor(glossary, validator).Visit(tree);
+            var queryDefinition = new QueryConstructorVisitor(dbInfoGetter, validator).Visit(tree);
 
             if (queryDefinition.Select?.Count > 0 && queryDefinition.Parameters?.Count > 0 || queryDefinition.Transform?.Count > 0 || queryDefinition.GroupBy?.Count > 0 || queryDefinition.Let?.Count > 0 || queryDefinition.OrderBy?.Count > 0 || queryDefinition.Skip != null || queryDefinition.Top != null)
                 throw new FormatException("Was expecting filter but got query");
@@ -62,7 +65,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             var parser = CreateParser(input);
             var tree = parser.expressionContainer();
 
-            var expression = new QueryExpressionVisitor(glossary, validator, true, new Dictionary<string, string>(), new HashSet<string>()).VisitValidated(tree);
+            var expression = new QueryExpressionVisitor(dbInfoGetter, validator, true, new Dictionary<string, string>(), new HashSet<string>()).VisitValidated(tree);
 
             if (input != expression.ToString())
                 throw new FormatException($"Parsing expression did not throw an exception but the constructed expression does not match the input string. Input string was '{input}', while the minimized constructed expression was '{expression}'!");

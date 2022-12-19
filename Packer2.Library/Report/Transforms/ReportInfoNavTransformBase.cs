@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
-using Packer2.Library.Report.Queries;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
@@ -23,7 +22,7 @@ namespace Packer2.Library.Report.Transforms
 
         public void Transform(JObject layout)
         {
-            var stuffedAreaSelectors = new string[] 
+            var stuffedAreaSelectors = new string[]
             {
                 "#filters",
                 "sections[*].#filters",
@@ -60,8 +59,7 @@ namespace Packer2.Library.Report.Transforms
 
                             if (TryReadExpression(expToken, out var expression))
                             {
-                                var visitor = CreateProcessingVisitor(expToken.Path);
-                                PerformOperationAndLog(expression, e => visitor.VisitExpression(e), expToken.Path);
+                                PerformOperationAndLog(expression, e => Process(e, expToken.Path), expToken.Path);
                                 WriteExpression(expToken, expression!);
                             }
                         }
@@ -92,8 +90,7 @@ namespace Packer2.Library.Report.Transforms
                         {
                             if (TryReadQuery(expToken, out var query))
                             {
-                                var visitor = CreateProcessingVisitor(expToken.Path);
-                                PerformOperationAndLog(query, (q) => visitor.Visit(q), expToken.Path);
+                                PerformOperationAndLog(query, q => Process(q, expToken.Path), expToken.Path);
                                 WriteQuery(expToken, query!);
                             }
                         }
@@ -103,8 +100,7 @@ namespace Packer2.Library.Report.Transforms
                         {
                             if (TryReadFilter(expToken, out var filter))
                             {
-                                var visitor = CreateProcessingVisitor(expToken.Path);
-                                PerformOperationAndLog(filter, f => visitor.Visit(f), expToken.Path);
+                                PerformOperationAndLog(filter, f => Process(f, expToken.Path), expToken.Path);
                                 WriteFilter(expToken, filter!);
                             }
                         }
@@ -121,6 +117,10 @@ namespace Packer2.Library.Report.Transforms
 
             OnProcessingComplete(layout);
         }
+
+        protected virtual void Process(QueryDefinition query, string path) { }
+        protected virtual void Process(FilterDefinition filter, string path) { }
+        protected virtual void Process(QueryExpressionContainer expression, string path) { }
 
         private void PerformOperationAndLog<T>(T exp, Action<T> action, string path)
         {
@@ -214,7 +214,5 @@ namespace Packer2.Library.Report.Transforms
         }
 
         protected virtual void OnProcessingComplete(JObject jObject) { }
-
-        protected abstract ExtendedExpressionVisitor CreateProcessingVisitor(string path);
     }
 }

@@ -149,6 +149,26 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
                     base.Visit(expression);
                 }
+
+                protected override void Visit(QueryHierarchyExpression expression)
+                {
+                    if (expression.Expression.Subquery != null)
+                    {
+                        // The validator seems to be firing a false positive when the expression inside a property referes to a subquery.
+                        // Might be good to check if this is still the case in future updates to PowerBI
+
+                        // example query that manifests this bug:
+                        /*
+                         * min({
+        from d in [dbth Ward]
+        orderby d.TypeKind ascending
+        select d.TypeKind }.[dbth Ward.TypeKind])
+                         */
+                        return;
+                    }
+
+                    base.Visit(expression);
+                }
             }
         }
     }
