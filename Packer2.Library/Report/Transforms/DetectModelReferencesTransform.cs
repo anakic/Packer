@@ -73,7 +73,7 @@ namespace Packer2.Library.Report.Transforms
 
             protected override void Visit(QueryMeasureExpression expression)
             {
-                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
                 detections.MeasureReferences.Add(new DetectedMeasureReference(Path, sourceName, expression.Property));
             }
 
@@ -82,7 +82,7 @@ namespace Packer2.Library.Report.Transforms
                 if (expression.Expression.SourceRef == null)
                     return;
 
-                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
                 detections.ColumnReferences.Add(new DetectedColumnReference(Path, sourceName, expression.Property));
             }
 
@@ -91,7 +91,7 @@ namespace Packer2.Library.Report.Transforms
                 if (expression.Expression.SourceRef == null)
                     return;
 
-                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
                 detections.HierarchyReferences.Add(new DetectedHierarchyReference(Path, sourceName, expression.Hierarchy));
             }
         }

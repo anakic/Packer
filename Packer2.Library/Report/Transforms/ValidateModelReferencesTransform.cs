@@ -111,9 +111,9 @@ namespace Packer2.Library.Report.Transforms
         class ResolveTabularExpressionTargetVisitor<T, K> : QueryExpressionVisitor<NamedMetadataObject> where T : NamedMetadataObject where K : MetadataObject
         {
             private readonly NamedMetadataObjectCollection<T, K> parent;
-            private readonly Dictionary<string, string> sourcesMap;
+            private readonly Dictionary<string, EntitySource> sourcesMap;
 
-            public ResolveTabularExpressionTargetVisitor(NamedMetadataObjectCollection<T, K> parent, Dictionary<string, string> sourcesMap)
+            public ResolveTabularExpressionTargetVisitor(NamedMetadataObjectCollection<T, K> parent, Dictionary<string, EntitySource> sourcesMap)
             {
                 this.parent = parent;
                 this.sourcesMap = sourcesMap;
@@ -126,7 +126,9 @@ namespace Packer2.Library.Report.Transforms
                 {
                     if (expression.Source != null)
                     {
-                        if (sourcesMap.TryGetValue(expression.Source, out entity) == false)
+                        if (sourcesMap.TryGetValue(expression.Source, out var entitySource))
+                            entity = entitySource.Entity;
+                        else
                             throw new ResolutionException($"Invalid source alias '{expression.Source}'!");
                     }
                     else

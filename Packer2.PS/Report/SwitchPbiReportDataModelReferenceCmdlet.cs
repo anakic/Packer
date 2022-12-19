@@ -26,9 +26,9 @@ namespace Packer2.PS.Report
         {
             var renames = new Mappings();
             if (ObjectName != null)
-                renames.AddRename(TableName, ObjectName, NewName);
+                renames.Table(TableName).MapObjectTo(ObjectName, NewName);
             else
-                renames.AddTableRename(TableName, NewName);
+                renames.Table(TableName).MapTo(NewName);
 
             var transform = new ReplaceModelReferenceTransform(renames, CreateLogger<ReplaceModelReferenceTransform>());
             transform.Transform(Report.Layout);

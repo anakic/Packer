@@ -5,6 +5,7 @@ using Packer2.Library.Report.Queries;
 using Packer2.Library.Tools;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq.Expressions;
 using static Microsoft.InfoNav.Common.DijkstraAlgorithm;
 
 namespace Packer2.Library.Report.Transforms
@@ -67,21 +68,33 @@ namespace Packer2.Library.Report.Transforms
             return false;
         }
 
-        public bool TryGetMappedObjectInfo(string originalTableName, string originalObjectName, [MaybeNullWhen(false)] out string newTableName, [MaybeNullWhen(false)] out string newObjectName)
+        public bool TryGetMappedObjectInfo(string originalTableName, string originalObjectName, [MaybeNullWhen(false)] out TableObjectMapping objectMapping)
         {
             if (tableMappings.TryGetValue(originalTableName, out var tableObjMappings))
             {
-                if (tableObjMappings.TryGetMapping(originalObjectName, out var change))
+                if (tableObjMappings.TryGetMapping(originalObjectName, out objectMapping))
                 {
-                    newTableName = change.NewTableName;
-                    newObjectName = change.NewObjectName;
                     return true;
+                }
+                // if there are no direct mappings for object on the original table, then it will move to the mapped-to table
+                // so we need to check if that table has mappings for it
+                else if(tableMappings.TryGetValue(tableObjMappings.NewTableName, out var mappedToTableObjMappings))
+                {
+                    if (mappedToTableObjMappings.TryGetMapping(originalObjectName, out objectMapping))
+                    {
+                        return true;
+                    }
                 }
             }
 
-            newTableName = null;
-            newObjectName = null;
+            objectMapping = default;
             return false;
+        }
+
+        // this is a very non-exact way of trying to figure out if 
+        public IEnumerable<string> GetTablesMappedTo(string key)
+        {
+            return tableMappings.Where(tm => tm.Value.NewTableName == key).Select(x => x.Key);
         }
     }
 
@@ -155,7 +168,8 @@ namespace Packer2.Library.Report.Transforms
             {
                 base.Visit(queryDefinition);
 
-                var takenAliases = new HashSet<string>();
+                // we're not touching the report-defined ones (they have a schema), but we must not overwrite their aliases either
+                var takenAliases = queryDefinition.From.Where(x => x.Schema != null).Select(x => x.Name).ToHashSet();
                 var sources = new List<EntitySource>();
                 foreach (var kvp in aliasedPropertyExpressions)
                 {
@@ -183,7 +197,8 @@ namespace Packer2.Library.Report.Transforms
             private void SyncSources(List<EntitySource> sources, List<EntitySource> from)
             {
                 var srcDict = sources.ToDictionary(s => s.Entity, f => f);
-                var fromDict = from.Where(f => f.Entity != null && f.Schema == null).ToDictionary(f => f.Entity, f => f);
+                // we don't want to mess with the ones that have a schema (they are report-defined measures, not in the model)
+                var fromDict = from.Where(x => x.Schema == null && x.Entity != null).ToDictionary(f => f.Entity, f => f);
                 foreach (var s in sources)
                 {
                     // adjust alias for existing source if needed
@@ -192,7 +207,7 @@ namespace Packer2.Library.Report.Transforms
                     else
                         from.Add(s);
                 }
-
+                
                 foreach (var f in fromDict.Values)
                 {
                     if (!srcDict.ContainsKey(f.Entity))
@@ -210,6 +225,11 @@ namespace Packer2.Library.Report.Transforms
                 Process(expression);
             }
 
+            protected override void Visit(QueryPropertyExpression expression)
+            {
+                Process(expression);
+            }
+
             protected override void Visit(QuerySourceRefExpression expression)
             {
                 // skipping over the ones that have schema set, those are extensions (report-defined measures)
@@ -221,7 +241,7 @@ namespace Packer2.Library.Report.Transforms
                 if (expression.Entity != null)
                 {
                     var oldName = expression.Entity;
-                    var newName = renames.Table(expression.Entity).NewTableName;
+                    var newName = renames.Table(oldName).NewTableName;
                     if (newName != oldName)
                     {
                         expression.Entity = newName;
@@ -237,36 +257,50 @@ namespace Packer2.Library.Report.Transforms
                 base.Visit(expression);
 
                 var sourceRef = expression.Expression.SourceRef;
-                // skipping over the ones that have schema set, those are extensions (report-defined measures)
-                // todo: check if it's possible that it's from the model. If it is possible, we need to add support for model schemas
-                if (sourceRef == null || sourceRef.Schema != null)
+
+                if (sourceRef == null)
                     return;
 
+                string originalTableName;
                 if (sourceRef.Source != null)
                 {
-                    var originalOwnerTableName = SourcesByAliasMap[sourceRef.Source];
+                    var originalTableEntitySource = SourcesByAliasMap[sourceRef.Source];
+                    // skipping over the ones that have schema set, those are extensions (report-defined measures)
+                    // todo: check if it's possible that it's from the model. If it is possible, we need to add support for model schemas
+                    if (originalTableEntitySource.Schema != null)
+                        return;
 
-                    var tableMapping = renames.Table(originalOwnerTableName);
-                    if (tableMapping.TryGetMapping(expression.Property, out var objectMapping))
-                    {
-                        var originalName = expression.Property;
-                        var newName = objectMapping.NewObjectName;
-                        expression.Property = newName;
+                    originalTableName = originalTableEntitySource.Entity;
+                }
+                else
+                {
+                    originalTableName = sourceRef.Entity;
+                }
 
-                        aliasedPropertyExpressions
-                            .GetValueOrInitialize(objectMapping.NewTableName, _ => new List<QueryExpression>())
-                            .Add(expression);
+                var tableMapping = renames.Table(originalTableName);
+                if (renames.TryGetMappedObjectInfo(originalTableName, expression.Property, out var objectMapping))
+                {
+                    var originalName = expression.Property;
+                    var newName = objectMapping.NewObjectName;
+                    expression.Property = newName;
+                    // if it was a direct reference, replace the source name as well (the original table might not have been replaced by the new table,
+                    // it's possible that just this one column was moved to the new table so the sourceRef would not have been replaced)
+                    if(sourceRef.Entity != null)
+                        sourceRef.Entity = objectMapping.NewTableName;
 
-                        logger.LogInformation("Replaced a reference to an object in table '{tableName}' from '{oldName}' to '{newName}'. (Path '{path}')", originalOwnerTableName, originalName, newName, Path);
-                        incrementReplaceCountAction();
-                    }
-                    else
-                    {
-                        // use tableMapping.NewTableName because the owning table name might have been changed
-                        aliasedPropertyExpressions
-                            .GetValueOrInitialize(tableMapping.NewTableName, _ => new List<QueryExpression>())
-                            .Add(expression);
-                    }
+                    aliasedPropertyExpressions
+                        .GetValueOrInitialize(objectMapping.NewTableName, _ => new List<QueryExpression>())
+                        .Add(expression);
+
+                    logger.LogInformation("Replaced a reference to an object in table '{tableName}' from '{oldName}' to '{newName}'. (Path '{path}')", originalTableName, originalName, newName, Path);
+                    incrementReplaceCountAction();
+                }
+                else
+                {
+                    // use tableMapping.NewTableName because the owning table name might have been changed
+                    aliasedPropertyExpressions
+                        .GetValueOrInitialize(tableMapping.NewTableName, _ => new List<QueryExpression>())
+                        .Add(expression);
                 }
             }
 
@@ -275,14 +309,20 @@ namespace Packer2.Library.Report.Transforms
                 base.Visit(expression);
 
                 var sourceRef = expression.Expression.SourceRef;
+
                 if (sourceRef == null)
                     return;
 
                 if (sourceRef.Source != null)
                 {
-                    var originalOwnerTableName = SourcesByAliasMap[sourceRef.Source];
+                    var originalTableEntitySource = SourcesByAliasMap[sourceRef.Source];
+                    // skipping over the ones that have schema set, those are extensions (report-defined measures)
+                    // todo: check if it's possible that it's from the model. If it is possible, we need to add support for model schemas
+                    if (originalTableEntitySource.Schema != null)
+                        return;
 
-                    if (renames.Table(originalOwnerTableName).TryGetMapping(expression.Hierarchy, out var objectMapping))
+                    var tableMapping = renames.Table(originalTableEntitySource.Entity);
+                    if (tableMapping.TryGetMapping(expression.Hierarchy, out var objectMapping))
                     {
                         var originalName = expression.Hierarchy;
                         var newName = objectMapping.NewObjectName;
@@ -292,13 +332,14 @@ namespace Packer2.Library.Report.Transforms
                             .GetValueOrInitialize(objectMapping.NewTableName, _ => new List<QueryExpression>())
                             .Add(expression);
 
-                        logger.LogInformation("Replaced a reference to an hierarchy in table '{tableName}' from '{oldName}' to '{newName}'. (Path '{path}')", originalOwnerTableName, originalName, newName, Path);
+                        logger.LogInformation("Replaced a reference to an hierarchy in table '{tableName}' from '{oldName}' to '{newName}'. (Path '{path}')", originalTableEntitySource.Entity, originalName, newName, Path);
                         incrementReplaceCountAction();
                     }
                     else
                     {
+                        // use tableMapping.NewTableName because the owning table name might have been changed
                         aliasedPropertyExpressions
-                            .GetValueOrInitialize(originalOwnerTableName, _ => new List<QueryExpression>())
+                            .GetValueOrInitialize(tableMapping.NewTableName, _ => new List<QueryExpression>())
                             .Add(expression);
                     }
                 }

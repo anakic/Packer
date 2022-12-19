@@ -143,7 +143,7 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             {
                 if (expression.Expression.SourceRef != null)
                 {
-                    var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                    var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
                     glossary.AddMeasure(sourceName, expression.Property);
                 }
                 base.Visit(expression);
@@ -153,7 +153,7 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             {
                 if (expression.Expression.SourceRef != null)
                 {
-                    var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source];
+                    var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
                     glossary.AddColumn(sourceName, expression.Property);
                 }
                 base.Visit(expression);
