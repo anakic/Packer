@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Library.Report.Transforms;
-using System.Drawing;
 using System.Management.Automation;
 
 namespace Packer2.PS.Report
@@ -62,6 +61,36 @@ namespace Packer2.PS.Report
 
             var transform = new ValidateModelReferencesTransform(database, CreateLogger<ValidateModelReferencesTransform>());
             transform.Transform(Report.Layout);
+
+            if (transform.UnmatchedDetections.Any())
+            {
+                var myLogger = CreateLogger<TestPbiReportDataModelReferencesCmdlet>();
+                foreach (var d in transform.UnmatchedDetections)
+                {
+                    switch (d)
+                    {
+                        case InvalidTableDetection t:
+                            myLogger.LogError("Invalid table reference: {table} at path {path}", t.Table, t.Path);
+                            break;
+                        case InvalidColumnDetection c:
+                            myLogger.LogError("Invalid column reference: {table}.{column} at path {path}", c.Table, c.Column, c.Path);
+                            break;
+                        case InvalidMeasureDetection m:
+                            myLogger.LogError("Invalid measure reference: {table}.{measure} at path {path}", m.Table, m.Measure, m.Path);
+                            break;
+                        case InvalidHierarchyDetection h:
+                            myLogger.LogError("Invalid hiearchy reference: {table}.{hierarchy} at path {path}", h.Table, h.Hierarchy, h.Path);
+                            break;
+                        case InvalidHierarchyLevelDetection hl:
+                            myLogger.LogError("Invalid hiearchy reference: {table}.{hierarchy}.{level} at path {path}", hl.Table, hl.Hierarchy, hl.HierarchyLevel, hl.Path);
+                            break;
+                        default:
+                            throw new NotImplementedException("Unexpected detection type - should never happen.");
+                    }
+                }
+
+                throw new Exception($"### A total of {transform.UnmatchedDetections.Count()} invalid references found! ###");
+            }
 
             base.ProcessRecord();
 
