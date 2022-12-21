@@ -2,7 +2,7 @@
 
 namespace Packer2.Library.Report.Queries
 {
-    public class BaseTransformVisitor : ExtendedExpressionVisitor
+    public abstract class BaseTransformVisitor : ExtendedExpressionVisitor
     {
         public Dictionary<string, EntitySource> SourcesByAliasMap { get; private set; }
 
@@ -17,5 +17,13 @@ namespace Packer2.Library.Report.Queries
             SourcesByAliasMap = queryDefinition.From.ToDictionary(f => f.Name, f => f);
             base.Visit(queryDefinition);
         }
+
+        protected override void Visit(QuerySubqueryExpression expression)
+        {
+            var subqueryVisitor = CreateSubqueryVisitor();
+            subqueryVisitor.Visit(expression.Query);
+        }
+
+        protected abstract BaseTransformVisitor CreateSubqueryVisitor();
     }
 }

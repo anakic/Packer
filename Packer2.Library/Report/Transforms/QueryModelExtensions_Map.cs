@@ -99,6 +99,11 @@ namespace Packer2.Library.Report.Transforms
                 }
             }
 
+            protected override BaseTransformVisitor CreateSubqueryVisitor()
+            {
+                return new ReplaceReferencesVisitor(renames);
+            }
+
             protected override void Visit(QueryColumnExpression expression)
             {
                 Process(expression);

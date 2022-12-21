@@ -138,6 +138,11 @@ namespace Packer2.Library.Report.Transforms
                 this.detections = detections;
             }
 
+            protected override BaseTransformVisitor CreateSubqueryVisitor()
+            {
+                return new DetectVisitor(detections);
+            }
+
             protected override void VisitEntitySource(EntitySource source)
             {
                 base.VisitEntitySource(source);

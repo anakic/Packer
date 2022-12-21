@@ -56,6 +56,51 @@ namespace Packer2.Tests.Report
 
             PerformRenameAndVerifyQuery(originalQueryStr, mappings, expectedQueryStr);
         }
+
+        [Fact]
+        public void MoveColumnToExistingFromSourceDropOldSource()
+        {
+            var originalQueryStr = @"from t in tblA, t1 in tblB select t.col1, t1.col2";
+            var expectedQueryStr = @"from t in tblB select t.col1, t.col2";
+
+            var mappings = new Mappings();
+            mappings.Table("tblA").MapObjectTo("col1", "col1", "tblB");
+
+            PerformRenameAndVerifyQuery(originalQueryStr, mappings, expectedQueryStr);
+        }
+
+        [Fact]
+        public void MoveInSubquery()
+        {
+            string input = 
+@"from subquery in {
+        from a in [Acuity Tier (Previous Service)],
+            c in [Care Changes]
+        orderby c.[Service Flows for graphing] descending
+        select a.[Simplified Service Type]
+        top 5 },
+    a in [Acuity Tier (T-1)]
+where a.[Service Type] in subquery";
+
+            string expected = @"from subquery in {
+        from c in [Care Changes], a in [AT (T-1)]
+        orderby c.[Service Flows for graphing] descending
+        select a.[Simplified Service Type]
+        top 5 },
+    a in [Acuity Tier (T-1)]
+where a.[Service Type] in subquery";
+
+            var mappings = new Mappings();
+            mappings.Table("Acuity Tier (Previous Service)").MapTo("AT (T-1)");
+
+            var parser = new QueryParser(new TestDbInfoGetter());
+            var query = parser.ParseFilter(input);
+            query.MapReferences(mappings);
+            var res = NormalizeNewlines(query.ToString());
+
+            res.Should().Be(NormalizeNewlines(expected));
+        }
+
         private void PerformRenameAndVerifyQuery(string originalQueryStr, Mappings mappings, string expectedQueryStr)
         {
             var parser = new QueryParser(new TestDbInfoGetter());
