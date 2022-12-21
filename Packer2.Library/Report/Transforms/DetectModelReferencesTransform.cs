@@ -96,14 +96,38 @@ namespace Packer2.Library.Report.Transforms
             new DetectVisitor(detections).Visit(filterDefinition);
         }
 
-        public static void DetectReferences(this QueryExpressionContainer expressionContainer, Detections detections)
-            => DetectReferences(expressionContainer.Expression, detections);
-
-
         public static void DetectReferences(this QueryExpression expression, Detections detections)
         {
             new DetectVisitor(detections).VisitExpression(expression);
         }
+
+        public static void DetectReferences(this QueryExpressionContainer expressionContainer, Detections detections)
+            => DetectReferences(expressionContainer.Expression, detections);
+
+
+        public static Detections DetectReferences(this QueryDefinition query)
+        {
+            var detections = new Detections();
+            query.DetectReferences(detections);
+            return detections;
+        }
+
+        public static Detections DetectReferences(this FilterDefinition filter)
+        {
+            var detections = new Detections();
+            filter.DetectReferences(detections);
+            return detections;
+        }
+
+        public static Detections DetectReferences(this QueryExpression expression)
+        {
+            var detections = new Detections();
+            expression.DetectReferences(detections);
+            return detections;
+        }
+
+        public static Detections DetectReferences(this QueryExpressionContainer expressionContainer)
+            => DetectReferences(expressionContainer.Expression);
 
         class DetectVisitor : BaseTransformVisitor
         {
