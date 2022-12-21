@@ -3,6 +3,7 @@ using Microsoft.InfoNav.Data.Contracts.Internal;
 using Newtonsoft.Json.Linq;
 using Packer2.Library.Report.Queries;
 using Packer2.Library.Report.Transforms;
+using System.Linq.Expressions;
 
 namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
 {
@@ -67,24 +68,32 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
         {
             // just register the columns and measures into the glossary here,
             // we'll minify when writing
-            var visitor = new AddMeasuresAndColumnsToGlossaryVisitor(Glossary);
-            visitor.Visit(filter);
+            var detections = filter.DetectReferences();
+            AddToGlossary(detections);
         }
 
         protected override void Process(QueryDefinition query, string path)
         {
             // just register the columns and measures into the glossary here
             // we'll minify when writing
-            var visitor = new AddMeasuresAndColumnsToGlossaryVisitor(Glossary);
-            visitor.Visit(query);
+            var detections = query.DetectReferences();
+            AddToGlossary(detections);
         }
 
         protected override void Process(QueryExpressionContainer expression, string path)
         {
             // just register the columns and measures into the glossary here
             // we'll minify when writing
-            var visitor = new AddMeasuresAndColumnsToGlossaryVisitor(Glossary);
-            visitor.VisitExpression(expression);
+            var detections = expression.DetectReferences();
+            AddToGlossary(detections);
+        }
+
+        private void AddToGlossary(Detections detections)
+        {
+            foreach (var m in detections.MeasureReferences.GroupBy(x => new { x.TableName, x.Measure }))
+                Glossary.AddMeasure(m.Key.TableName, m.Key.Measure);
+            foreach (var m in detections.ColumnReferences.GroupBy(x => new { x.TableName, x.Column }))
+                Glossary.AddColumn(m.Key.TableName, m.Key.Column);
         }
 
         protected override bool TryReadExpression(JToken expToken, out QueryExpressionContainer? expressionContainer)
@@ -154,36 +163,6 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
             parent!.AddAfterSelf(new JProperty($"#{parent.Name}SelectList", selectList));
 
             expToken.Replace(queryObj.ToString());
-        }
-
-        class AddMeasuresAndColumnsToGlossaryVisitor : BaseTransformVisitor
-        {
-            private readonly ColumnsAndMeasuresGlossary glossary;
-
-            public AddMeasuresAndColumnsToGlossaryVisitor(ColumnsAndMeasuresGlossary glossary) 
-            {
-                this.glossary = glossary;
-            }
-
-            protected override void Visit(QueryMeasureExpression expression)
-            {
-                if (expression.Expression.SourceRef != null)
-                {
-                    var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
-                    glossary.AddMeasure(sourceName, expression.Property);
-                }
-                base.Visit(expression);
-            }
-
-            protected override void Visit(QueryColumnExpression expression)
-            {
-                if (expression.Expression.SourceRef != null)
-                {
-                    var sourceName = expression.Expression.SourceRef.Entity ?? SourcesByAliasMap[expression.Expression.SourceRef.Source].Entity;
-                    glossary.AddColumn(sourceName, expression.Property);
-                }
-                base.Visit(expression);
-            }
         }
     }
 }
