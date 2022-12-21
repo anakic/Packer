@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Packer2.Library.Report.Queries;
-using Packer2.Library.Tools;
 
 namespace Packer2.Library.Report.Transforms
 {
@@ -149,6 +148,10 @@ namespace Packer2.Library.Report.Transforms
 
                 // skipping extensins (data model tables do not have a schema)
                 if (source.Schema != null)
+                    return;
+
+                // skip subqueries, they are not references to db objects (but might contain them)
+                if (source.Entity == null)
                     return;
 
                 detections.TableReferences.Add(new DetectedTableReference(source.Entity));
