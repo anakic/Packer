@@ -19,7 +19,14 @@ bool skipPrompts = false;
 Mappings renames = CreateRenames();
 
 var folder = @"C:\Dropbox (RwHealth)\WLT\Flow Tool - WLT\Modules";
-var pbiFiles = Directory.GetFiles(folder, "*(WLT).pbix", SearchOption.AllDirectories);
+var pbiFiles = Directory.GetFiles(folder, "*(WLT).pbix", SearchOption.AllDirectories)
+    .Select(x => x.ToLower())
+    .Where(f => !f.Contains("\\old\\"))
+    .Where(f => !f.Contains("archive\\"))
+    .Where(f => !f.Contains("benchmarking"))
+    .Where(f => !f.Contains("explainers"))
+    .Where(f => !f.Contains("crises, camhs (wlt)"))
+    .Where(f => !f.Contains("exec flow headlines, awa"));
 
 var ssasConnStr = "server=LTP-220118-ANA\\RC2022;database=test234";
 var db = TabularModel.LoadFromSSAS(ssasConnStr);
@@ -32,9 +39,6 @@ var allDetections = new Detections();
 int i = 1;
 foreach (var originalPbix in pbiFiles)
 {
-   if (originalPbix.Contains("\\old\\") || originalPbix.Contains("archive\\") || originalPbix.ToLower().Contains("benchmarking") || originalPbix.ToLower().Contains("explainers") || originalPbix.ToLower().Contains("crises, camhs (wlt)"))
-        continue;
-
     string name = Path.GetFileNameWithoutExtension(originalPbix);
     string repoFolder = Path.Combine(@"C:\work\DHCFT\Modules\WLT", name);
     string workingPbix = repoFolder + ".pbix";
@@ -148,7 +152,7 @@ void PrintDetections(Detections detections, Database ssasModel, Database oldMode
         }
     }
 
-    var unmappedMeasures = detections.MeasureReferences.Where(x => !IsMeasureInModel(x.Measure, db)).GroupBy(cr => cr.TableName);
+    var unmappedMeasures = detections.MeasureReferences.Where(x => !IsMeasureInModel(new[] { x.TableName }, x.Measure, db)).GroupBy(cr => cr.TableName);
     if (unmappedMeasures.Any())
     {
         Console.WriteLine("");
@@ -159,7 +163,7 @@ void PrintDetections(Detections detections, Database ssasModel, Database oldMode
             Console.WriteLine($"- {g.Key}");
             foreach (var meas in g.GroupBy(x => x.Measure))
             {
-                bool isInModel = IsMeasureInModel(meas.Key, oldDb);
+                bool isInModel = IsMeasureInModel(renames.GetTablesMappedTo(g.Key).Append(g.Key).Distinct(), meas.Key, oldDb);
                 string prefix = isInModel ? "-" : "X";
                 if (!isInModel)
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -204,7 +208,9 @@ bool InteractiveLoop(string archivePath, string folderPath)
         }
         else if (answer.Key == ConsoleKey.A)
         {
-            PbiReportLoader.LoadFromFolder(folderPath).SaveToPbiArchive(archivePath);
+            PbiReportLoader.LoadFromFolder(folderPath)
+                .SwitchToSSASDataSource(ssasConnStr)
+                .SaveToPbiArchive(archivePath);
         }
         else if (answer.Key == ConsoleKey.G)
         {
@@ -225,8 +231,8 @@ bool InteractiveLoop(string archivePath, string folderPath)
 bool IsColumnInModel(IEnumerable<string> tableNames, string columnName, Database db)
     => db.Model.Tables.SelectMany(t => t.Columns).Any(m => tableNames.Contains(m.Table.Name) && m.Name == columnName);
 
-bool IsMeasureInModel(string measureName, Database db)
-    => db.Model.Tables.SelectMany(t => t.Measures).Any(m => /*m.Table.Name == tableName && */m.Name == measureName);
+bool IsMeasureInModel(IEnumerable<string> tableNames, string measureName, Database db)
+    => db.Model.Tables.SelectMany(t => t.Measures).Any(m => tableNames.Contains(m.Table.Name) && m.Name == measureName);
 
 Mappings CreateRenames()
 {
@@ -244,10 +250,6 @@ Mappings CreateRenames()
     mappings.Table("WardLeave")
         .MapTo("Ward Leave");
 
-    // not too sure about this one, probably wrong
-    mappings.Table("Localities")
-        .MapTo("Local Authorities");
-
     mappings.Table("Latest Week")
         .MapTo("Last Model Date")
         .MapObjectTo("Model Update Date", "m_LastUpdated_VisualLabel");
@@ -258,7 +260,12 @@ Mappings CreateRenames()
         .MapObjectTo("Simplified Service Type", "Service Type")
         .MapObjectTo("Service/Ward (Trial Balance LoD)", "Service (Trial Balance LoD)")
         .MapObjectTo("m_serviceflows_inflows_HTT", "m_Flows_Inflows_HTT")
-        .MapObjectTo("m_serviceflows_outflows_HTT", "m_Flows_Outflows_HTT");
+        .MapObjectTo("m_serviceflows_outflows_HTT", "m_Flows_Outflows_HTT")
+        .MapObjectTo("Average Flows", "m_Flows_AverageperWeek", "Flows")
+        .MapObjectTo("m_Caseload_Total_EndofPeriod_Stratified_byIntensity", "m_Caseload_Total_EndofPeriod_Stratified_byIntensity", "Referral Spells")
+        .MapObjectTo("m_Caseload_Total_EndofPeriod_Stratified_byLastContact", "m_Caseload_Total_EndofPeriod_Stratified_byLastContact", "Referral Spells")
+        .MapObjectTo("m_%Change_YearonYear_DirectCaseload", "m_%Change_YearonYear_DirectCaseload", "Flows")
+        .MapObjectTo("m_Flows_Inflows_HTT", "m_Flows_Inflows_HTT", "Flows");
 
     mappings.Table("Acuity Tier (Previous)").MapTo("Acuity Tier (T-1)");
     mappings.Table("Acuity Tier (Previous Service)").MapTo("Acuity Tier (T-1)");
@@ -272,21 +279,24 @@ Mappings CreateRenames()
         .MapObjectTo("Service/Ward", "Service")
         .MapObjectTo("Simplified Service Type", "Service Type");
 
-    mappings.Table("Acuity Tier (T+1 Service)").MapTo("Acuity Tier (T+1)");
-        mappings.Table("Acuity Tier (T+1)")
+    mappings.Table("Acuity Tier (T+1 Service)")
+        .MapTo("Acuity Tier (T+1)");
+    mappings.Table("Acuity Tier (T+1)")
         .MapObjectTo("Service/Ward", "Service")
         .MapObjectTo("Simplified Service Type", "Service Type")
         .MapObjectTo("Conversion into Next Service_Latest 3 months", "m_%ConversionToT+1_Latest3Months")
         .MapObjectTo("Conversion into Next Service_excl Latest 3 months", "m_%ConversionToT+1_NotLatest3Months");
 
-    mappings.Table("Acuity Tier (T+2 Service)").MapTo("Acuity Tier (T+2)");
+    mappings.Table("Acuity Tier (T+2 Service)")
+        .MapTo("Acuity Tier (T+2)");
     mappings.Table("Acuity Tier (T+2)")
         .MapTo("Acuity Tier (T+2)")
         .MapObjectTo("Service/Ward", "Service")
         .MapObjectTo("Simplified Service Type", "Service Type");
 
-    mappings.Table("Acuity Tier (Next Service Within 6 months)").MapTo("Acuity Tier (T+1_w6M)");
-        mappings.Table("Acuity Tier (T+1_w6M)")
+    mappings.Table("Acuity Tier (Next Service Within 6 months)")
+        .MapTo("Acuity Tier (T+1_w6M)");
+    mappings.Table("Acuity Tier (T+1_w6M)")
         .MapObjectTo("Simplified Service Type", "Service Type");
 
     mappings.Table("Care Changes").MapTo("Flows");
@@ -297,18 +307,25 @@ Mappings CreateRenames()
         .MapObjectTo("Resultant Service", "T0 Service")
         .MapObjectTo("Service Flows", "m_Flows_0")
         .MapObjectTo("Previous Service", "T-1 Service")
-        .MapObjectTo("30-day Readmission Rate", "m_ReadmissionRate_30days")
-        .MapObjectTo("Conversion Rate to Inpatient", "m_ConversionRate_Inpatient")
         .MapObjectTo("Average Flows", "m_Flows_AverageperWeek")
         .MapObjectTo("Last Known Gender", "Gender", "Patients")
         .MapObjectTo("Gender", "Gender", "Patients")
+        .MapObjectTo("Month on Month Flow Change", "m_%Change_MonthonMonth_Flows")
         .MapObjectTo("MHA Section", "Last MHA Section at Flow")
         .MapObjectTo("Responsible Borough (Inferred)", "Responsible Area", "Responsible Area")
+        .MapObjectTo("30-day Readmission Rate", "m_ReadmissionRate_30days")
+        .MapObjectTo("Conversion Rate to Inpatient", "m_ConversionRate_Inpatient", "Admissions")
+        .MapObjectTo("m_ConversionRate_ToInpatient", "m_ConversionRate_Inpatient", "Admissions")
+        .MapObjectTo("m_ConversionRate_Inpatient", "m_ConversionRate_Inpatient", "Admissions")
         .MapObjectTo("m_ReadmissionRate_30Days", "m_ReadmissionRate_30days")
-        .MapObjectTo("m_ConversionRate_ToInpatient", "m_ConversionRate_Inpatient")
         .MapObjectTo("m_ServiceFlows_NoCalendarTableRelationship", "m_Flows_NoCalendarTableRelationship")
         .MapObjectTo("m_SPC_Measure", "m_Selected_Measure")
-        .MapObjectTo("m_Caseload_Direct_CATT", "m_Caseload_Direct_HTT");
+        .MapObjectTo("m_Caseload_Direct_CATT", "m_Caseload_Direct_HTT")
+        // this measure was broken even before 
+        //.MapObjectTo("Into HTT Flow", "m_Flows_Inflows_HTT")
+        .MapObjectTo("service flows % change", "m_Flows_%change")
+        .MapObjectTo("m_Compound_Weekly_Caseload_Rate", "m_CririsPresentations_CompoundWeeklyGrowthRate", "Crisis")
+        .MapObjectTo("Net Adm/Dis", "Net Adm/Dis", "Acuity Tier (T0)");
 
     mappings.Table("Gender (Simplifcations)")
         .MapTo("Patients")
@@ -325,7 +342,7 @@ Mappings CreateRenames()
         .MapObjectTo("Gender (Simplification)", "Gender")
         .MapObjectTo("Ethnicity Simplification", "Ethnic Category (group)")
         .MapObjectTo("EthnicityDescription", "Ethnic Category (group)")
-        .MapObjectTo("Ethnicity/BAME Group", "Ethnic Category (group)");
+        .MapObjectTo("Ethnicity/BAME Group", "Ethnic Category");
 
     mappings.Table("Crisis")
         .MapObjectTo("m_CountCrisisPresentation", "m_CrisisPresentations_Count");
@@ -349,16 +366,9 @@ Mappings CreateRenames()
         .MapTo("Pathways")
         .MapObjectTo("Referral Source Simplified", "Pathway Referral source");
 
-    // not too sure about this one, probably wrong
-    mappings.Table("Localities")
-        .MapObjectTo("Locality", "Local Authority");
-
-    mappings.Table("Last Model Date")
-        .MapObjectTo("Model Update Date", "m_LastUpdated_VisualLabel");
-
     mappings.Table("Days of Week").MapTo("Calendar");
     mappings.Table("Weekdays").MapTo("Calendar");
-    mappings.Table("Calendar Helper").MapTo("Calendar");
+    // mappings.Table("Calendar Helper").MapTo("Calendar");
 
     mappings.Table("Calendar")
         .MapObjectTo("Is Current 3 Years", "Is Last 3 Years")
@@ -375,14 +385,13 @@ Mappings CreateRenames()
 
     mappings.Table("Referrals and Ward Stays")
         .MapTo("Care Episodes");
-    // renames.AddRename("Calendar", "Completed Month", "???");
 
     mappings.Table("Staff Types")
         .MapTo("Subjective Code Descriptions")
         .MapObjectTo("Staff Grouping", "Staff Type");
 
-    mappings.Table("EthnicityDescription")
-        .MapObjectTo("Ethnicity/BAME Group", "Ethnic Category");
+    //mappings.Table("EthnicityDescription")
+    //    .MapObjectTo("Ethnicity/BAME Group", "Ethnic Category");
 
     mappings.Table("Admissions")
         .MapObjectTo("Adult Acute & PICU Admissions in last Year", "Acute or PICU Admissions in last Year")
@@ -393,7 +402,11 @@ Mappings CreateRenames()
         .MapObjectTo("Resultant Service", "T0 Service")
         .MapObjectTo("MHA Section", "MHA Section Open on Admission")
         .MapObjectTo("Section Admission Label", "MHA Section Admission Status")
-        .MapObjectTo("Admitted Under Section (all)", "MHA Section Admission Status");
+        .MapObjectTo("Admitted Under Section (all)", "MHA Section Admission Status")
+        .MapObjectTo("Net Adm/Dis2", "m_NetAdmissions")
+        .MapObjectTo("m_Discharges", "m_Discharges_NetAdmissions")
+        .MapObjectTo("m_Discharges_NetAdmissions", "m_Discharges_NetAdmissions", "Acuity Tier (T0)")
+        .MapObjectTo("m_NetAdmissions", "m_NetAdmissions", "Acuity Tier (T0)");
 
     mappings.Table("Crisis")
         .MapObjectTo("In-Hours or Out-of-Hours", "In or Out of Hours")
@@ -408,10 +421,6 @@ Mappings CreateRenames()
     mappings.Table("Acuity Tier (CATT)")
         .MapTo("Acuity Tier HTT")
         .MapObjectTo("Service/Ward", "Service");
-
-    // todo: find which table these two measures belonged to
-    //mappings.AddMeasureRebase("m_Caseload_Total_EndofPeriod_Stratified_byIntensity", "Referral Spells");
-    //mappings.AddMeasureRebase("m_Caseload_Total_EndofPeriod_Stratified_byLastContact", "Referral Spells");
 
     mappings.Table("Days from Trust Entry to Admission")
         .MapTo("Days from Trust Entry to Admission Label Rank");
