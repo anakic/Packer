@@ -32,7 +32,9 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
             return queryDefinition;
         }
 
-        Regex wsRx = new Regex(@"(\r|\n)+", RegexOptions.Compiled);
+        // todo: do not replace inside string literals and identifiers otherwise we might conclude [name of     meas] is the same as [name of meas] which it isn't.
+        // This is just a verification mechanism though
+        Regex wsRx = new Regex(@"\s+", RegexOptions.Compiled);
         private string NormalizeNewlines(string input)
             => wsRx.Replace(input, " ");
 
