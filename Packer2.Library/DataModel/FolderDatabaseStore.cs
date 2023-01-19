@@ -148,6 +148,8 @@ namespace Packer2.Library.DataModel
         // todo: use logger
         private readonly ILogger<FolderDatabaseStore> logger;
 
+        public string Customization { get; set; }
+
         public FolderDatabaseStore(string folderPath, ILogger<FolderDatabaseStore>? logger = null)
             : this(new LocalFileSystem(folderPath), logger)
         { }

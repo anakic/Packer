@@ -156,5 +156,6 @@ namespace Packer2.Tests.DataModel
         //    var storeSSAS = new SSASDataModelStore(".", "test_model_single_table", true);
         //    storeSSAS.Save(database);
         //}
+
     }
 }
