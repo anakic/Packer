@@ -75,6 +75,12 @@
             return InnerStore.GetFilesRecursive(ToAbsolutePath(folderPath)).Select(f => ToRelativePath(f));
         }
 
+
+        public IEnumerable<string> GetFoldersRecursive(string folderPath)
+        {
+            return InnerStore.GetFoldersRecursive(ToAbsolutePath(folderPath)).Select(f => ToRelativePath(f));
+        }
+
         public IEnumerable<string> GetFolders(string folderPath)
         {
             return InnerStore.GetFolders(ToAbsolutePath(folderPath)).Select(f => ToRelativePath(f));

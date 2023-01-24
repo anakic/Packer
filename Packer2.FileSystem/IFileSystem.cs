@@ -23,6 +23,7 @@
 
         // inspecting folders
         IEnumerable<string> GetFolders(string path);
+        IEnumerable<string> GetFoldersRecursive(string folderPath);
         bool FolderExists(string path);
         void DeleteFolder(string path);
         void CreateFolder(string path);

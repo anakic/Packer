@@ -66,7 +66,7 @@
         public IEnumerable<string> GetFiles(string folderPath)
             => GetFiles(folderPath, SearchOption.TopDirectoryOnly);
 
-        public IEnumerable<string> GetFiles(string folderPath, SearchOption searchOption)
+        IEnumerable<string> GetFiles(string folderPath, SearchOption searchOption)
         {
             var folderPathAbs = ToAbsolutePath(folderPath);
             if (Directory.Exists(folderPathAbs))
@@ -80,12 +80,18 @@
         }
 
         public IEnumerable<string> GetFolders(string folderPath)
+            => GetFolders(folderPath, SearchOption.TopDirectoryOnly);
+
+        public IEnumerable<string> GetFoldersRecursive(string folderPath)
+            => GetFolders(folderPath, SearchOption.AllDirectories);
+
+        private IEnumerable<string> GetFolders(string folderPath, SearchOption searchOption)
         {
             var folderPathAbs = ToAbsolutePath(folderPath);
             if (Directory.Exists(folderPathAbs))
             {
                 DirectoryInfo directory = new DirectoryInfo(folderPathAbs);
-                DirectoryInfo[] directories = directory.GetDirectories();
+                DirectoryInfo[] directories = directory.GetDirectories("*", searchOption);
                 return directories.Where(d => !d.Attributes.HasFlag(FileAttributes.Hidden)).Select(fi => fi.FullName).Select(ToRelativePath);
             }
             else

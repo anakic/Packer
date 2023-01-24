@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Packer2.FileSystem;
+using Packer2.Library.DataModel.Customizations;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.DataModel
@@ -144,37 +145,57 @@ namespace Packer2.Library.DataModel
 
         BimMappedRepository map = new BimMappedRepository();
 
-        private readonly IFileSystem fileSystem;
         // todo: use logger
         private readonly ILogger<FolderDatabaseStore> logger;
 
         public string Customization { get; set; }
 
-        public FolderDatabaseStore(string folderPath, ILogger<FolderDatabaseStore>? logger = null)
-            : this(new LocalFileSystem(folderPath), logger)
+        public FolderDatabaseStore(string folderPath, string? customization = null, ILogger<FolderDatabaseStore>? logger = null)
+            : this(new LocalFileSystem(folderPath), customization, logger)
         { }
 
-        public FolderDatabaseStore(IFileSystem fileSystem, ILogger<FolderDatabaseStore>? logger = null)
-            : base(fileSystem)
+        IFileSystem originalFileSystem;
+        public FolderDatabaseStore(IFileSystem fileSystem, string? customization = null, ILogger<FolderDatabaseStore>? logger = null)
+            : base(customization == null ? fileSystem : new CustFileSystem(fileSystem, customization) )
         {
-            this.fileSystem = fileSystem;
+            originalFileSystem = fileSystem;
             this.logger = logger ?? new DummyLogger<FolderDatabaseStore>();
         }
 
-        public override Database Read()
+        protected override Database DoRead(IFileSystem fileSystem)
         {
-            var jobject = map.Read(fileSystem);
-            var jObjFile = new JObjFile(jobject);
-            var inner = new BimDataModelStore(jObjFile);
-            return inner.Read();
+            Database db = ReadDatabase(fileSystem);
+
+            var ignoreFile = ReadIgnoreFile();
+            var rules = new IgnoreFileParser().Parse(ignoreFile);
+            var filter = new DataModelFilter(rules);
+            filter.Crop(db);
+
+            return db;
         }
 
-        protected override void DoSave(Database model)
+        protected override void DoSave(Database model, IFileSystem fileSystem)
         {
+            var originalFullDb = ReadDatabase(fileSystem);
+
+            var ignoreFile = ReadIgnoreFile();
+            var rules = new IgnoreFileParser().Parse(ignoreFile);
+            var filter = new DataModelFilter(rules);
+            filter.Extend(model, originalFullDb);
+
             var jObjFile = new JObjFile();
             var inner = new BimDataModelStore(jObjFile);
             inner.Save(model);
             map.Write(jObjFile.JObject!, fileSystem);
+        }
+
+        private Database ReadDatabase(IFileSystem fileSystem)
+        {
+            var jobject = map.Read(fileSystem);
+            var jObjFile = new JObjFile(jobject);
+            var inner = new BimDataModelStore(jObjFile);
+            var db = inner.Read();
+            return db;
         }
     }
 }

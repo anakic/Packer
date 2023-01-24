@@ -2,11 +2,17 @@
 
 namespace Packer2.Library.DataModel.Customizations
 {
-    public record IgnoreRule(string TablePattern, string? ObjectPattern, bool Invert);
+    public enum TargetAction
+    {
+        Ignore,
+        Keep
+    }
+
+    public record IgnoreRule(string TablePattern, string? ObjectPattern, TargetAction Action);
 
     public class IgnoreFileParser
     {
-        Regex regex = new Regex(@"^(?'invert'!)?('(?'tableNamePattern'[^]]*)'|(?'tableNamePattern'[^]]*))(\[(?'objectNamePattern'[^]]*)\])?$", RegexOptions.Compiled);
+        Regex regex = new Regex(@"^(?'invert'!?)('(?'tableNamePattern'[^]]*)'|(?'tableNamePattern'[^]]*))(\[(?'objectNamePattern'[^]]*)\])?$", RegexOptions.Compiled);
 
         public IEnumerable<IgnoreRule> Parse(string inputText)
         {
@@ -30,9 +36,13 @@ namespace Packer2.Library.DataModel.Customizations
                 if (objectNamePatternGroup.Success)
                     objectNamePattern = objectNamePatternGroup.Value;
 
-                bool invert = (m.Groups["invert"].Success);
+                TargetAction action = m.Groups["invert"].Value switch 
+                {
+                    "!" => TargetAction.Ignore,
+                    _ => TargetAction.Keep
+                };
 
-                yield return new IgnoreRule(tableNamePattern, objectNamePattern, invert);
+                yield return new IgnoreRule(tableNamePattern, objectNamePattern, action);
             }
         }
     }

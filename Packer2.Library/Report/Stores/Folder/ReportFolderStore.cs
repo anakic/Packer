@@ -21,7 +21,6 @@ namespace Packer2.Library.Report.Stores.Folder
         private const string ReportLinguisticSchemaFilePath = "Report\\LinguisticSchema.xml";
         private const string ReportFolderPath = "Report";
 
-        private readonly IFileSystem fileSystem;
         private readonly ILogger<ReportFolderStore> logger;
         ReportMappedFolder reportFolderMapper = new ReportMappedFolder();
 
@@ -40,11 +39,9 @@ namespace Packer2.Library.Report.Stores.Folder
             : base(fileSystem)
         {
             this.logger = logger ?? new DummyLogger<ReportFolderStore>();
-
-            this.fileSystem = fileSystem;
         }
 
-        private IEnumerable<IJObjTransform> GetTransforms()
+        private IEnumerable<IJObjTransform> GetTransforms(IFileSystem fileSystem)
         {
             // note: ordering is important because unstuff changes selectors
             // that said, I could certainly optimize things by running minification after unstuff
@@ -63,7 +60,7 @@ namespace Packer2.Library.Report.Stores.Folder
                 yield return new SimplifyBookmarks(logger);
         }
 
-        public override PowerBIReport Read()
+        protected override PowerBIReport DoRead(IFileSystem fileSystem)
         {
             var model = new PowerBIReport();
 
@@ -75,17 +72,17 @@ namespace Packer2.Library.Report.Stores.Folder
                 model.Blobs[blobFileName] = fileSystem.ReadAsBytes(file)!;
             }
 
-            model.Connections = ReadJsonFile(ConnectionsFilePath);
-            model.Content_Types = ReadXmlFile(ContentTypesFilePath);
-            model.DataModelSchemaFile = ReadJsonFile(DataModelSchemaFilePath);
-            model.DiagramLayout = ReadJsonFile(DiagramLayoutFilePath);
-            model.Metadata = ReadJsonFile(MedataFilePath);
-            model.Settings = ReadJsonFile(SettingsFilePath);
-            model.Version = ReadTextFile(VersionFilePath);
-            model.Report_LinguisticSchema = ReadXmlFile(ReportLinguisticSchemaFilePath);
+            model.Connections = ReadJsonFile(fileSystem, ConnectionsFilePath);
+            model.Content_Types = ReadXmlFile(fileSystem, ContentTypesFilePath);
+            model.DataModelSchemaFile = ReadJsonFile(fileSystem, DataModelSchemaFilePath);
+            model.DiagramLayout = ReadJsonFile(fileSystem, DiagramLayoutFilePath);
+            model.Metadata = ReadJsonFile(fileSystem, MedataFilePath);
+            model.Settings = ReadJsonFile(fileSystem, SettingsFilePath);
+            model.Version = ReadTextFile(fileSystem, VersionFilePath);
+            model.Report_LinguisticSchema = ReadXmlFile(fileSystem, ReportLinguisticSchemaFilePath);
 
             var rpt = reportFolderMapper.Read(fileSystem.Sub(ReportFolderPath));
-            foreach(var t in GetTransforms().Reverse())
+            foreach(var t in GetTransforms(fileSystem).Reverse())
             {
                 logger.LogInformation("Restoring report transformation '{transformation}'", t.GetType().Name);
                 t.Restore(rpt);
@@ -95,7 +92,7 @@ namespace Packer2.Library.Report.Stores.Folder
             return model;
         }
 
-        protected override void DoSave(PowerBIReport model)
+        protected override void DoSave(PowerBIReport model, IFileSystem fileSystem)
         {
             foreach (var kvp in model.Blobs)
             {
@@ -118,7 +115,7 @@ namespace Packer2.Library.Report.Stores.Folder
             // object would probably not cause any issues because nobody else is using it, but there's no guarantee
             // this will always continue to be the case so using the clone just in case.
             var layoutJObjClone = (JObject)model.Layout.DeepClone();
-            foreach(var t  in GetTransforms())
+            foreach(var t  in GetTransforms(fileSystem))
             {
                 logger.LogInformation("Applying report transformation '{transformation}'", t.GetType().Name);
                 t.Transform(layoutJObjClone);
@@ -126,7 +123,7 @@ namespace Packer2.Library.Report.Stores.Folder
             reportFolderMapper.Write(layoutJObjClone, fileSystem.Sub(ReportFolderPath));
         }
 
-        private string? ReadTextFile(string path)
+        private string? ReadTextFile(IFileSystem fileSystem, string path)
         {
             if (fileSystem.FileExists(path) == false)
             {
@@ -139,7 +136,7 @@ namespace Packer2.Library.Report.Stores.Folder
         }
 
         // todo: use ReadTextFile internally?
-        private JObject? ReadJsonFile(string path)
+        private JObject? ReadJsonFile(IFileSystem fileSystem, string path)
         {
             if (fileSystem.FileExists(path) == false)
             {
@@ -158,7 +155,7 @@ namespace Packer2.Library.Report.Stores.Folder
         }
 
         // todo: use ReadTextFile internally?
-        private XDocument? ReadXmlFile(string path)
+        private XDocument? ReadXmlFile(IFileSystem fileSystem, string path)
         {
             if (fileSystem.FileExists(path) == false)
             {

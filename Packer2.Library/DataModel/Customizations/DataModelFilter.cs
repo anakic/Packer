@@ -5,16 +5,12 @@ namespace Packer2.Library.DataModel.Customizations
 {
     internal class DataModelFilter
     {
-        private readonly IEnumerable<IgnoreRule> rules;
+        private readonly List<TableRuleFilter> tableFilters;
+        private readonly List<TableObjectRuleFilter> objectFilters;
 
         public DataModelFilter(IEnumerable<IgnoreRule> rules)
         {
-            this.rules = rules;
-        }
-
-        public void Apply(Database database)
-        {
-            var tableFilters = rules
+            tableFilters = rules
                 .Where(r => r.ObjectPattern == null)
                 .Select(r => new TableRuleFilter
                 (
@@ -23,7 +19,7 @@ namespace Packer2.Library.DataModel.Customizations
                 ))
                 .ToList();
 
-            var objectFilters = rules
+            objectFilters = rules
                 .Where(r => r.ObjectPattern != null)
                 .Select(r => new TableObjectRuleFilter
                 (
@@ -32,8 +28,67 @@ namespace Packer2.Library.DataModel.Customizations
                     ObjectFilter: new NameFilter(r.ObjectPattern!)
                 ))
                 .ToList();
+        }
 
-            foreach (var table in database.Model.Tables)
+        public void Extend(Database targetDatabase, Database fullDatabase)
+        {
+            List<Table> copiedTables = new List<Table>();
+            List<Column> copiedColumns = new List<Column>();
+            foreach (var table in fullDatabase.Model.Tables.ToArray())
+            {
+                var shouldKeepTable = ShouldKeepTable(table.Name, tableFilters);
+                if (!shouldKeepTable)
+                {
+                    targetDatabase.Model.Tables.Add(table.Clone());
+                    copiedTables.Add(table);
+                    continue;
+                }
+
+                foreach (var c in table.Columns.ToArray())
+                {
+                    var shouldKeepObject = ShouldKeepObject(c.Table.Name, c.Name, objectFilters);
+                    if (!shouldKeepObject)
+                    {
+                        targetDatabase.Model.Tables[table.Name].Columns.Add(c.Clone());
+                        copiedColumns.Add(c);
+                    }
+                }
+
+                foreach (var m in table.Measures.ToArray())
+                {
+                    var shouldKeepObject = ShouldKeepObject(m.Table.Name, m.Name, objectFilters);
+                    if (!shouldKeepObject)
+                        targetDatabase.Model.Tables[table.Name].Measures.Add(m.Clone());
+                }
+
+                foreach (var h in table.Hierarchies.ToArray())
+                {
+                    var shouldKeepObject = ShouldKeepObject(h.Table.Name, h.Name, objectFilters);
+                    if (!shouldKeepObject)
+                        targetDatabase.Model.Tables[table.Name].Hierarchies.Add(h.Clone());
+                }
+            }
+
+            foreach (var t in copiedTables)
+            {
+                foreach (var r in fullDatabase.Model.Relationships.Where(r => r.FromTable == t || r.ToTable == t))
+                {
+                    targetDatabase.Model.Relationships.Add(r.Clone());
+                }
+            }
+
+            foreach (var c in copiedColumns)
+            {
+                foreach (var r in fullDatabase.Model.Relationships.Where(r => r.GetFromColumn() == c || r.GetToColumn() == c))
+                {
+                    targetDatabase.Model.Relationships.Add(r.Clone());
+                }
+            }
+        }
+
+        public void Crop(Database database)
+        {
+            foreach (var table in database.Model.Tables.ToArray())
             {
                 var shouldKeepTable = ShouldKeepTable(table.Name, tableFilters);
                 if (!shouldKeepTable)
@@ -42,21 +97,21 @@ namespace Packer2.Library.DataModel.Customizations
                     continue;
                 }
 
-                foreach (var c in table.Columns)
+                foreach (var c in table.Columns.ToArray())
                 {
                     var shouldKeepObject = ShouldKeepObject(c.Table.Name, c.Name, objectFilters);
                     if (!shouldKeepObject)
                         c.RemoveFromModel();
                 }
 
-                foreach (var m in table.Measures)
+                foreach (var m in table.Measures.ToArray())
                 {
                     var shouldKeepObject = ShouldKeepObject(m.Table.Name, m.Name, objectFilters);
                     if (!shouldKeepObject)
                         table.Measures.Remove(m);
                 }
 
-                foreach (var h in table.Hierarchies)
+                foreach (var h in table.Hierarchies.ToArray())
                 {
                     var shouldKeepObject = ShouldKeepObject(h.Table.Name, h.Name, objectFilters);
                     if (!shouldKeepObject)
@@ -71,7 +126,7 @@ namespace Packer2.Library.DataModel.Customizations
             foreach (var f in objectFilters)
             {
                 if (f.TableFilter.IsMatch(tableName) && f.ObjectFilter.IsMatch(objectName))
-                    shouldRemove = f.Rule.Invert;
+                    shouldRemove = f.Rule.Action == TargetAction.Ignore;
             }
             return shouldRemove;
         }
@@ -81,8 +136,8 @@ namespace Packer2.Library.DataModel.Customizations
             bool shouldRemove = true;
             foreach (var f in tableFilters)
             {
-                if(f.TableFilter.IsMatch(tableName))
-                    shouldRemove = f.Rule.Invert;
+                if (f.TableFilter.IsMatch(tableName))
+                    shouldRemove = f.Rule.Action == TargetAction.Ignore;
             }
             return shouldRemove;
         }

@@ -99,6 +99,9 @@
             return false;
         }
 
+        public static bool IsEqualToOrDescendantOf(this IPathResolver resolver, string path, string potentialAncestor)
+            => resolver.ArePathsEqual(path, potentialAncestor) || resolver.IsDescendantOf(path, potentialAncestor);
+
         public static IEnumerable<string> GetAncestors(this IPathResolver resolver, string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
