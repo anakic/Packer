@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Packer2.FileSystem;
 using Packer2.Library.DataModel.Customizations;
+using Packer2.Library.Report.Stores.Folder.Zones;
 using Packer2.Library.Tools;
 
 namespace Packer2.Library.DataModel
@@ -37,13 +38,19 @@ namespace Packer2.Library.DataModel
 
             protected override string PayloadContainingObjectJsonPath => ".source";
 
-            protected override string PayloadProperty => "expression";
+            protected override string GetPayloadProperty(JToken obj)
+            {
+                // a bit hacky, sure, but not worth fixing at the moment
+                return GetFileExtension(obj) == "sql"
+                    ? "query"
+                    : "expression";
+            }
 
 
             protected override string GetFileName(JToken elem)
                 => elem["name"]!.Value<string>()!;
-            
-            static Dictionary<string, string> expTypeToExtensionsMap = new Dictionary<string, string>() { { "m", "m" }, { "calculated", "dax" } };
+
+            static Dictionary<string, string> expTypeToExtensionsMap = new Dictionary<string, string>() { { "m", "m" }, { "calculated", "dax" }, { "query", "sql" } };
             protected override string GetFileExtension(JToken elem)
             {
                 var type = elem.SelectToken("source.type")!.Value<string>()!;
@@ -55,7 +62,7 @@ namespace Packer2.Library.DataModel
         {
             protected override string PayloadContainingObjectJsonPath => "";
 
-            protected override string PayloadProperty => "expression";
+            protected override string GetPayloadProperty(JToken obj) => "expression";
 
             protected override string ContainingFolder => "Columns";
 
@@ -70,14 +77,14 @@ namespace Packer2.Library.DataModel
         {
             protected override string PayloadContainingObjectJsonPath => "";
 
-            protected override string PayloadProperty => "expression";
+            protected override string GetPayloadProperty(JToken obj) => "expression";
 
             protected override string ContainingFolder => "Measures";
 
             protected override string ElementsSelector => ".measures[*]";
 
             protected override string GetFileName(JToken elem) => $"{(string)elem["name"]!}";
-            
+
             protected override string GetFileExtension(JToken elem) => "dax";
         }
 
@@ -85,7 +92,7 @@ namespace Packer2.Library.DataModel
         {
             protected override string PayloadContainingObjectJsonPath => "";
 
-            protected override string PayloadProperty => "expression";
+            protected override string GetPayloadProperty(JToken obj) => "expression";
 
             protected override string ContainingFolder => "MQueries";
 
@@ -141,6 +148,9 @@ namespace Packer2.Library.DataModel
             protected override IEnumerable<MappingZone> Mappings { get; }
 
             protected override string RootFileName => "database.json";
+
+            public bool RepositoryExists(IFileSystem fs)
+                => fs.FileExists(RootFileName);
         }
 
         BimMappedRepository map = new BimMappedRepository();
@@ -156,7 +166,7 @@ namespace Packer2.Library.DataModel
 
         IFileSystem originalFileSystem;
         public FolderDatabaseStore(IFileSystem fileSystem, string? customization = null, ILogger<FolderDatabaseStore>? logger = null)
-            : base(customization == null ? fileSystem : new CustFileSystem(fileSystem, customization) )
+            : base(customization == null ? fileSystem : new CustFileSystem(fileSystem, customization))
         {
             originalFileSystem = fileSystem;
             this.logger = logger ?? new DummyLogger<FolderDatabaseStore>();
@@ -176,12 +186,15 @@ namespace Packer2.Library.DataModel
 
         protected override void DoSave(Database model, IFileSystem fileSystem)
         {
-            var originalFullDb = ReadDatabase(fileSystem);
+            if (map.RepositoryExists(fileSystem))
+            {
+                Database originalFullDb = ReadDatabase(fileSystem);
 
-            var ignoreFile = ReadIgnoreFile();
-            var rules = new IgnoreFileParser().Parse(ignoreFile);
-            var filter = new DataModelFilter(rules);
-            filter.Extend(model, originalFullDb);
+                var ignoreFile = ReadIgnoreFile();
+                var rules = new IgnoreFileParser().Parse(ignoreFile);
+                var filter = new DataModelFilter(rules);
+                filter.Extend(model, originalFullDb);
+            }
 
             var jObjFile = new JObjFile();
             var inner = new BimDataModelStore(jObjFile);

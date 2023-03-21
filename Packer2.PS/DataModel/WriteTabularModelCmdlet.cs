@@ -11,12 +11,16 @@ namespace Packer2.PS.DataModel
         [Alias("d")]
         public string Destination { get; set; }
 
+        [Parameter(Mandatory = false, Position = 1)]
+        [Alias("c")]
+        public string Customization { get; set; }
+
         [Parameter(ValueFromPipeline = true, Mandatory = true)]
         public Database Database { get; set; }
 
         protected override void ProcessRecord()
         {
-            IModelStore<Database> store = GetDataModelStore(Destination);
+            IModelStore<Database> store = GetDataModelStore(Destination, Customization);
             store.Save(Database);
         }
     }

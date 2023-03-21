@@ -1,5 +1,6 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library.Tools;
+using System.Linq;
 
 namespace Packer2.Library.DataModel.Customizations
 {
@@ -69,21 +70,18 @@ namespace Packer2.Library.DataModel.Customizations
                 }
             }
 
-            foreach (var t in copiedTables)
-            {
-                foreach (var r in fullDatabase.Model.Relationships.Where(r => r.FromTable == t || r.ToTable == t))
+            var relationshipsToAdd =
+                fullDatabase.Model.Relationships.Where(r =>
                 {
-                    targetDatabase.Model.Relationships.Add(r.Clone());
-                }
-            }
+                    return copiedTables.Contains(r.FromTable)
+                        || copiedTables.Contains(r.ToTable)
+                        || copiedColumns.Contains(r.GetFromColumn())
+                        || copiedColumns.Contains(r.GetToColumn());
+                })
+                .ToArray();
 
-            foreach (var c in copiedColumns)
-            {
-                foreach (var r in fullDatabase.Model.Relationships.Where(r => r.GetFromColumn() == c || r.GetToColumn() == c))
-                {
-                    targetDatabase.Model.Relationships.Add(r.Clone());
-                }
-            }
+            foreach(var r in relationshipsToAdd)
+                targetDatabase.Model.Relationships.Add(r.Clone());
         }
 
         public void Crop(Database database)

@@ -23,6 +23,8 @@ namespace Packer2.Library.DataModel.Customizations
 
             var regexSections = sections.Select(sect =>
             {
+                sect = Regex.Replace(sect, @"\\(.)", "$1");
+
                 StringBuilder sb = new StringBuilder();
                 // convert each char a [lU] set, e.g. a => [aA]
                 foreach (var c in sect)
@@ -37,7 +39,7 @@ namespace Packer2.Library.DataModel.Customizations
                 return sb.ToString();
             });
 
-            return String.Join(".*", regexSections);
+            return $"^{string.Join(".*", regexSections)}$";
         }
     }
 }

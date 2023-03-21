@@ -43,14 +43,73 @@ namespace Packer2.Library
 
         protected abstract T DoRead(IFileSystem fileSystem);
 
+        interface IUntouchedFilesList
+        {
+            void MarkFileAsInUse(string path);
+            void MarkFolderAsInUse(string path);
+
+            public IEnumerable<string> GetUnusedFiles();
+            public IEnumerable<string> GetUnusedFolders();
+        }
+
+        class UntouchedFilesList : IUntouchedFilesList
+        {
+            HashSet<string>? foldersForDeletion;
+            HashSet<string>? filesForDeletion;
+
+            public UntouchedFilesList(HashSet<string> foldersForDeletion, HashSet<string> filesForDeletion)
+            {
+                this.foldersForDeletion = foldersForDeletion;
+                this.filesForDeletion = filesForDeletion;
+            }
+
+            public void MarkFileAsInUse(string path)
+            {
+                filesForDeletion.Remove(path);
+            }
+
+            public void MarkFolderAsInUse(string path)
+            {
+                foldersForDeletion!.Remove(path);
+            }
+
+            public IEnumerable<string> GetUnusedFiles() => filesForDeletion;
+            public IEnumerable<string> GetUnusedFolders() => foldersForDeletion;
+        }
+
+        class SubUntouchedFilesList : IUntouchedFilesList
+        {
+            private readonly FolderModelStore<T>.IUntouchedFilesList inner;
+            private readonly string subPath;
+            private readonly IPathResolver resolver;
+
+            public SubUntouchedFilesList(IUntouchedFilesList inner, string subPath, IPathResolver resolver)
+            {
+                this.inner = inner;
+                this.subPath = subPath;
+                this.resolver = resolver;
+            }
+
+            public void MarkFileAsInUse(string path)
+            {
+                inner.MarkFileAsInUse(resolver.CombinePath(subPath, path));
+            }
+
+            public void MarkFolderAsInUse(string path)
+            {
+                inner.MarkFolderAsInUse(resolver.CombinePath(subPath, path));
+            }
+            public IEnumerable<string> GetUnusedFiles() => throw new NotImplementedException("Not needed");
+            public IEnumerable<string> GetUnusedFolders() => throw new NotImplementedException("Not needed");
+        }
+
 
         class ProtectedFileSystemDecorator : IFileSystem
         {
             private readonly IFileSystem inner;
             private readonly HashSet<string> protectedFolders;
             private readonly HashSet<string> protectedFiles;
-            HashSet<string>? foldersForDeletion;
-            HashSet<string>? filesForDeletion;
+            IUntouchedFilesList? untouchedFilesList;
 
             public ProtectedFileSystemDecorator(IFileSystem inner, IEnumerable<string> protectedFolders, IEnumerable<string> protectedFiles)
             {
@@ -61,21 +120,24 @@ namespace Packer2.Library
 
             public void BeginUpdate()
             {
-                filesForDeletion = GetFilesRecursive("").ToHashSet(StringComparer.OrdinalIgnoreCase);
-                foldersForDeletion = GetFoldersRecursive("").ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var filesForDeletion = GetFilesRecursive("").ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var foldersForDeletion = GetFoldersRecursive("").ToHashSet(StringComparer.OrdinalIgnoreCase);
+                untouchedFilesList = new UntouchedFilesList(filesForDeletion, foldersForDeletion);
             }
             public void EndUpdate()
             {
-                if (filesForDeletion == null || foldersForDeletion == null)
+                if (untouchedFilesList == null)
                     throw new InvalidOperationException("EndUpdate called without BeginUpdate being executed.");
+
+                var filesForDeletion = untouchedFilesList.GetUnusedFiles();
+                var foldersForDeletion = untouchedFilesList.GetUnusedFolders();
 
                 foreach (var file in filesForDeletion)
                     inner.DeleteFile(file);
                 foreach (var folder in foldersForDeletion)
                     inner.DeleteFolder(folder);
 
-                filesForDeletion = null;
-                foldersForDeletion = null;
+                untouchedFilesList = null;
             }
 
             public string Kind => inner.Kind;
@@ -193,7 +255,7 @@ namespace Packer2.Library
             }
 
             public IFileSystem Sub(string childFolderPath)
-                => new ProtectedFileSystemDecorator(inner.Sub(childFolderPath), protectedFolders, protectedFiles);
+                => new ProtectedFileSystemDecorator(inner.Sub(childFolderPath), protectedFolders, protectedFiles) { untouchedFilesList = this.untouchedFilesList == null ? null : new SubUntouchedFilesList(untouchedFilesList, childFolderPath, PathResolver) };
 
             private void VerifyAccess(string path)
             {
@@ -203,13 +265,15 @@ namespace Packer2.Library
 
             private void MarkFileAsInUse(string path)
             {
-                filesForDeletion?.Remove(path);
+                untouchedFilesList?.MarkFileAsInUse(path);
                 MarkFolderAsInUse(inner.PathResolver.GetParent(path));
             }
 
             private void MarkFolderAsInUse(string path)
             {
-                foldersForDeletion?.Remove(path);
+                untouchedFilesList?.MarkFolderAsInUse(path);
+                foreach (var folder in inner.PathResolver.GetAncestors(path))
+                    untouchedFilesList?.MarkFolderAsInUse(folder);
             }
 
             private bool IsPathInProtectedAreas(string path)

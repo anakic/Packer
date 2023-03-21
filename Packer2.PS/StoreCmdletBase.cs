@@ -4,9 +4,7 @@ using Microsoft.Extensions.Logging;
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Library.Report.Stores.Folder;
-using System.Data.SqlClient;
 using System.Management.Automation;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Packer2.PS
 {
@@ -49,7 +47,7 @@ namespace Packer2.PS
         protected ILogger<T> CreateLogger<T>()
             => new PSLogger<T>(this);
 
-        protected IModelStore<Database> GetDataModelStore(string? location)
+        protected IModelStore<Database> GetDataModelStore(string? location, string? customization = null)
         {
             string currentPath = SessionState.Path.CurrentLocation.Path;
             IModelStore<Database> store;
@@ -62,7 +60,7 @@ namespace Packer2.PS
             {
                 string combinedPath = currentPath;
                 if (!string.IsNullOrEmpty(location))
-                    combinedPath = Path.Combine(currentPath, location); //if path is already rooted it will ignore the first arg
+                    combinedPath = Path.GetFullPath(Path.Combine(currentPath, location)); //if path is already rooted it will ignore the first arg
 
                 if (Path.HasExtension(combinedPath))
                 {
@@ -84,7 +82,7 @@ namespace Packer2.PS
                 }
                 else
                 {
-                    store = new FolderDatabaseStore(combinedPath, CreateLogger<FolderDatabaseStore>());
+                    store = new FolderDatabaseStore(combinedPath, customization, CreateLogger<FolderDatabaseStore>());
                     logger.LogTrace("Created folder data model store '({location})'", location);
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library;
+using Packer2.Library.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
@@ -12,9 +13,13 @@ namespace Packer2.PS.DataModel
         [Alias("s")]
         public string Source { get; set; }
 
+        [Parameter(Mandatory = false, Position = 1)]
+        [Alias("c")]
+        public string Customization { get; set; }
+
         protected override void ProcessRecord()
         {
-            IModelStore<Database> store = GetDataModelStore(Source);
+            IModelStore<Database> store = GetDataModelStore(Source, Customization);
             WriteObject(store.Read());
         }
     }
