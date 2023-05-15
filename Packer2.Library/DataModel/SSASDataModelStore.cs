@@ -2,32 +2,33 @@
 using Microsoft.Extensions.Logging;
 using Packer2.Library.Tools;
 using System.Data.SqlClient;
+using System.Net.Sockets;
 using System.Text;
 
 namespace Packer2.Library.DataModel
 {
     public class SSASDataModelStore : IModelStore<Database>
     {
-        private readonly string serverName;
-        private readonly string? databaseName;
+        SqlConnectionStringBuilder connectionStringBuilder;
         private readonly bool processOnSave;
         private readonly ILogger<SSASDataModelStore> logger;
 
         public SSASDataModelStore(string connectionString, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
         {
-            var connStrBuilder = new SqlConnectionStringBuilder(connectionString);
-
-            this.serverName = connStrBuilder.DataSource;
-            this.databaseName = connStrBuilder.InitialCatalog;
+            connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
             this.processOnSave = processOnSave;
             this.logger = logger ?? new DummyLogger<SSASDataModelStore>();
         }
 
         public SSASDataModelStore(string server, string? database, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
         {
-            // server can be e.g. "localhost:54287"
-            this.serverName = server;
-            this.databaseName = database;
+            connectionStringBuilder = new SqlConnectionStringBuilder()
+            {
+                // server can be e.g. "localhost:54287"
+                DataSource = server,
+                InitialCatalog = database
+            };
+
             this.processOnSave = processOnSave;
             this.logger = logger ?? new DummyLogger<SSASDataModelStore>();
         }
@@ -35,23 +36,28 @@ namespace Packer2.Library.DataModel
         public Database Read()
         {
             var s = new Server();
-            s.Connect($"Data source={serverName}");
+            s.Connect(connectionStringBuilder.ConnectionString);
 
+            var databaseName = connectionStringBuilder.InitialCatalog;
             if (databaseName != null)
-                return s.Databases[databaseName];
+                return GetDatabase(s, databaseName);
             else
                 return s.Databases[0];
+        }
+
+        private static Database GetDatabase(Server s, string databaseName)
+        {
+            return s.Databases.OfType<Database>().Single(d => d.ID == databaseName || d.Name == databaseName);
         }
 
         public void Save(Database database)
         {
             using (var server = new Server())
             {
-                var builder = new SqlConnectionStringBuilder();
-                builder.DataSource = serverName;
+                logger.LogInformation("Connecting to server '{serverName}'...", connectionStringBuilder.DataSource);
+                server.Connect(connectionStringBuilder.ConnectionString);
 
-                logger.LogInformation("Connecting to server '{serverName}'...", serverName);
-                server.Connect(builder.ConnectionString);
+                string databaseName = connectionStringBuilder.InitialCatalog;
 
                 if(!string.Equals(database.ID, databaseName, StringComparison.CurrentCultureIgnoreCase))
                     database.ID = databaseName;
@@ -59,13 +65,17 @@ namespace Packer2.Library.DataModel
                 if (!string.Equals(database.Name, databaseName, StringComparison.CurrentCultureIgnoreCase))
                     database.Name = databaseName;
 
-                if (server.Databases.Contains(database.Name))
+                var existingDatabase = GetDatabase(server, databaseName);
+                if (existingDatabase != null)
                 {
+                    Microsoft.AnalysisServices.Tabular.Model model = existingDatabase.Model as Microsoft.AnalysisServices.Tabular.Model;
                     logger.LogInformation("Replacing existing database '{databaseName}'...", database.Name);
-                    server.Databases.Remove(database.Name);
+                    server.Databases.Remove(existingDatabase);
                 }
                 else
                     logger.LogInformation("Creating database '{databaseName}'...", database.Name);
+
+
 
                 server.Databases.Add(database);
                 database.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);

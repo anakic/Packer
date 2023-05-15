@@ -11,8 +11,10 @@
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.9.2" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="LibGit2Sharp" Version="0.27.0-preview-0182" />
+    <PackageReference Include="Microsoft.AnalysisServices.AdomdClient.retail.amd64" Version="19.64.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+    <PackageReference Include="Microsoft.PowerBI.Api" Version="4.13.0" />
   </ItemGroup>
 
   <ItemGroup>
