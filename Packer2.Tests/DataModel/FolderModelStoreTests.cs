@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.AnalysisServices.Tabular;
-using Microsoft.InfoNav.Utils;
 using Packer2.FileSystem;
-using Packer2.Library;
 using Packer2.Library.DataModel;
 using Packer2.Library.DataModel.Customizations;
 using Xunit;

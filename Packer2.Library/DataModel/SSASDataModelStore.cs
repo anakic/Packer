@@ -45,9 +45,9 @@ namespace Packer2.Library.DataModel
                 return s.Databases[0];
         }
 
-        private static Database GetDatabase(Server s, string databaseName)
+        private static Database? GetDatabase(Server s, string databaseName)
         {
-            return s.Databases.OfType<Database>().Single(d => d.ID == databaseName || d.Name == databaseName);
+            return s.Databases.OfType<Database>().SingleOrDefault(d => d.ID == databaseName || d.Name == databaseName);
         }
 
         public void Save(Database database)
@@ -55,7 +55,9 @@ namespace Packer2.Library.DataModel
             using (var server = new Server())
             {
                 logger.LogInformation("Connecting to server '{serverName}'...", connectionStringBuilder.DataSource);
-                server.Connect(connectionStringBuilder.ConnectionString);
+                var stripDbConnStrBuilder = new SqlConnectionStringBuilder(connectionStringBuilder.ConnectionString);
+                stripDbConnStrBuilder.InitialCatalog = string.Empty;
+                server.Connect(stripDbConnStrBuilder.ConnectionString);
 
                 string databaseName = connectionStringBuilder.InitialCatalog;
 
