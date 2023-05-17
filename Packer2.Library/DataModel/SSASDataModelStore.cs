@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Packer2.Library.Tools;
 using System.Data.SqlClient;
-using System.Net.Sockets;
 using System.Text;
 
 namespace Packer2.Library.DataModel
@@ -62,7 +61,7 @@ namespace Packer2.Library.DataModel
                 string databaseName = connectionStringBuilder.InitialCatalog;
 
                 if(!string.Equals(database.ID, databaseName, StringComparison.CurrentCultureIgnoreCase))
-                    database.ID = databaseName;
+                    database.ID = Guid.NewGuid().ToString();
 
                 if (!string.Equals(database.Name, databaseName, StringComparison.CurrentCultureIgnoreCase))
                     database.Name = databaseName;
@@ -70,17 +69,18 @@ namespace Packer2.Library.DataModel
                 var existingDatabase = GetDatabase(server, databaseName);
                 if (existingDatabase != null)
                 {
-                    Microsoft.AnalysisServices.Tabular.Model model = existingDatabase.Model as Microsoft.AnalysisServices.Tabular.Model;
+                    // for some weird reason, we must access model this way, if we need it
+                    // Microsoft.AnalysisServices.Tabular.Model model = existingDatabase.Model as Microsoft.AnalysisServices.Tabular.Model;
                     logger.LogInformation("Replacing existing database '{databaseName}'...", database.Name);
                     server.Databases.Remove(existingDatabase);
                 }
                 else
                     logger.LogInformation("Creating database '{databaseName}'...", database.Name);
 
-
-
                 server.Databases.Add(database);
                 database.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
+                
+                OnDatabaseUpdated(database);
 
                 try
                 {
@@ -101,6 +101,10 @@ namespace Packer2.Library.DataModel
                     logger.LogError("Failed to process database '{databaseName}'.", database.Name);
                 }
             }
+        }
+
+        protected virtual void OnDatabaseUpdated(Database database)
+        {
         }
 
         private void PrintMessages(Microsoft.AnalysisServices.XmlaResultCollection results)

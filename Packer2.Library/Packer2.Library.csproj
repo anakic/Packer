@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime.Standard" Version="4.9.2" />
-    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.51.0" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.64.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
@@ -34,13 +34,13 @@
 
   <ItemGroup>
     <Reference Include="Microsoft.InfoNav.Common">
-      <HintPath>C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.116.966.0_x64__8wekyb3d8bbwe\bin\Microsoft.InfoNav.Common.dll</HintPath>
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Common.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.InfoNav.Data.Contracts">
-      <HintPath>C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.116.966.0_x64__8wekyb3d8bbwe\bin\Microsoft.InfoNav.Data.Contracts.dll</HintPath>
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Data.Contracts.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.InfoNav.Explore.VisualContracts">
-      <HintPath>C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.116.966.0_x64__8wekyb3d8bbwe\bin\Microsoft.InfoNav.Explore.VisualContracts.dll</HintPath>
+      <HintPath>..\..\..\Program Files\Microsoft Power BI Desktop\bin\Microsoft.InfoNav.Explore.VisualContracts.dll</HintPath>
     </Reference>
   </ItemGroup>
 

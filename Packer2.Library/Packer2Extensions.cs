@@ -52,6 +52,16 @@ namespace Packer2.Library
             => new SSASDataModelStore(server, database).Save(db);
 
         public static void SaveToBimFile(this Database db, string filePath)
-            => new BimDataModelStore(new TextFileStore(filePath)).Save(db);
+            => db.SaveToBimFile(new TextFileStore(filePath));
+
+        public static void SaveToBimFile(this Database db, ITextStore store)
+            => new BimDataModelStore(store).Save(db);
+
+        public static string ToBimString(this Database db)
+        {
+            ITextStore store = new MemoryFile();
+            new BimDataModelStore(store).Save(db);
+            return store.GetText();
+        }
     }
 }
