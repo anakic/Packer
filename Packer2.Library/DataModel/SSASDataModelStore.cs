@@ -1,25 +1,43 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
+using Microsoft.PowerBI.Api.Models;
 using Packer2.Library.Tools;
 using System.Data.SqlClient;
 using System.Text;
+using RefreshType = Microsoft.AnalysisServices.Tabular.RefreshType;
 
 namespace Packer2.Library.DataModel
 {
+    public enum AutoProcessBehavior
+    {
+        /// <summary>
+        /// The database is not processed automatically after pushing to SSAS.
+        /// </summary>
+        None,
+        /// <summary>
+        /// The database is processed automatically after pushing to SSAS. The ordering and parallel processing is controlled by the SSAS instance.
+        /// </summary>
+        Default,
+        /// <summary>
+        /// The database is processed automatically after pushing to SSAS. Tables are processed sequentially, one after another (no parallel processing). This can be useful when pushing to PowerBI Service to avoid memory use issues.
+        /// </summary>
+        Sequential,
+    }
+
     public class SSASDataModelStore : IModelStore<Database>
     {
         SqlConnectionStringBuilder connectionStringBuilder;
-        private readonly bool processOnSave;
+        private readonly AutoProcessBehavior autoProcessBehavior;
         private readonly ILogger<SSASDataModelStore> logger;
 
-        public SSASDataModelStore(string connectionString, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
+        public SSASDataModelStore(string connectionString, AutoProcessBehavior autoProcessBehavior = AutoProcessBehavior.Default, ILogger<SSASDataModelStore>? logger = null)
         {
             connectionStringBuilder = new SqlConnectionStringBuilder(connectionString);
-            this.processOnSave = processOnSave;
+            this.autoProcessBehavior = autoProcessBehavior;
             this.logger = logger ?? new DummyLogger<SSASDataModelStore>();
         }
 
-        public SSASDataModelStore(string server, string? database, bool processOnSave = true, ILogger<SSASDataModelStore>? logger = null)
+        public SSASDataModelStore(string server, string? database, AutoProcessBehavior autoProcessBehavior = AutoProcessBehavior.Default, ILogger<SSASDataModelStore>? logger = null)
         {
             connectionStringBuilder = new SqlConnectionStringBuilder()
             {
@@ -28,7 +46,7 @@ namespace Packer2.Library.DataModel
                 InitialCatalog = database
             };
 
-            this.processOnSave = processOnSave;
+            this.autoProcessBehavior = autoProcessBehavior;
             this.logger = logger ?? new DummyLogger<SSASDataModelStore>();
         }
 
@@ -69,6 +87,8 @@ namespace Packer2.Library.DataModel
                 var existingDatabase = GetDatabase(server, databaseName);
                 if (existingDatabase != null)
                 {
+                    OnBeforeDeleteOldDb(existingDatabase);
+
                     // for some weird reason, we must access model this way, if we need it
                     // Microsoft.AnalysisServices.Tabular.Model model = existingDatabase.Model as Microsoft.AnalysisServices.Tabular.Model;
                     logger.LogInformation("Replacing existing database '{databaseName}'...", database.Name);
@@ -78,21 +98,40 @@ namespace Packer2.Library.DataModel
                     logger.LogInformation("Creating database '{databaseName}'...", database.Name);
 
                 server.Databases.Add(database);
+
+                logger.LogInformation("Updating database definition'...");
                 database.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull, Microsoft.AnalysisServices.UpdateMode.CreateOrReplace);
                 
                 OnDatabaseUpdated(database);
 
                 try
                 {
-                    logger.LogInformation("Processing database '{databaseName}'...", database.Name);
+                    logger.LogInformation("Processing database '{databaseName}'...",  database.Name);
 
                     // process
                     server.BeginTransaction();
-                    if (processOnSave)
+                    if (autoProcessBehavior == AutoProcessBehavior.Default)
+                    {
+                        
+                        logger.LogInformation($"Processing database (populating database data)...");
                         database.Model.RequestRefresh(RefreshType.Full);
-                    var results = database.Model.SaveChanges(new SaveOptions() { SaveFlags = SaveFlags.ForceValidation });
+                        var results = database.Model.SaveChanges(new SaveOptions() { SaveFlags = SaveFlags.ForceValidation });
+                        PrintMessages(results.XmlaResults);
+                    }
+                    else if (autoProcessBehavior == AutoProcessBehavior.Sequential)
+                    {
+                        int current = 1;
+                        int total = database.Model.Tables.Count;
+                        foreach (var table in database.Model.Tables)
+                        {
+                            logger.LogInformation($"Processing table ({current++}/{total}): '{table.Name}'...");
+                            table.RequestRefresh(RefreshType.Full);
+                            var results = database.Model.SaveChanges();
+                            PrintMessages(results.XmlaResults);
+                        }
+                    }
+                    logger.LogInformation($"Committing changes...");
                     server.CommitTransaction();
-                    PrintMessages(results.XmlaResults);
                     logger.LogInformation("Processing database '{databaseName}' complete.", database.Name);
                 }
                 catch(Microsoft.AnalysisServices.OperationException ex)
@@ -103,9 +142,9 @@ namespace Packer2.Library.DataModel
             }
         }
 
-        protected virtual void OnDatabaseUpdated(Database database)
-        {
-        }
+        protected virtual void OnBeforeDeleteOldDb(Database existingDatabase) { }
+
+        protected virtual void OnDatabaseUpdated(Database database) { }
 
         private void PrintMessages(Microsoft.AnalysisServices.XmlaResultCollection results)
         {

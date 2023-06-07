@@ -12,7 +12,7 @@
 RootModule = 'packer2.ps.dll'
 
 # Version number of this module.
-ModuleVersion = '0.0.33'
+ModuleVersion = '0.0.35'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -72,7 +72,7 @@ PowerShellVersion = '7.0'
 FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @('Read-PbiReport' ,'Switch-PbiReportDataSource' ,'Write-PbiReport' ,'Export-TabularModelDataSources' ,'Find-TabularModelDaxErrors' ,'Import-TabularModelDataSources' ,'Read-TabularModel' ,'Register-TabularModelMExpressions' ,'Register-TabularModelDataSources' ,'Remove-TabularModelAutoTimeIntelligence' ,'Remove-TabularModelCultures' ,'Resolve-TabularModelPasswords' ,'Switch-TabularModelCompatibilityLevel' ,'Write-TabularModel' ,'Compress-PbiReport' ,'Expand-PbiReport' , 'Expand-PbiReport' ,'Export-TabularModelDataSources' ,'Find-TabularModelDaxErrors' ,'Import-TabularModelDataSources' ,'Read-PbiReport' ,'Read-TabularModel' ,'Register-TabularModelDataSources' ,'Register-TabularModelMExpressions' ,'Remove-TabularModelAutoTimeIntelligence' ,'Remove-TabularModelCultures' ,'Resolve-TabularModelPasswords' ,'Switch-PbiReportDataSource' ,'Switch-TabularModelCompatibilityLevel' ,'Write-PbiReport' ,'Write-TabularModel', 'Test-PbiReportDataModelReferences', 'Switch-PbiReportDataModelReference', 'Switch-PbiReportToLocalDataModel')
+CmdletsToExport = @('Read-PbiReport' ,'Switch-PbiReportDataSource' ,'Write-PbiReport' ,'Export-TabularModelDataSources' ,'Find-TabularModelDaxErrors' ,'Import-TabularModelDataSources' ,'Read-TabularModel' ,'Register-TabularModelMExpressions' ,'Register-TabularModelDataSources' ,'Remove-TabularModelAutoTimeIntelligence' ,'Remove-TabularModelCultures' ,'Resolve-TabularModelPasswords' ,'Switch-TabularModelCompatibilityLevel' ,'Write-TabularModel', 'Write-TabularModelToPbiService' ,'Compress-PbiReport' ,'Expand-PbiReport' , 'Expand-PbiReport' ,'Export-TabularModelDataSources' ,'Find-TabularModelDaxErrors' ,'Import-TabularModelDataSources' ,'Read-PbiReport' ,'Read-TabularModel' ,'Register-TabularModelDataSources' ,'Register-TabularModelMExpressions' ,'Remove-TabularModelAutoTimeIntelligence' ,'Remove-TabularModelCultures' ,'Resolve-TabularModelPasswords' ,'Switch-PbiReportDataSource' ,'Switch-TabularModelCompatibilityLevel' ,'Write-PbiReport' ,'Write-TabularModel', 'Test-PbiReportDataModelReferences', 'Switch-PbiReportDataModelReference', 'Switch-PbiReportToLocalDataModel')
 
 # Variables to export from this module
 VariablesToExport = '*'
