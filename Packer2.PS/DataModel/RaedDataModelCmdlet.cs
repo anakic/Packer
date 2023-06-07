@@ -1,13 +1,12 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
 using Packer2.Library;
-using Packer2.Library.DataModel;
 using System.Management.Automation;
 
 namespace Packer2.PS.DataModel
 {
     [Cmdlet(VerbsCommunications.Read, "TabularModel")]
     [OutputType(typeof(Database))]
-    public class RaedDataModelCmdlet : StoreCmdletBase
+    public class ReadDataModelCmdlet : StoreCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
         [Alias("s")]

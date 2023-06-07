@@ -47,13 +47,15 @@ namespace Packer2.PS
         protected ILogger<T> CreateLogger<T>()
             => new PSLogger<T>(this);
 
+        protected virtual AutoProcessBehavior AutoProcessBehavior => AutoProcessBehavior.Default;
+
         protected IModelStore<Database> GetDataModelStore(string? location, string? customization = null)
         {
             string currentPath = SessionState.Path.CurrentLocation.Path;
             IModelStore<Database> store;
             try
             {
-                store = new SSASDataModelStore(location, true, CreateLogger<SSASDataModelStore>());
+                store = new SSASDataModelStore(location, AutoProcessBehavior, CreateLogger<SSASDataModelStore>());
                 logger.LogTrace("Created SSAS data model store '({location})'", location);
             }
             catch
