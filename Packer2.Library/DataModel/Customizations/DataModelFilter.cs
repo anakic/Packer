@@ -11,6 +11,11 @@ namespace Packer2.Library.DataModel.Customizations
 
         public DataModelFilter(IEnumerable<IgnoreRule> rules)
         {
+            // todo: we currently only check table and their nested objects (columns, measures, hierarchies)
+            // but if we want to rename an expression, the old one won't get deleted. To fix this, we need to 
+            // include folders e.g. Tables/ and Expressions/ to filter patterns and check for expressions as well
+            // in the Extend and Crop methods
+
             tableFilters = rules
                 .Where(r => r.ObjectPattern == null)
                 .Select(r => new TableRuleFilter
@@ -33,11 +38,18 @@ namespace Packer2.Library.DataModel.Customizations
 
         public void Extend(Database targetDatabase, Database fullDatabase)
         {
+            foreach (var expr in fullDatabase.Model.Expressions.ToArray())
+            {
+                var shouldKeepExpression = ShouldKeepObject(expr.Name, tableFilters);
+                if (!shouldKeepExpression)
+                    targetDatabase.Model.Expressions.Add(expr.Clone());
+            }
+
             List<Table> copiedTables = new List<Table>();
             List<Column> copiedColumns = new List<Column>();
             foreach (var table in fullDatabase.Model.Tables.ToArray())
             {
-                var shouldKeepTable = ShouldKeepTable(table.Name, tableFilters);
+                var shouldKeepTable = ShouldKeepObject(table.Name, tableFilters);
                 if (!shouldKeepTable)
                 {
                     targetDatabase.Model.Tables.Add(table.Clone());
@@ -47,7 +59,7 @@ namespace Packer2.Library.DataModel.Customizations
 
                 foreach (var c in table.Columns.ToArray())
                 {
-                    var shouldKeepObject = ShouldKeepObject(c.Table.Name, c.Name, objectFilters);
+                    var shouldKeepObject = ShouldKeepNestedObject(c.Table.Name, c.Name, objectFilters);
                     if (!shouldKeepObject)
                     {
                         targetDatabase.Model.Tables[table.Name].Columns.Add(c.Clone());
@@ -57,14 +69,14 @@ namespace Packer2.Library.DataModel.Customizations
 
                 foreach (var m in table.Measures.ToArray())
                 {
-                    var shouldKeepObject = ShouldKeepObject(m.Table.Name, m.Name, objectFilters);
+                    var shouldKeepObject = ShouldKeepNestedObject(m.Table.Name, m.Name, objectFilters);
                     if (!shouldKeepObject)
                         targetDatabase.Model.Tables[table.Name].Measures.Add(m.Clone());
                 }
 
                 foreach (var h in table.Hierarchies.ToArray())
                 {
-                    var shouldKeepObject = ShouldKeepObject(h.Table.Name, h.Name, objectFilters);
+                    var shouldKeepObject = ShouldKeepNestedObject(h.Table.Name, h.Name, objectFilters);
                     if (!shouldKeepObject)
                         targetDatabase.Model.Tables[table.Name].Hierarchies.Add(h.Clone());
                 }
@@ -86,9 +98,16 @@ namespace Packer2.Library.DataModel.Customizations
 
         public void Crop(Database database)
         {
+            foreach (var expr in database.Model.Expressions.ToArray())
+            {
+                var shouldKeepTable = ShouldKeepObject(expr.Name, tableFilters);
+                if (!shouldKeepTable)
+                    database.Model.Expressions.Remove(expr);
+            }
+
             foreach (var table in database.Model.Tables.ToArray())
             {
-                var shouldKeepTable = ShouldKeepTable(table.Name, tableFilters);
+                var shouldKeepTable = ShouldKeepObject(table.Name, tableFilters);
                 if (!shouldKeepTable)
                 {
                     table.RemoveFromModel();
@@ -97,28 +116,28 @@ namespace Packer2.Library.DataModel.Customizations
 
                 foreach (var c in table.Columns.ToArray())
                 {
-                    var shouldKeepObject = ShouldKeepObject(c.Table.Name, c.Name, objectFilters);
+                    var shouldKeepObject = ShouldKeepNestedObject(c.Table.Name, c.Name, objectFilters);
                     if (!shouldKeepObject)
                         c.RemoveFromModel();
                 }
 
                 foreach (var m in table.Measures.ToArray())
                 {
-                    var shouldKeepObject = ShouldKeepObject(m.Table.Name, m.Name, objectFilters);
+                    var shouldKeepObject = ShouldKeepNestedObject(m.Table.Name, m.Name, objectFilters);
                     if (!shouldKeepObject)
                         table.Measures.Remove(m);
                 }
 
                 foreach (var h in table.Hierarchies.ToArray())
                 {
-                    var shouldKeepObject = ShouldKeepObject(h.Table.Name, h.Name, objectFilters);
+                    var shouldKeepObject = ShouldKeepNestedObject(h.Table.Name, h.Name, objectFilters);
                     if (!shouldKeepObject)
                         table.Hierarchies.Remove(h);
                 }
             }
         }
 
-        private bool ShouldKeepObject(string tableName, string objectName, List<TableObjectRuleFilter> objectFilters)
+        private bool ShouldKeepNestedObject(string tableName, string objectName, List<TableObjectRuleFilter> objectFilters)
         {
             bool shouldRemove = true;
             foreach (var f in objectFilters)
@@ -129,7 +148,7 @@ namespace Packer2.Library.DataModel.Customizations
             return shouldRemove;
         }
 
-        private bool ShouldKeepTable(string tableName, List<TableRuleFilter> tableFilters)
+        private bool ShouldKeepObject(string tableName, List<TableRuleFilter> tableFilters)
         {
             bool shouldRemove = true;
             foreach (var f in tableFilters)

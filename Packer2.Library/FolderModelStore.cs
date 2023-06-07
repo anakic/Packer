@@ -57,7 +57,7 @@ namespace Packer2.Library
             HashSet<string>? foldersForDeletion;
             HashSet<string>? filesForDeletion;
 
-            public UntouchedFilesList(HashSet<string> foldersForDeletion, HashSet<string> filesForDeletion)
+            public UntouchedFilesList(HashSet<string> filesForDeletion, HashSet<string> foldersForDeletion)
             {
                 this.foldersForDeletion = foldersForDeletion;
                 this.filesForDeletion = filesForDeletion;
