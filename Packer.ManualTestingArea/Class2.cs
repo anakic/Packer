@@ -1,70 +1,11 @@
-﻿using Microsoft.Identity.Client;
-using Microsoft.PowerBI.Api.Models;
-using Microsoft.PowerBI.Api;
-using Microsoft.Rest;
-using Packer2.Library;
+﻿using Packer2.Library;
 using Packer2.Library.DataModel;
 using Microsoft.Extensions.Logging;
-using Microsoft.AnalysisServices.Tabular;
+using Packer2.Library.Report.Stores.Folder;
+using DataModelLoader.Report;
 
 namespace Packer.ManualTestingArea
 {
-    class PowerBIServiceDataModelStore : SSASDataModelStore
-    {
-        private readonly Guid workspaceId;
-        private readonly string tenantId;
-        private readonly string appId;
-        private readonly string appSecret;
-
-        public PowerBIServiceDataModelStore(string workspaceConnection, string databaseName, Guid workspaceId, string tenantId, string appId, string appSecret, bool processOnSave = true, ILogger<PowerBIServiceDataModelStore>? logger = null) 
-            : base($"Server={workspaceConnection};Database={databaseName};User ID=app:{appId}@{tenantId};Password={appSecret};", processOnSave, logger)
-        {
-            this.workspaceId = workspaceId;
-            this.tenantId = tenantId;
-            this.appId = appId;
-            this.appSecret = appSecret;
-        }
-
-        protected override void OnDatabaseUpdated(Database database)
-        {
-            DoPbi(async client =>
-            {
-                var datasetId = database.ID;
-
-                var ds = await client.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId);
-
-                // Get the datasource from your dataset
-                var datasource = await client.Datasets.GetDatasourcesInGroupAsync(workspaceId, datasetId);
-                var gw = (await client.Gateways.GetGatewaysAsync()).Value.Single();
-
-                var ds2 = await client.Gateways.GetDatasourcesAsync(gw.Id);
-
-                await client.Datasets.BindToGatewayInGroupAsync(workspaceId, datasetId, new BindToGatewayRequest(gw.Id));
-            }).Wait();
-        }
-
-        async Task DoPbi(Func<PowerBIClient, Task> action)
-        {
-            var authority = $"https://login.microsoftonline.com/{tenantId}";
-            var scopes = new string[] { "https://analysis.windows.net/powerbi/api/.default" };
-
-            var app = ConfidentialClientApplicationBuilder
-            .Create(appId)
-                .WithClientSecret(appSecret)
-                .WithAuthority(new Uri(authority))
-                .Build();
-
-            var authResult = await app.AcquireTokenForClient(scopes).ExecuteAsync();
-
-            var tokenCredentials = new TokenCredentials(authResult.AccessToken, "Bearer");
-
-            using (var client = new PowerBIClient(new Uri("https://api.powerbi.com"), tokenCredentials))
-            {
-                await action(client);
-            }
-        }
-    }
-
     public class Class2
     {
         static Guid groupId = Guid.Parse("b060ead8-e4b4-4855-8ee1-633dddbd796c");
@@ -74,10 +15,42 @@ namespace Packer.ManualTestingArea
 
         public static void Main()
         {
-            var db = TabularModel.LoadFromPbitFile(@"C:\Models\a\adwks_test.pbit");
-            db.DeclareDataSources();
+            var pbiArch = new PBIArchiveStore(@"C:\Dropbox (RwHealth)\Flow Tool - DHFT\AN DHCFT Backup\Inequalities.pbix");
+            var xx = pbiArch.Read();
 
-            var store23 = new PowerBIServiceDataModelStore($"powerbi://api.powerbi.com/v1.0/myorg/DHCFT%20%7C%20DEV", "adwks_onqsserver_test", groupId, tenantId, appId, secret);
+            
+
+            var rfs = new ReportFolderStore("C:\\Dropbox (RwHealth)\\Flow Tool - DHFT\\AN DHCFT Backup\\Inequalities_2");
+            rfs.Save(xx);
+            rfs.Read();
+
+            return;
+
+            var db = TabularModel.LoadFromFolder(@"C:\GH\Data Model");
+            //db.DeclareDataSources();
+
+            //db.Model.Expressions.ToList().ForEach(exp =>
+            //{
+            //    if (db.Model.Tables.Contains(exp.Name))
+            //    {
+            //        var matchingTable = db.Model.Tables[exp.Name];
+            //        exp.Name = exp.Name + "_expr";
+            //        matchingTable.Partitions.Select(p => p.Source).OfType<MPartitionSource>().ToList().ForEach(ps =>
+            //        {
+            //            string origExpression = ps.Expression;
+            //            ps.Expression = ps.Expression.Replace($@"#""{matchingTable.Name}""", $@"#""{exp.Name}""");
+            //            Trace.WriteLine($">>> Table {matchingTable.Name}: replacing expression <exp>{origExpression.Replace("\r\n", " ")}</exp> with <exp>{ps.Expression.Replace("\r\n", " ")}</exp>.");
+            //        });
+            //    }
+            //});
+
+            //db.SaveToFolder(@"C:\GH\Data Model");
+
+            // Create LoggerFactory
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var logger = loggerFactory.CreateLogger<PowerBIServiceDataModelStore>();
+
+            var store23 = new PowerBIServiceDataModelStore($"powerbi://api.powerbi.com/v1.0/myorg/DHCFT%20%7C%20DEV", "dhcft_packer_test", groupId, tenantId, appId, secret, AutoProcessBehavior.Sequential, logger: logger);
             store23.Save(db);
         }
     }
