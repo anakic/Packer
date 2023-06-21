@@ -1,16 +1,18 @@
 ﻿# for authors (allows push)
 $repoName = "Packer2Repo"
-$repoUserName = "...@realworld.health"
+$pkgSrcName = "Packer2PackageSource"
+$repoUserName = "{...account name goes here...}@realworld.health"
 $repoUrl = "https://pkgs.dev.azure.com/antonio0480/_packaging/PackerFeed/nuget/v2"
-$patToken = "..." | ConvertTo-SecureString -AsPlainText -Force
+$patToken = "{...Azure Artifacts API key goes here...}" | ConvertTo-SecureString -AsPlainText -Force
 
 $credsAzureDevopsServices = New-Object System.Management.Automation.PSCredential($repoUserName, $patToken)
 Register-PSRepository -Name @$repoName -SourceLocation $repoUrl -PublishLocation $repoUrl -InstallationPolicy Trusted -Credential $credsAzureDevopsServices
-Register-PackageSource -Name $repoName + "PackageSource" -Location $repoUrl -ProviderName NuGet -SkipValidate
+Register-PackageSource -Name $pkgSrcName -Location $repoUrl -ProviderName NuGet -SkipValidate
 
 # for readers
 $repoName = "Packer2Repo"
-$repoUserName = "...@realworld.health"
+$pkgSrcName = "Packer2PackageSource"
+$repoUserName = "{...account name goes here...}@realworld.health"
 $repoUrl = "https://pkgs.dev.azure.com/antonio0480/_packaging/PackerFeed/nuget/v2"
-Register-PSRepository -Name @$repoName -SourceLocation $repoUrl -InstallationPolicy Trusted -Credential
-Register-PackageSource -Name $repoName + "PackageSource" -Location $repoUrl -ProviderName NuGet -SkipValidate
+Register-PSRepository -Name @$repoName -SourceLocation $repoUrl -InstallationPolicy Trusted -Credential $repoUserName
+Register-PackageSource -Name $pkgSrcName -Location $repoUrl -ProviderName NuGet -SkipValidate
