@@ -173,7 +173,7 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
                 { 92, "__backslash__" },
                 { 93, "__right_square_bracket__" },
                 { 94, "__circumflex_accent__" },
-                { 95, "__low_line__" },
+                // { 95, "__low_line__" },
                 { 96, "__grave_accent__" },
                 { 123, "__left_curly_bracket__" },
                 { 124, "__vertical_bar__" },
