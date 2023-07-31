@@ -145,6 +145,18 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                         TimeUnit = argReader.ReadEnum<TimeUnit>(),
                         Expression = argReader.ReadExpr()
                     };
+                else if (functionStr == "max")
+                    expression = new QueryMaxExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        IncludeAllTypes = argReader.ReadEnum<IncludeAllTypes>()
+                    };
+                else if (functionStr == "min")
+                    expression = new QueryMinExpression()
+                    {
+                        Expression = argReader.ReadExpr(),
+                        IncludeAllTypes = argReader.ReadEnum<IncludeAllTypes>()
+                    };
                 else if (functionStr == "datespan")
                     expression = new QueryDateSpanExpression()
                     {

@@ -312,5 +312,15 @@ namespace Packer2.Library.Report.Transforms
         {
 
         }
+
+        protected override void Visit(QueryMinExpression expression)
+        {
+
+        }
+
+        protected override void Visit(QueryMaxExpression expression)
+        {
+
+        }
     }
 }
