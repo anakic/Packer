@@ -16,7 +16,8 @@ namespace Packer2.Library.DataModel.Customizations
 
         public IEnumerable<IgnoreRule> Parse(string inputText)
         {
-            var lines = inputText.Split(Environment.NewLine);
+            // normalize line endings before breaking by line ending (git uses lf, windows uses crlf by default)
+            var lines = inputText.Replace(Environment.NewLine, "\n").Split("\n");
 
             int lineNr = 0;
             foreach (var line in lines)
