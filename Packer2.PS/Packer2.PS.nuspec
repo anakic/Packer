@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Packer2.PS</id>
-		<version>0.0.36</version>
+		<version>0.0.37</version>
 		<authors>Antonio Nakic-Alfirev</authors>
 		<owners>Antonio Nakic-Alfirev</owners>
 		<projectUrl>https://github.com/anakic/packer</projectUrl>
