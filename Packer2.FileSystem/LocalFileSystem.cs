@@ -158,7 +158,14 @@
         private void SaveText(string path, string text)
         {
             using (var streamWriter = new StreamWriter(OpenStream(path, FileMode.Create, FileAccess.Write, FileShare.None)))
+            {
+                // text has a mix of \n and \r\n across files, we want to normalize to \r\n
+                if (!string.IsNullOrEmpty(text))
+                {
+                    text = text.Replace("\r\n", "\n").Replace("\n", "\r\n");
+                }
                 streamWriter.Write(text);
+            }
         }
 
         private Stream OpenStream(string path, FileMode fileMode, FileAccess fileAccess, FileShare share)
