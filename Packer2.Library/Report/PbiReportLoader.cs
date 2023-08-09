@@ -96,19 +96,20 @@ public static class PbiReportLoader
         var db = dataModelStore.Read();
 
         db.CompatibilityLevel = 1550;
-        db.Model.DefaultPowerBIDataSourceVersion = PowerBIDataSourceVersion.PowerBI_V3;
+        var model = db.Model as Microsoft.AnalysisServices.Tabular.Model;
+        model.DefaultPowerBIDataSourceVersion = PowerBIDataSourceVersion.PowerBI_V3;
 
-        foreach (var exp in db.Model.Expressions.ToList())
+        foreach (var exp in model.Expressions.ToList())
         {
-            var tableWithSameName = db.Model.Tables.Find(exp.Name);
+            var tableWithSameName = model.Tables.Find(exp.Name);
             if (tableWithSameName != null)
             {
                 (tableWithSameName.Partitions.Single().Source as MPartitionSource).Expression = exp.Expression;
-                db.Model.Expressions.Remove(exp);
+                model.Expressions.Remove(exp);
             }
         }
 
-        foreach (var partitionSource in db.Model.Tables.SelectMany(t => t.Partitions).Select(p => p.Source).OfType<MPartitionSource>())
+        foreach (var partitionSource in model.Tables.SelectMany(t => t.Partitions).Select(p => p.Source).OfType<MPartitionSource>())
         {
             partitionSource.Partition.Mode = ModeType.Import;
 
@@ -117,7 +118,7 @@ public static class PbiReportLoader
             if (match.Success)
             {
                 var dsId = match.Groups["id2"].Value;
-                var ds = db.Model.DataSources.OfType<StructuredDataSource>().SingleOrDefault(ds => ds.Name == dsId);
+                var ds = model.DataSources.OfType<StructuredDataSource>().SingleOrDefault(ds => ds.Name == dsId);
                 if (ds != null)
                 {
                     var toReplaceGroup = match.Groups["toReplace"];
@@ -126,14 +127,14 @@ public static class PbiReportLoader
             }
         }
 
-        foreach (var exp in db.Model.Expressions.Where(e => e.Kind == ExpressionKind.M))
+        foreach (var exp in model.Expressions.Where(e => e.Kind == ExpressionKind.M))
         {
             string pattern = @"let\s*((?'id'\w[^\s=]*)|(\#\""(?'id'\w[^\""]*)\""))\s*=\s*(?'toReplace'(?'id2'\w[^\s=]*)|(\#\""(?'id2'\w[^\""]*)\""))";
             var match = Regex.Match(exp.Expression, pattern, RegexOptions.IgnorePatternWhitespace);
             if (match.Success)
             {
                 var dsId = match.Groups["id2"].Value;
-                var ds = db.Model.DataSources.OfType<StructuredDataSource>().SingleOrDefault(ds => ds.Name == dsId);
+                var ds = model.DataSources.OfType<StructuredDataSource>().SingleOrDefault(ds => ds.Name == dsId);
                 if (ds != null)
                 {
                     var toReplaceGroup = match.Groups["toReplace"];
@@ -142,9 +143,9 @@ public static class PbiReportLoader
             }
         }
 
-        db.Model.DataSources.Clear();
+        model.DataSources.Clear();
 
-        db.Model.Cultures.Clear();
+        model.Cultures.Clear();
         db.Annotations.Clear();
 
         var file = new MemoryFile();
