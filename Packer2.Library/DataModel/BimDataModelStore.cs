@@ -76,19 +76,21 @@ namespace Packer2.Library.DataModel
             // These get overwritten at the proper build time anyway so they don't need real values stored for source control
             JArray dataSources = (JArray)jObject["model"]["dataSources"];
 
-            foreach (JObject dataSource in dataSources)
+            if (!(dataSources is null))
             {
-                // If the property exists, set it to the default
-                if (dataSource["connectionString"] != null)
+                foreach (JObject dataSource in dataSources)
                 {
-                    dataSource["connectionString"] = "Data Source=.;Initial Catalog=Model;Integrated Security=True";
-                }
-                if (dataSource["connectionDetails"] != null)
-                {
-                    dataSource["connectionDetails"]["address"]["database"] = "Model";
+                    // If the property exists, set it to the default
+                    if (dataSource["connectionString"] != null)
+                    {
+                        dataSource["connectionString"] = "Data Source=.;Initial Catalog=Model;Integrated Security=True";
+                    }
+                    if (dataSource["connectionDetails"] != null)
+                    {
+                        dataSource["connectionDetails"]["address"]["database"] = "Model";
+                    }
                 }
             }
-
             //Convert the sorted jObject back to a string
             serialized = jObject.ToString();
 
