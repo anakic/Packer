@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Packer2.Library\Packer2.Library.csproj" />
+    <ProjectReference Include="..\Packer2.PS\Packer2.PS.csproj" />
   </ItemGroup>
 
   <ItemGroup>

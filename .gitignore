@@ -31,3 +31,5 @@ _ReSharper*/
 #Nuget packages folder
 packages/
 *.nupkg
+/Packer2.PS/Properties/launchSettings.json
+/Packer2.Library/Properties/launchSettings.json
