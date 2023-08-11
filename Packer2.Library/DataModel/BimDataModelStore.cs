@@ -36,8 +36,6 @@ namespace Packer2.Library.DataModel
             serialized = OrderModelJSONSection(serialized, "expressions");
             serialized = OrderModelJSONSection(serialized, "annotations");
 
-            serialized = SetDefaultConnectionDetails(serialized);
-
             file.SetText(serialized);
         }
 
@@ -55,42 +53,6 @@ namespace Packer2.Library.DataModel
             //Replace the original jarray with the sorted one
             jObject["model"][sectionName] = sortedSection;
 
-            //Convert the sorted jObject back to a string
-            serialized = jObject.ToString();
-
-            return serialized;
-        }
-
-        private string SetDefaultConnectionDetails(string serialized)
-        {
-            //Load the json into a jobject
-            JObject jObject = JObject.Parse(serialized);
-
-            // Remove the line for model.defaultPowerBIDataSourceVersion
-            if (jObject["model"]["defaultPowerBIDataSourceVersion"] != null)
-            {
-                jObject["model"]["defaultPowerBIDataSourceVersion"].Parent.Remove();
-            }
-
-            // For any of the model.dataSources set connectionString to a default and set connectionDetails.database to a default
-            // These get overwritten at the proper build time anyway so they don't need real values stored for source control
-            JArray dataSources = (JArray)jObject["model"]["dataSources"];
-
-            if (!(dataSources is null))
-            {
-                foreach (JObject dataSource in dataSources)
-                {
-                    // If the property exists, set it to the default
-                    if (dataSource["connectionString"] != null)
-                    {
-                        dataSource["connectionString"] = "Data Source=.;Initial Catalog=Model;Integrated Security=True";
-                    }
-                    if (dataSource["connectionDetails"] != null)
-                    {
-                        dataSource["connectionDetails"]["address"]["database"] = "Model";
-                    }
-                }
-            }
             //Convert the sorted jObject back to a string
             serialized = jObject.ToString();
 
