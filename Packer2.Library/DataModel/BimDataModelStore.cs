@@ -49,14 +49,18 @@ namespace Packer2.Library.DataModel
             //Find the tables jarray
             JArray section = (JArray)jObject["model"][sectionName];
 
-            //Sort it by name
-            JArray sortedSection = new JArray(section.OrderBy(obj => (string)obj[orderByName]));
+            //If section is not null
+            if (section != null)
+            {
+                //Sort it by name
+                JArray sortedSection = new JArray(section.OrderBy(obj => (string)obj[orderByName]));
 
-            //Replace the original jarray with the sorted one
-            jObject["model"][sectionName] = sortedSection;
+                //Replace the original jarray with the sorted one
+                jObject["model"][sectionName] = sortedSection;
 
-            //Convert the sorted jObject back to a string
-            serialized = jObject.ToString();
+                //Convert the sorted jObject back to a string
+                serialized = jObject.ToString();
+            }
 
             return serialized;
         }
