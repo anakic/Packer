@@ -52,7 +52,9 @@ namespace Packer2.Library.DataModel.Customizations
                 var shouldKeepTable = ShouldKeepObject(table.Name, tableFilters);
                 if (!shouldKeepTable)
                 {
-                    targetDatabase.Model.Tables.Add(table.Clone());
+                    // See comment on the Clone(table) helper method below
+                    // for exmplanation why we're not using table.Clone() here.
+                    targetDatabase.Model.Tables.Add(Clone(table));
                     copiedTables.Add(table);
                     continue;
                 }
@@ -135,6 +137,19 @@ namespace Packer2.Library.DataModel.Customizations
                         table.Hierarchies.Remove(h);
                 }
             }
+        }
+
+        // The purpose of this method is to clone tables. The built-in clone method does not preserve calculated column
+        // data types. Example of problem: if we read a model that does not include a table which contains calculated columns,
+        // (i.e. the table is not part of the customization), when we try to save the model, calculated columns on that table 
+        // will have their data types reset to "Unknown". This happens because before saving the model, we augment it with 
+        // the cropped out tables, but when the table is read from the full (uncropped) database and then cloned
+        // using the table.Clone() method, it loses its datatype (set to Unknown). To avoid this, instead of using table.Clone()
+        // we use the JsonSerializer to clone the table. Currently only using for tables because only table.Clone() seems to cause issues.
+        // If needed, can also be used for columns, measures, relationships, expressions, etc...
+        private T Clone<T>(T obj) where T : MetadataObject
+        {
+            return JsonSerializer.DeserializeObject<T>(JsonSerializer.SerializeObject(obj));
         }
 
         private bool ShouldKeepNestedObject(string tableName, string objectName, List<TableObjectRuleFilter> objectFilters)
