@@ -559,7 +559,7 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
 
             public override QueryExpression VisitBinaryStringExpr([NotNull] pbiqParser.BinaryStringExprContext context)
             {
-                var op = context.binary_string_operator().GetText();
+                var op = context.binary_string_operator().GetText().ToLower();
                 switch (op)
                 {
                     case "startswith":

@@ -2,6 +2,7 @@
 using Packer2.Library;
 using Packer2.Library.DataModel;
 using System.Management.Automation;
+using System.Security;
 
 namespace Packer2.PS.DataModel
 {
@@ -41,6 +42,14 @@ namespace Packer2.PS.DataModel
         [Alias("proc")]
         public AutoProcessBehavior AutoProcessBehavior { get; set; } = AutoProcessBehavior.Sequential;
 
+        [Parameter(Mandatory = false, Position = 8)]
+        [Alias("dsun")]
+        public string? DataSourceUsername { get; set; }
+
+        [Parameter(Mandatory = false, Position = 8)]
+        [Alias("dspwd")]
+        public SecureString? DataSourcePassword { get; set; }
+
         [Parameter(ValueFromPipeline = true, Mandatory = true)]
         public Database Database { get; set; }
 
@@ -54,7 +63,10 @@ namespace Packer2.PS.DataModel
                 AppId,
                 AppSecret,
                 AutoProcessBehavior,
-                CreateLogger<PowerBIServiceDataModelStore>())
+                CreateLogger<PowerBIServiceDataModelStore>(),
+                DataSourceUsername,
+                DataSourcePassword
+                )
             {
                 GatewayName = GatewayName
             };

@@ -279,12 +279,6 @@ namespace Packer2.Library.MinifiedQueryParser.QueryTransforms
         protected override void WriteFilter(JToken expToken, FilterDefinition filterObj)
         {
             aliasFixVisitor.Visit(filterObj);
-            var xxx = filterObj.ToString();
-            if (xxx.Contains(@"[*Master Index Metrics]"))
-            {
-                var yyy = filterObj.ToString();
-            }
-
             expToken.Replace(filterObj.ToString());
         }
 

@@ -36,8 +36,6 @@ namespace Packer2.Library.DataModel
             serialized = OrderModelJSONSection(serialized, "expressions");
             serialized = OrderModelJSONSection(serialized, "annotations");
 
-            serialized = SetDefaultConnectionDetails(serialized);
-
             file.SetText(serialized);
         }
 
