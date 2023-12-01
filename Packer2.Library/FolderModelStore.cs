@@ -1,5 +1,7 @@
 ﻿using Packer2.FileSystem;
 using Packer2.Library.DataModel.Customizations;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Packer2.Library
 {
@@ -13,8 +15,8 @@ namespace Packer2.Library
         {
             originalFileSystem = fileSystem;
             this.fileSystem = new ProtectedFileSystemDecorator(
-                originalFileSystem, 
-                new[] { ".git", ".config", CustFileSystem.CustomizationsFolder }, 
+                originalFileSystem,
+                new[] { ".git", ".config", CustFileSystem.CustomizationsFolder },
                 new[] { CustFileSystem.IgnoreFile });
         }
 
@@ -265,20 +267,57 @@ namespace Packer2.Library
 
             private void MarkFileAsInUse(string path)
             {
+                ValidatePathIsSafe(path);
                 untouchedFilesList?.MarkFileAsInUse(path);
                 MarkFolderAsInUse(inner.PathResolver.GetParent(path));
             }
 
             private void MarkFolderAsInUse(string path)
             {
+                ValidatePathIsSafe(path);
                 untouchedFilesList?.MarkFolderAsInUse(path);
                 foreach (var folder in inner.PathResolver.GetAncestors(path))
                     untouchedFilesList?.MarkFolderAsInUse(folder);
             }
 
             private bool IsPathInProtectedAreas(string path)
-                => protectedFolders.Any(pf => inner.PathResolver.IsEqualToOrDescendantOf(path, pf)) 
+                => protectedFolders.Any(pf => inner.PathResolver.IsEqualToOrDescendantOf(path, pf))
                 || protectedFiles.Any(pf => inner.PathResolver.ArePathsEqual(path, pf));
+
+
+            static HashSet<char> invalidChars = Path.GetInvalidFileNameChars().ToHashSet();
+            static HashSet<string> winFSReservedKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "CON", "PRN", "AUX", "CLOCK$", "NUL", "COM0", "COM1", "COM2", "COM3", "COM4",
+                "COM5", "COM6", "COM7", "COM8", "COM9", "LPT0", "LPT1", "LPT2", "LPT3", "LPT4",
+                "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+            };
+
+            // note: if needed, we can probably sanitize the paths instead (e.g. replace "c:\test\page name." with "c:\test\page name" but this seems safer.
+            // If this limitation is too inconvenient, we can switch to silent sanitization instead
+            // see https://stackoverflow.com/questions/309485/c-sharp-sanitize-file-name
+            public void ValidatePathIsSafe(string path)
+            {
+                var current = path;
+
+                while (!string.IsNullOrEmpty(current))
+                {
+                    var name = inner.PathResolver.GetName(path);
+                    if (winFSReservedKeywords.Contains(name))
+                        throw new ArgumentException($"Invalid report/datamodel object name '{name}' at path '{current}' - '{name}' is a reserved keyword on the Windows file system! In order to use Packer, object names should not be equal to reserved keywords on the windows file system.", nameof(path));
+
+                    foreach (var c in name)
+                    {
+                        if (invalidChars.Contains(c))
+                            throw new ArgumentException($"Invalid report/datamodel object name '{name}' at path '{current}'! In order to use Packer, object names should not contain characters that invalid on the windows file system.", nameof(path));
+                    }
+
+                    if(name.EndsWith(" ") || name.EndsWith("."))
+                        throw new ArgumentException($"Invalid report/datamodel object name '{name}' at path '{current}'. Object names should not end with a dot or a space! In order to use Packer, object names should be valid windows file system names (that do not need to be sanitized by windows).", nameof(path));
+
+                    current = inner.PathResolver.GetParent(current);
+                }
+            }
         }
     }
 }
