@@ -55,6 +55,11 @@ namespace Packer2.Library.DataModel
 
                 // fetch the gateway to use
                 var allGateways = (await client.Gateways.GetGatewaysAsync()).Value;
+                if (allGateways.Count == 0)
+                {
+                    string errorMessage = "No gateways found. Gateway being looked up is: " + GatewayName + ". This is most likely an access issue for the user.";
+                    throw new InvalidDataException(errorMessage);
+                }
                 var gw = string.IsNullOrEmpty(GatewayName)
                     ? allGateways.Single()
                     : allGateways.Single(x => x.Name == GatewayName);
@@ -62,11 +67,12 @@ namespace Packer2.Library.DataModel
                 var dataSources = await client.Gateways.GetDatasourcesAsync(gw.Id);
 
                 // Go through the model datasources and find one which has type of structured. Extract the ConnectionDetails and compare to the ds2 list to see if any have the same connection details
-                var modelDatasource = database.Model.DataSources.Single(x => x.Type == DataSourceType.Structured) as Microsoft.AnalysisServices.Tabular.StructuredDataSource;
+                var modelDatasource = database.Model.DataSources.SingleOrDefault(x => x.Type == DataSourceType.Structured) as Microsoft.AnalysisServices.Tabular.StructuredDataSource;
 
                 if (modelDatasource == null)
                 {
-                    throw new System.Exception("No structured datasource found in model");
+                    string errorMessage = "No model datasource found with a type of structured inside the model JSON. Auto binding can only work if it has this setup in the model.";
+                    throw new InvalidDataException(errorMessage);
                 }
                 // Create a connstring for matching which should be like {"server":"dsp","database":"NS-FullServiceTest"}
                 string databaseName = modelDatasource.ConnectionDetails.Address.Database;
