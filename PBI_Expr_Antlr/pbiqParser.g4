@@ -98,11 +98,11 @@ propertyExpression: nonPropertyExpression DOT IDENTIFIER;
 notExpr: NOT LPAREN expression RPAREN;
 literalExpr: STRING_LITERAL;
 inExpr:
-	(nonFilterExpression | nonFilterExpression (COMMA nonFilterExpression RPAREN)) 
+	(nonFilterExpression | (LPAREN nonFilterExpression (COMMA nonFilterExpression)* RPAREN )) 
 	IN (tableName | inExprValues);
-inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)+ RPAREN (USING equalityKind)?;
+inExprValues: LPAREN expressionOrExpressionList (COMMA expressionOrExpressionList)* RPAREN (USING equalityKind)?;
 expressionOrExpressionList
-	: expression | LPAREN expression (COMMA expression)+ RPAREN;
+	: expression | LPAREN expression (COMMA expression)* RPAREN;
 arithmenticExpr:
 	LPAREN left BINARY_ARITHMETIC_OPERATOR right RPAREN;
 

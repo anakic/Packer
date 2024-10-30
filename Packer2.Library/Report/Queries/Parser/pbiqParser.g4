@@ -37,7 +37,7 @@ top: TOP INTEGER;
 
 select: SELECT expression (COMMA expression)*;
 
-/* Expressions */
+/* Expressions */ 
 
 expression
 	: primary_expression
@@ -51,7 +51,7 @@ expression
 
 containsExpr: primary_expression CONTAINS right;
 betweenExpr: primary_expression BETWEEN left AND right;
-inExpr: primary_expression IN (sourceRefExpr | inExprValues) | LPAREN expression (COMMA expression) RPAREN IN (sourceRefExpr | inExprValues);
+inExpr: primary_expression IN (sourceRefExpr | inExprValues) | LPAREN expression (COMMA expression)* RPAREN IN (sourceRefExpr | inExprValues);
 compareExpr: primary_expression comparisonOperator right;
 binaryStringExpr: primary_expression binary_string_operator right;
 binary_string_operator: STARTSWITH | ENDSWITH;

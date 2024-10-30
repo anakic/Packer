@@ -4,7 +4,6 @@ using Antlr4.Runtime.Tree;
 using Microsoft.InfoNav;
 using Microsoft.InfoNav.Data.Contracts.Internal;
 using Packer2.Library.MinifiedQueryParser.QueryTransforms;
-using System.Runtime.CompilerServices;
 
 namespace Packer2.Library.Report.QueryTransforms.Antlr
 {
@@ -508,7 +507,6 @@ namespace Packer2.Library.Report.QueryTransforms.Antlr
                     };
                 }
             }
-
 
             public override QueryExpression VisitEncodedLiteralExpr([NotNull] pbiqParser.EncodedLiteralExprContext context)
             {
