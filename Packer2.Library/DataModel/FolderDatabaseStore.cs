@@ -108,6 +108,50 @@ namespace Packer2.Library.DataModel
             }
         }
 
+        class CalculationItemMapping : JsonPropertyZone
+        {
+            protected override string PayloadContainingObjectJsonPath => "";
+
+            protected override string GetPayloadProperty(JToken obj) => "expression";
+
+            protected override string ContainingFolder => "Items";
+
+            protected override string ElementsSelector => ".calculationGroup.calculationItems[*]";
+
+            protected override string GetFileName(JToken elem) => (string)elem["name"]!;
+
+            protected override string GetFileExtension(JToken elem) => "dax";
+        }
+
+        class CalculationGroupMapping : JsonElementZone
+        {
+            protected override string ElementsSelector => ".model.tables[*]";
+
+            protected override string ContainingFolder => "CalculationGroups";
+
+            protected override string GetSubfolderForElement(JToken elem)
+                => (string)elem["name"]!;
+
+            protected override string GetFileName(JToken elem) => "group";
+
+            protected override string GetFileExtension(JToken elem) => "json";
+
+            protected override IEnumerable<MappingZone> ChildMappings { get; }
+
+            protected override bool FilterSelectedElements(JToken element)
+            {
+                return element["calculationGroup"] != null;
+            }
+
+            public CalculationGroupMapping()
+            {
+                ChildMappings = new MappingZone[]
+                {
+                    new CalculationItemMapping()
+                };
+            }
+        }
+
         class TablesMapping : JsonElementZone
         {
             protected override string ElementsSelector => ".model.tables[*]";
@@ -123,13 +167,18 @@ namespace Packer2.Library.DataModel
 
             protected override IEnumerable<MappingZone> ChildMappings { get; }
 
+            protected override bool FilterSelectedElements(JToken element)
+            {
+                return element["calculationGroup"] == null;
+            }
+
             public TablesMapping()
             {
                 ChildMappings = new MappingZone[]
                 {
                     new PartitionExpressionsMapping(),
                     new ColumnExpressionsMapping(),
-                    new MeasureExpressionsMapping()
+                    new MeasureExpressionsMapping(),
                 };
             }
         }
@@ -140,8 +189,9 @@ namespace Packer2.Library.DataModel
             {
                 Mappings = new MappingZone[]
                 {
-                new TablesMapping(),
-                new ModelExpressionsMapping()
+                    new TablesMapping(),
+                    new ModelExpressionsMapping(),
+                    new CalculationGroupMapping(),
                 };
             }
 
