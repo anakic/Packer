@@ -12,7 +12,7 @@
 RootModule = 'packer2.ps.dll'
 
 # Version number of this module.
-ModuleVersion = '0.0.46'
+ModuleVersion = '0.0.47'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

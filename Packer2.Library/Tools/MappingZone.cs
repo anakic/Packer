@@ -49,7 +49,13 @@ namespace Packer2.Library.Tools
 
                 // read the stored payload for this element
                 var payloadLocation = ReadPayloadLocation(elem);
-                
+
+                if (payloadLocation == null)
+                {
+                    string errorMessage = "Invalid JSON in element for model.\nObject path: " + relativeFolder + "\nElement:" + element;
+                    throw new InvalidDataException(errorMessage);
+                }
+
                 // read 
                 var payload = fileSystem.ReadAsString(Path.Combine(relativeFolder, payloadLocation));
 
